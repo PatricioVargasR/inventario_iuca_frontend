@@ -108,6 +108,9 @@ export default api
 
 // ===== VISTAS =====
 export const vistasApi = {
-  list: (params) => api.get('/vistas/equipos-completo/', { params }),
-  get: (id) => api.get(`/vistas/equipo-completo/${id}`),
+  listEquipos: (params) => api.get('/vistas/equipos-completo/', { params }),
+  getEquipos: (id) => api.get(`/vistas/equipo-completo/${id}`),
+
+  listMobiliario: (params) => api.get('/vistas/mobiliarios-completo/', { params }),
+  getMobiliario: (id) => api.get(`/vistas/mobiliario-completo/${id}`)
 }

@@ -256,7 +256,7 @@ async function loadData() {
     if (filters.tipo_activo_id) params.tipo_activo_id = filters.tipo_activo_id
     if (filters.estado_id) params.estado_id = filters.estado_id
     if (filters.usuario_id) params.usuario_id = filters.usuario_id
-    const res = await vistasApi.list(params)
+    const res = await vistasApi.listEquipos(params)
     equipos.value = res.data.equipos
     total.value = res.data.total
     totalPages.value = res.data.pages
@@ -272,7 +272,7 @@ function onSearch() {
 function onPageChange(p) { page.value = p; loadData() }
 
 async function openDetail(eq) {
-  const res = await vistasApi.get(eq.id_activo)
+  const res = await vistasApi.getEquipos(eq.id_activo)
   selected.value = res.data
   showDetail.value = true
 }

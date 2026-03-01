@@ -23,21 +23,21 @@
         <label>Tipo de Mobiliario</label>
         <select v-model="filters.tipo_mobiliario_id" class="form-select" @change="loadData">
           <option value="">Todos los tipos</option>
-          <option v-for="t in catalogos.tipos" :key="t.id_tipo_mobiliario" :value="t.id_tipo_mobiliario">{{ t.nombre_tipo }}</option>
+          <option v-for="t in catalogos.tipos" :key="t.nombre_tipo" :value="t.nombre_tipo">{{ t.nombre_tipo }}</option>
         </select>
       </div>
       <div class="filter-group">
         <label>Estado</label>
         <select v-model="filters.estado_id" class="form-select" @change="loadData">
           <option value="">Cualquier estado</option>
-          <option v-for="e in catalogos.estados" :key="e.id_estado" :value="e.id_estado">{{ e.nombre_estado }}</option>
+          <option v-for="e in catalogos.estados" :key="e.nombre_estado" :value="e.nombre_estado">{{ e.nombre_estado }}</option>
         </select>
       </div>
       <div class="filter-group">
         <label>Responsable</label>
         <select v-model="filters.usuario_id" class="form-select" @change="loadData">
           <option value="">Todos los responsables</option>
-          <option v-for="u in catalogos.usuarios" :key="u.id_usuario" :value="u.id_usuario">{{ u.nombre_usuario }}</option>
+          <option v-for="u in catalogos.usuarios" :key="u.nombre_usuario" :value="u.nombre_usuario">{{ u.nombre_usuario }}</option>
         </select>
       </div>
     </div>
@@ -151,10 +151,10 @@
               <option v-for="u in catalogos.usuarios" :key="u.id_usuario" :value="u.id_usuario">{{ u.nombre_usuario }}</option>
             </select>
           </div>
-          <div class="form-group">
+          <!-- <div class="form-group">
             <label class="form-label">Tipo</label>
             <input v-model="form.tipo" class="form-input" placeholder="Ej: Silla" />
-          </div>
+          </div> -->
         </div>
         <div class="section-title">Detalles</div>
         <div class="form-grid">
@@ -187,7 +187,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { mobiliarioApi, catalogosApi, usuariosApi } from '@/services/api'
+import { mobiliarioApi, catalogosApi, usuariosApi, vistasApi } from '@/services/api'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import Pagination from '@/components/ui/Pagination.vue'
@@ -224,8 +224,7 @@ async function loadData() {
     if (filters.tipo_mobiliario_id) params.tipo_mobiliario_id = filters.tipo_mobiliario_id
     if (filters.estado_id) params.estado_id = filters.estado_id
     if (filters.usuario_id) params.usuario_id = filters.usuario_id
-    const res = await mobiliarioApi.list(params)
-    console.log(res.data.mobiliario)
+    const res = await vistasApi.listMobiliario(params)
     items.value = res.data.mobiliario
     total.value = res.data.total
     totalPages.value = res.data.pages
@@ -235,7 +234,7 @@ async function loadData() {
 function onSearch() { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { page.value = 1; loadData() }, 400) }
 function onPageChange(p) { page.value = p; loadData() }
 
-async function openDetail(m) { const res = await mobiliarioApi.get(m.id_mueble); selected.value = res.data; showDetail.value = true }
+async function openDetail(m) { const res = await vistasApi.getMobiliario(m.id_mueble); selected.value = res.data; showDetail.value = true }
 
 function openCreate() {
   editMode.value = false
