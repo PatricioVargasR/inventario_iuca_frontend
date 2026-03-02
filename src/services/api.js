@@ -112,5 +112,11 @@ export const vistasApi = {
   getEquipos: (id) => api.get(`/vistas/equipo-completo/${id}`),
 
   listMobiliario: (params) => api.get('/vistas/mobiliarios-completo/', { params }),
-  getMobiliario: (id) => api.get(`/vistas/mobiliario-completo/${id}`)
+  getMobiliario: (id) => api.get(`/vistas/mobiliario-completo/${id}`),
+
+  listResponsables: (params) => api.get('/vistas/responsables-completo/', { params }),
+  getResponsables: (id) => api.get(`/vistas/responsable-completo/${id}`),
+
+  listAccesos: (params) => api.get('/vistas/accesos-completo/', { params }),
+  getAccesos: (id) => api.get(`/vistas/acceso-completo/${id}`)
 }
