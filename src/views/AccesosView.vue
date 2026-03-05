@@ -380,7 +380,7 @@ async function loadData() {
 
     const res = await vistasApi.listAccesos(params)
     items.value = res.data.accesos
-    total.value = res.data.length
+    total.value = res.data.total
     totalPages.value = res.data.pages
   } catch (e) { console.error(e) } finally { loading.value = false }
 }
@@ -388,10 +388,9 @@ async function loadData() {
 function onSearch() { clearTimeout(searchTimeout); searchTimeout = setTimeout(loadData, 400) }
 function onPageChange(p) { page.value = p; loadData() }
 
-
 async function openDetail(acc) {
   try {
-    const res = await vistasApi.getAccesos(acc.id_acceso)
+    const res = await vistasApi.getAcceso(acc.id_acceso)
     selected.value = res.data
   } catch { selected.value = acc }
   showDetail.value = true
