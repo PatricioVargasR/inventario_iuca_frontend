@@ -7,7 +7,7 @@
       </div>
       <button class="btn btn-primary" @click="openCreate">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Nuevo Acceso
+        Nuevo acceso
       </button>
     </div>
 
@@ -115,7 +115,7 @@
           <div class="detail-item"><label>Último Acceso</label><strong style="font-family:var(--font-mono);font-size:13px">{{ selected.ultimo_acceso || '–' }}</strong></div>
           <div class="detail-item"><label>Cuenta Creada</label><strong>{{ selected.fecha_creacion?.slice(0,10) || '–' }}</strong></div>
         </div>
-        <div class="section-title">Permisos del Rol</div>
+        <div class="section-title" style="color:var(--primary)">PERMISOS DEL ROL ASIGNADO</div>
         <div style="font-size:12.5px;color:var(--gray-500);margin-bottom:8px;">{{ selected.rol }} – Nivel {{ selected.nivel_acceso }}</div>
         <table class="permissions-table">
           <thead><tr><th>MÓDULO</th><th>LEER</th><th>CREAR</th><th>EDITAR</th><th>ELIMINAR</th></tr></thead>
@@ -226,7 +226,7 @@
           </div>
         </div>
         <div style="margin-top:4px;">
-          <div style="font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:8px;">Permisos del Rol Seleccionado</div>
+        <div class="section-title" style="color:var(--primary); margin-top: 20px;">PERMISOS DEL ROL ASIGNADO</div>
           <table class="permissions-table">
             <thead><tr><th>MÓDULO</th><th>LEER</th><th>CREAR</th><th>EDITAR</th><th>ELIMINAR</th></tr></thead>
             <tbody>
