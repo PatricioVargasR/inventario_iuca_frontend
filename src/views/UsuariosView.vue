@@ -23,7 +23,7 @@
         <label>Áreas</label>
         <select v-model="filters.area_id" class="form-select" @change="loadData">
           <option value="">Todas las áreas</option>
-          <option v-for="a in areas" :key="a.id_area" :value="a.id_area">{{ a.nombre_area }}</option>
+          <option v-for="a in catalogos.areas" :key="a.nombre_area" :value="a.nombre_area">{{ a.nombre_area }}</option>
         </select>
       </div>
     </div>
@@ -35,8 +35,8 @@
         </thead>
         <tbody>
           <tr v-if="loading" class="loading-row"><td colspan="6"><span class="spinner"></span></td></tr>
-          <tr v-else-if="!filtered.length"><td colspan="6"><div class="empty-state"><div class="empty-icon">👤</div><p>No se encontraron responsables</p></div></td></tr>
-          <tr v-else v-for="u in filtered" :key="u.id_usuario">
+          <tr v-else-if="!items.length"><td colspan="6"><div class="empty-state"><div class="empty-icon">👤</div><p>No se encontraron responsables</p></div></td></tr>
+          <tr v-else v-for="u in items" :key="u.id_usuario">
             <td><span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">ACC-{{ String(u.id_usuario).padStart(3,'0') }}</span></td>
             <td style="font-weight:700;color:var(--gray-900)">{{ u.nombre_usuario }}</td>
             <td><span style="font-family:var(--font-mono);font-size:12.5px;">{{ u.numero_nomina || '–' }}</span></td>
@@ -98,7 +98,7 @@
             <label class="form-label">Área de Adscripción</label>
             <select v-model="form.area_id" class="form-select">
               <option value="">Seleccionar área</option>
-              <option v-for="a in areas" :key="a.id_area" :value="a.id_area">{{ a.nombre_area }}</option>
+              <option v-for="a in catalogos.areas" :key="a.id_area" :value="a.id_area">{{ a.nombre_area }}</option>
             </select>
           </div>
           <div class="form-group span-full">
@@ -136,9 +136,10 @@ import { usuariosApi, catalogosApi } from '@/services/api'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import Pagination from '@/components/ui/Pagination.vue'
+import { vistasApi } from '../services/api'
 
 const items = ref([])
-const areas = ref([])
+const catalogos = reactive({ areas: [] })
 const loading = ref(false)
 const page = ref(1)
 const total = ref(0)
@@ -156,38 +157,49 @@ const form = reactive({ nombre_usuario: '', numero_nomina: '', puesto: '', area_
 
 let searchTimeout = null
 
-const filtered = computed(() => {
-  let list = items.value
-  if (filters.search) {
-    const q = filters.search.toLowerCase()
-    list = list.filter(u => u.nombre_usuario.toLowerCase().includes(q) || (u.puesto||'').toLowerCase().includes(q))
-  }
-  if (filters.area_id) list = list.filter(u => u.area_id == filters.area_id)
-  return list
-})
+async function loadAreas() {
+  const areas = await catalogosApi.getAreas()
+  catalogos.areas = areas.data
+}
 
 async function loadData() {
   loading.value = true
   try {
-    const res = await usuariosApi.listResponsables()
-    items.value = res.data
-    total.value = res.data.length
-    totalPages.value = Math.ceil(res.data.length / 20)
+    const params = { page: page.value, per_page: 20 }
+
+    if (filters.search) params.search = filters.search
+    if (filters.area_id) params.area_id = filters.area_id
+
+    const res = await vistasApi.listResponsables(params)
+    items.value = res.data.responsables
+    total.value = res.data.total
+    totalPages.value = res.data.pages
   } catch (e) { console.error(e) } finally { loading.value = false }
 }
 
 function onSearch() { clearTimeout(searchTimeout); searchTimeout = setTimeout(loadData, 400) }
-function onPageChange(p) { page.value = p }
+function onPageChange(p) { page.value = p; loadData() }
 
-function openDetail(u) { selected.value = u; showDetail.value = true }
+async function openDetail(u) {
+  try {
+    const res = await vistasApi.getResponsable(u.id_usuario)
+    selected.value = res.data
+  } catch {
+    selected.value = u
+  }
+  showDetail.value = true
+  }
 function openCreate() {
   editMode.value = false
   Object.assign(form, { nombre_usuario: '', numero_nomina: '', puesto: '', area_id: '' })
   showForm.value = true
 }
-function openEdit(u) {
+
+async function openEdit(u) {
   editMode.value = true
-  Object.assign(form, { nombre_usuario: u.nombre_usuario, numero_nomina: u.numero_nomina || '', puesto: u.puesto || '', area_id: u.area_id || '' })
+  const res = await usuariosApi.getResponsable(u.id_usuario)
+  const d = res.data
+  Object.assign(form, { nombre_usuario: d.nombre_usuario, numero_nomina: d.numero_nomina || '', puesto: d.puesto || '', area_id: d.area_id || '' })
   form._id = u.id_usuario
   showForm.value = true
 }
@@ -209,8 +221,6 @@ async function doDelete() {
 }
 
 onMounted(async () => {
-  const res = await catalogosApi.getAreas()
-  areas.value = res.data
-  loadData()
+  loadAreas(),  loadData()
 })
 </script>
