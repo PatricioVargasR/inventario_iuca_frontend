@@ -55,10 +55,16 @@ export const mobiliarioApi = {
 export const catalogosApi = {
   // GET (ya existentes)
   getAreas: () => api.get('/catalogos/areas'),
+  getArea: (id) => api.get(`/catalogos/areas/${id}`),
+
   getTiposActivo: () => api.get('/catalogos/tipos-activo'),
+  getActivo: (id) => api.get(`/catalogos/activo/${id}`),
+
   getEstados: () => api.get('/catalogos/estados'),
+  getEstado: (id) => api.get(`/catalogos/estados/${id}`),
+
   getTiposMobiliario: () => api.get('/catalogos/tipos-mobiliario'),
-  getRoles: () => api.get('/catalogos/roles'),
+  getMobiliario: (id) => api.get(`/catalogos/mobiliario /${id}`),
 
   // CRUD Areas (endpoints faltantes)
   createArea: (data) => api.post('/catalogos/areas', data),
