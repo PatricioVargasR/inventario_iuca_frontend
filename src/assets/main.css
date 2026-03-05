@@ -437,6 +437,7 @@ h3 { font-size: 1.125rem; font-weight: 600; color: var(--gray-800); }
   overflow: hidden;
   border: 1px solid var(--border);
   margin-top: 12px;
+  table-layout: fixed;
 }
 
 .permissions-table th {
