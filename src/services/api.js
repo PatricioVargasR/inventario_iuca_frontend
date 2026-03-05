@@ -91,7 +91,7 @@ export const catalogosApi = {
 export const usuariosApi = {
   // Responsables
   listResponsables: (params) => api.get('/usuarios/responsables', { params }),
-  getResponsable: (id) => api.get(`/usuarios/responsables/${id}`),       // FALTANTE
+  getResponsable: (id) => api.get(`/usuarios/responsable/${id}`),       // FALTANTE
   createResponsable: (data) => api.post('/usuarios/responsables', data),
   updateResponsable: (id, data) => api.put(`/usuarios/responsables/${id}`, data),  // FALTANTE
   deleteResponsable: (id) => api.delete(`/usuarios/responsables/${id}`), // FALTANTE
@@ -121,8 +121,8 @@ export const vistasApi = {
   getMobiliario: (id) => api.get(`/vistas/mobiliario-completo/${id}`),
 
   listResponsables: (params) => api.get('/vistas/responsables-completo/', { params }),
-  getResponsables: (id) => api.get(`/vistas/responsable-completo/${id}`),
+  getResponsable: (id) => api.get(`/vistas/responsable-completo/${id}`),
 
   listAccesos: (params) => api.get('/vistas/accesos-completo/', { params }),
-  getAccesos: (id) => api.get(`/vistas/acceso-completo/${id}`)
+  getAcceso: (id) => api.get(`/vistas/acceso-completo/${id}`)
 }
