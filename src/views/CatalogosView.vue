@@ -5,6 +5,10 @@
         <h1 class="page-title">Catálogos del Sistema</h1>
         <p class="page-subtitle">Consultar catálogos y configuraciones</p>
       </div>
+        <button class="btn btn-primary" @click="openCreate('tipo_activo')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nuevo catálogo
+      </button>
     </div>
 
     <div class="catalogs-grid">
@@ -12,10 +16,6 @@
       <div class="catalog-card">
         <div class="catalog-card-header">
           <span class="catalog-card-title">Áreas</span>
-          <button class="btn btn-primary btn-sm" @click="openCreate('area')">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Nueva área
-          </button>
         </div>
         <div v-if="loading.areas" style="text-align:center;padding:20px;"><span class="spinner"></span></div>
         <div v-else>
@@ -34,10 +34,6 @@
       <div class="catalog-card">
         <div class="catalog-card-header">
           <span class="catalog-card-title">Tipos de Activo</span>
-          <button class="btn btn-primary btn-sm" @click="openCreate('tipo_activo')">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Nuevo activo
-          </button>
         </div>
         <div v-if="loading.tipos" style="text-align:center;padding:20px;"><span class="spinner"></span></div>
         <div v-else>
@@ -56,10 +52,6 @@
       <div class="catalog-card">
         <div class="catalog-card-header">
           <span class="catalog-card-title">Estados</span>
-          <button class="btn btn-primary btn-sm" @click="openCreate('estado')">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Nuevo estado
-          </button>
         </div>
         <div v-if="loading.estados" style="text-align:center;padding:20px;"><span class="spinner"></span></div>
         <div v-else>
@@ -78,10 +70,6 @@
       <div class="catalog-card">
         <div class="catalog-card-header">
           <span class="catalog-card-title">Tipos de Mobiliario</span>
-          <button class="btn btn-primary btn-sm" @click="openCreate('tipo_mobiliario')">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Nuevo mobiliario
-          </button>
         </div>
         <div v-if="loading.mobiliario" style="text-align:center;padding:20px;"><span class="spinner"></span></div>
         <div v-else>
@@ -98,7 +86,7 @@
     </div>
 
     <!-- Create/Edit Modal -->
-    <BaseModal v-model="showForm" :title="editMode ? 'Actualizar Catálogo' : 'Nuevo Catálogo'" :subtitle="'Configurando variante: ' + currentTypeLabel" size="md">
+    <BaseModal v-model="showForm" :title="editMode ? 'Actualizar Catálogo' : 'Nuevo Catálogo'" size="md">
       <div class="tab-selector">
         <button v-for="t in catalogTypes" :key="t.key" type="button" class="tab-option" :class="{ active: currentType === t.key }" @click="currentType = t.key">{{ t.label }}</button>
       </div>
@@ -114,6 +102,29 @@
             <option value="activo">Activo</option>
             <option value="inactivo">Inactivo</option>
           </select>
+        </div>
+        <div v-if="currentType == 'estado'" class="form-group span-full">
+          <label class="form-label">Color del Estado</label>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <!-- Campo editable -->
+            <input
+              type="text"
+              v-model="form.color_hex"
+              class="form-input"
+              placeholder="#000000"
+              maxlength="7"
+              style="max-width:120px;"
+            />
+            <!-- Selector visual -->
+            <input
+              type="color"
+              v-model="form.color_hex"
+              style="width:50px; height:40px; padding:0; border:none; background:none; cursor:pointer;"
+            />
+          </div>
+          <small style="color:var(--gray-400);font-size:11px;">
+            Puedes elegir el color o escribir el código HEX manualmente.
+          </small>
         </div>
         <div class="form-group span-full">
           <label class="form-label">Descripción</label>
@@ -137,7 +148,27 @@
           <div class="detail-item"><label>ID</label><strong style="color:var(--primary);font-family:var(--font-mono)">{{ selectedId }}</strong></div>
           <div class="detail-item"><label>Tipo de Catálogo</label><strong>{{ currentTypeLabel }}</strong></div>
           <div class="detail-item"><label>Nombre del tipo</label><strong>{{ selectedName }}</strong></div>
-          <div class="detail-item"><label>Estado del Catálogo</label><span class="badge badge-success">Activo</span></div>
+          <div class="detail-item">
+            <label>Estado del Catálogo</label>
+            <span
+              :class=" selected.activo ? 'badge badge-success' : 'badge badge-danger'">
+              {{ selected.activo ? 'Activo' : 'Inactivo'}}
+            </span>
+          </div>
+          <div v-if="currentType === 'estado'" class="detail-item">
+            <label>Color del tipo</label>
+
+            <div class="color-preview">
+              <input
+                type="color"
+                v-model="selected.color_hex"
+                disabled
+              />
+              <strong>{{ selected.color_hex }}</strong>
+            </div>
+          </div>
+
+
           <div class="detail-item span-full"><label>Descripción</label><strong>{{ selected.descripcion || 'Sin descripción...' }}</strong></div>
         </div>
       </template>
@@ -167,16 +198,16 @@ const deleting = ref(false)
 const currentType = ref('activo')
 const selected = ref(null)
 const toDelete = ref(null)
-const form = reactive({ nombre: '', descripcion: '', estado_catalogo: 'activo' })
+const form = reactive({ nombre: '', descripcion: '', estado_catalogo: 'activo', color_hex: '' })
 
 const catalogTypes = [
-  { key: 'activo', label: 'Activos' },
+  { key: 'tipo_activo', label: 'Activos' },
   { key: 'area', label: 'Áreas' },
   { key: 'estado', label: 'Estados' },
-  { key: 'rol', label: 'Roles' },
+  { key: 'tipo_mobiliario', label: 'Mobiliarios' },
 ]
 
-const typeLabels = { area: 'Áreas', tipo_activo: 'Activos', estado: 'Estados', tipo_mobiliario: 'Mobiliario', activo: 'Activos' }
+const typeLabels = { area: 'Áreas', tipo_activo: 'Activos', estado: 'Estados', tipo_mobiliario: 'Mobiliario' }
 const currentTypeLabel = computed(() => typeLabels[currentType.value] || currentType.value)
 
 const namePlaceholders = { area: 'Ej: Dirección, Sistemas...', tipo_activo: 'Ej: Laptops, Escritorios', estado: 'Ej: Bueno, Regular...', tipo_mobiliario: 'Ej: Silla, Mesa...' }
@@ -196,35 +227,125 @@ async function loadAll() {
   } finally { loading.areas = loading.tipos = loading.estados = loading.mobiliario = false }
 }
 
-function openCreate(type) { currentType.value = type; editMode.value = false; Object.assign(form, { nombre: '', descripcion: '', estado_catalogo: 'activo' }); showForm.value = true }
-function openEdit(type, item) {
-  currentType.value = type; editMode.value = true
-  form.nombre = item.nombre_area || item.nombre_tipo || item.nombre_estado || ''
-  form.descripcion = item.descripcion || ''; form.estado_catalogo = 'activo'; form._id = selectedId.value || item.id_area || item.id_tipo_activo || item.id_estado || item.id_tipo_mobiliario
+function openCreate(type) { currentType.value = type; editMode.value = false; Object.assign(form, { nombre: '', descripcion: '', estado_catalogo: 'activo', color_hex: '' }); showForm.value = true }
+
+async function openEdit(type, item) {
+  currentType.value = type;
+  editMode.value = true
+
+  let res;
+
+  switch (type) {
+    case 'area':
+      res = await catalogosApi.getArea(item.id_area);
+      break;
+    case 'tipo_activo':
+      res = await catalogosApi.getActivo(item.id_tipo_activo);
+      break;
+    case 'estado':
+      res = await catalogosApi.getEstado(item.id_estado);
+      break;
+    case 'tipo_mobiliario':
+      res = await catalogosApi.getMobiliario(item.id_tipo_mobiliario);
+      break;
+  }
+  const d = res.data
+
+  if (type === 'estado') {
+    form.color_hex = d.color_hex
+  }
+  form.nombre = d.nombre_area || d.nombre_tipo || d.nombre_estado || ''
+  form.descripcion = d.descripcion || '';
+  form.estado_catalogo = d.activo ? 'activo' : 'inactivo';
+  form._id = d.id_area || d.id_tipo_activo || d.id_estado || d.id_tipo_mobiliario
   showForm.value = true
 }
-function openDetail(type, item) { currentType.value = type; selected.value = item; showDetail.value = true }
+async function openDetail(type, item) {
+
+  try {
+
+    let res;
+
+    switch (type) {
+      case 'area':
+        res = await catalogosApi.getArea(item.id_area);
+        break;
+      case 'tipo_activo':
+        res = await catalogosApi.getActivo(item.id_tipo_activo);
+        break;
+      case 'estado':
+        res = await catalogosApi.getEstado(item.id_estado);
+        break;
+      case 'tipo_mobiliario':
+        res = await catalogosApi.getMobiliario(item.id_tipo_mobiliario);
+        break;
+    }
+
+    selected.value = res.data
+
+  } catch {
+    selected.value = item
+  }
+
+  currentType.value = type;
+  showDetail.value = true;
+
+}
 function confirmDelete(type, item) { currentType.value = type; toDelete.value = { ...item, nombre: item.nombre_area || item.nombre_tipo || item.nombre_estado || '' }; showConfirm.value = true }
 
 async function saveItem() {
   saving.value = true
-  const payload = { nombre: form.nombre, descripcion: form.descripcion }
-  try {
-    if (currentType.value === 'area') {
-      if (editMode.value) await catalogosApi.updateArea(form._id, { nombre_area: form.nombre, descripcion: form.descripcion })
-      else await catalogosApi.createArea({ nombre_area: form.nombre, descripcion: form.descripcion })
-    } else if (currentType.value === 'tipo_activo' || currentType.value === 'activo') {
-      if (editMode.value) await catalogosApi.updateTipoActivo(form._id, { nombre_tipo: form.nombre, descripcion: form.descripcion })
-      else await catalogosApi.createTipoActivo({ nombre_tipo: form.nombre, descripcion: form.descripcion })
-    } else if (currentType.value === 'estado') {
-      if (editMode.value) await catalogosApi.updateEstado(form._id, { nombre_estado: form.nombre, descripcion: form.descripcion })
-      else await catalogosApi.createEstado({ nombre_estado: form.nombre, descripcion: form.descripcion })
-    } else if (currentType.value === 'tipo_mobiliario') {
-      if (editMode.value) await catalogosApi.updateTipoMobiliario(form._id, { nombre_tipo: form.nombre, descripcion: form.descripcion })
-      else await catalogosApi.createTipoMobiliario({ nombre_tipo: form.nombre, descripcion: form.descripcion })
+  let metodo;
+
+
+  const accion = editMode.value ? 'update' : 'create'
+
+  let payload = {
+      descripcion: form.descripcion,
+      activo: form.estado_catalogo === 'activo' ? true : false
     }
-    showForm.value = false; loadAll()
-  } catch (e) { alert(e.response?.data?.error || 'Error al guardar') } finally { saving.value = false }
+
+  if (currentType.value === 'estado') payload['color_hex'] = form.color_hex
+
+  const valor_nombre = currentType.value.includes('tipo') ? 'nombre_tipo' : `nombre_${currentType.value}`
+  payload[valor_nombre] = form.nombre
+
+  try {
+
+    switch (currentType.value) {
+      case 'area':
+        metodo = `${accion}Area`
+      break;
+
+      case 'tipo_activo':
+        metodo = `${accion}TipoActivo`
+      break;
+
+      case 'estado':
+        metodo = `${accion}Estado`
+      break;
+
+      case 'tipo_mobiliaro':
+        metodo = `${accion}TipoMobiliario`
+      break;
+    }
+
+
+    if (editMode.value) {
+      await catalogosApi[metodo](form._id, payload)
+    } else {
+      await catalogosApi[metodo](payload)
+    }
+
+    showForm.value = false;
+    loadAll()
+
+  } catch (e) {
+    alert(e.response?.data?.error || 'Error al guardar')
+  } finally {
+    saving.value = false;
+  }
+
 }
 
 async function doDelete() {
@@ -255,4 +376,20 @@ onMounted(loadAll)
 
 @media (max-width: 1100px) { .catalogs-grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 700px) { .catalogs-grid { grid-template-columns: 1fr; } }
+
+.color-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color-preview input[type="color"] {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: none;
+  padding: 0;
+}
 </style>
+
+
