@@ -3,7 +3,7 @@
     <!-- Navbar -->
     <nav class="navbar">
       <div class="navbar-inner">
-        <RouterLink to="/equipos" class="nav-brand">Sistema de Inventario IUCA</RouterLink>
+        <RouterLink to="/accesos" class="nav-brand">Sistema de Inventario IUCA</RouterLink>
 
         <div class="nav-links">
           <RouterLink
@@ -60,11 +60,11 @@ const userMenuOpen = ref(false)
 const userMenuRef = ref(null)
 
 const navLinks = [
-  { to: '/equipos', label: 'Equipos' },
-  { to: '/mobiliario', label: 'Mobiliario' },
   { to: '/accesos', label: 'Accesos' },
   { to: '/catalogos', label: 'Catálogos' },
+  { to: '/equipos', label: 'Equipos' },
   { to: '/historial', label: 'Historial' },
+  { to: '/mobiliario', label: 'Mobiliario' },
   { to: '/usuarios', label: 'Usuarios' },
 ]
 

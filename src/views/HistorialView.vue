@@ -90,11 +90,6 @@
       </div>
     </div>
 
-    <div class="info-banner">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-      <div><strong>Información del Sistema</strong>Utilice los filtros superiores para refinar su búsqueda por categorías específicas. El sistema actualiza automáticamente la vista de auditoría para el responsable asignado.</div>
-    </div>
-
     <!-- Detail Modal -->
     <BaseModal v-model="showDetail" :title="`Detalles del Movimiento #${selected?.id_historial}`" :subtitle="selected ? formatFull(selected.fecha) : ''" size="lg">
       <template v-if="selected">
