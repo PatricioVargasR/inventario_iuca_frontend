@@ -158,9 +158,24 @@ h3 { font-size: 1.125rem; font-weight: 600; color: var(--gray-800); }
 
 .form-textarea { resize: vertical; min-height: 80px; }
 
-.input-with-icon { position: relative; }
-.input-with-icon .input-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--gray-400); pointer-events: none; }
-.input-with-icon .form-input { padding-left: 34px; }
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-icon .input-icon {
+  position: absolute;
+  left: 12px;
+  width: 14px;
+  height: 14px;
+  color: var(--gray-400);
+  pointer-events: none;
+}
+
+.input-with-icon input {
+  padding-left: 40px !important;
+}
 
 /* ===== TABLE ===== */
 .data-table {
@@ -728,4 +743,9 @@ h3 { font-size: 1.125rem; font-weight: 600; color: var(--gray-800); }
   background-color: var(--success);
   color: white;
   box-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+
+select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

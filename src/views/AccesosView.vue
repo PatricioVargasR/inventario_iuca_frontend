@@ -19,20 +19,39 @@
           <input v-model="filters.search" class="form-input" placeholder="Buscar por nombre, correo..." @input="onSearch" />
         </div>
       </div>
-      <div class="filter-group">
-        <label>Módulo de acceso</label>
-        <select v-model="filters.modulo_id" class="form-select" @change="loadData">
-          <option value="">Todos los módulos</option>
-          <option v-for="(value, key) in modulos_disponibles" :key="key" :value="key">{{ value }}</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>Tipo de permisos</label>
-        <select v-model="filters.tipo_id" class="form-select" @change="loadData">
-          <option value="">Todos los tipos</option>
-          <option v-for="(value, key) in permisos_disponibles" :key="key" :value="key">{{ value }}</option>
-        </select>
-      </div>
+<div class="filter-group">
+  <label>Módulo de acceso</label>
+  <select v-model="filters.modulo_id" class="form-select" @change="onModuloChange">
+    <option value="">Todos los módulos</option>
+    <option 
+      v-for="(value, key) in modulos_disponibles" 
+      :key="key" 
+      :value="key"
+    >
+      {{ value }}
+    </option>
+  </select>
+</div>
+
+<div class="filter-group">
+  <label>Tipo de permisos</label>
+  <select 
+    v-model="filters.tipos_permiso"
+    class="form-select"
+    multiple
+    :disabled="!filters.modulo_id"
+    @change="loadData"
+  >
+    <option 
+      v-for="(value, key) in permisos_disponibles" 
+      :key="key" 
+      :value="key"
+    >
+      {{ value }}
+    </option>
+  </select>
+</div>
+
       <div class="filter-group">
         <label>Áreas</label>
         <select v-model="filters.area_id" class="form-select" @change="loadData">
@@ -318,8 +337,7 @@
 </template>
 
 <script setup>
-// TODO: Fix filtros
-// TODO: Fix permisos table
+// TODO: Fix filtro tipo de permisos
 import { ref, reactive, onMounted } from 'vue'
 import { usuariosApi, catalogosApi } from '@/services/api'
 import BaseModal from '@/components/ui/BaseModal.vue'
@@ -332,7 +350,7 @@ const loading = ref(false)
 const page = ref(1)
 const total = ref(0)
 const totalPages = ref(1)
-const filters = reactive({ search: '', modulo_id: '', tipo_id: '', area_id:'' })
+const filters = reactive({ search: '', modulo_id: '', tipo_id: '', area_id:'', tipos_permiso: [] })
 const catalogos = reactive({ areas: [] })
 const showDetail = ref(false)
 const showForm = ref(false)
@@ -344,8 +362,9 @@ const saving = ref(false)
 const deleting = ref(false)
 const showPass = ref(false)
 
-const modulos_disponibles = {'computo': 'Cómputo', 'mobiliario': 'Mobiliario', 'usuarios': 'Usuarios', 'catalogos': 'Catálogos', 'historial': 'Historial'}
+const modulos_disponibles = {'computo': 'Cómputo', 'mobiliario': 'Mobiliario', 'usuarios': 'Responsable', 'catalogos': 'Catálogos', 'historial': 'Historial', 'acceso': 'Acceso'}
 const permisos_disponibles = {'puede_leer': 'Leer', 'puede_crear': 'Crear', 'puede_actualizar': 'Actualizar', 'puede_eliminar': 'Eliminar'  }
+
 const defaultPermisos = [
   { modulo: 'computo', puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
   { modulo: 'mobiliario', puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
@@ -377,6 +396,7 @@ async function loadData() {
     if (filters.area_id) params.area_id = filters.area_id
     if (filters.modulo_id) params.modulo_id = filters.modulo_id
     if (filters.tipo_id) params.tipo_id = filters.tipo_id
+    if (filters.tipos_permiso) params.tipos_permiso = filters.tipos_permiso
 
     const res = await vistasApi.listAccesos(params)
     items.value = res.data.accesos
@@ -440,6 +460,15 @@ function getPermisosActivos(p) {
 
     return permisos
   }
+
+const onModuloChange = () => {
+
+  if (!filters.modulo_id) {
+    filters.tipos_permiso = []
+  }
+
+  loadData()
+}
 
 onMounted(() => { loadCatalogos(); loadData() })
 </script>
