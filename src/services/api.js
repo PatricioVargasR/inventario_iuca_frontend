@@ -124,5 +124,26 @@ export const vistasApi = {
   getResponsable: (id) => api.get(`/vistas/responsable-completo/${id}`),
 
   listAccesos: (params) => api.get('/vistas/accesos-completo/', { params }),
-  getAcceso: (id) => api.get(`/vistas/acceso-completo/${id}`)
+  getAcceso: (id) => api.get(`/vistas/acceso-completo/${id}`),
+
+  listHistoriales: (params = {}) => {
+    return api.get('/historial/', { params })
+  },
+
+  getHistorial: (id) => {
+    return api.get(`/historial/${id}`)
+  },
+
+  getHistorialPorTabla: (tabla, params = {}) => {
+    return api.get(`/historial/tabla/${tabla}`, { params })
+  },
+
+  getHistorialPorRegistro: (tabla, registroId) => {
+    return api.get(`/historial/registro/${tabla}/${registroId}`)
+  },
+
+  getEstadisticasHistorial: () => {
+    return api.get('/historial/estadisticas')
+  }
+
 }

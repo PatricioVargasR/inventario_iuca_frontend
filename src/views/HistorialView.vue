@@ -9,13 +9,9 @@
 
     <!-- Filtros avanzados -->
     <div class="card" style="padding:18px 20px;margin-bottom:20px;">
-      <div style="display:flex;align-items:center;gap:7px;margin-bottom:14px;font-size:13px;font-weight:700;color:var(--primary);">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-        Filtros Avanzados
-      </div>
       <div class="filter-grid">
-        <div class="filter-group">
-          <label>Búsqueda Rápida</label>
+        <div class="filter-group search">
+          <label>Búsqueda General</label>
           <div class="input-with-icon">
             <svg class="input-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input v-model="filters.search" class="form-input" placeholder="Usuario, equipo, descripción..." @input="onSearch" />
@@ -25,9 +21,10 @@
           <label>Tipo de Registro</label>
           <select v-model="filters.tipo_registro" class="form-select" @change="loadData">
             <option value="">Todos</option>
-            <option value="equipo">Equipo</option>
+            <option value="computo">Equipo</option>
             <option value="mobiliario">Mobiliario</option>
             <option value="acceso">Acceso</option>
+            <option value="usuario">Usuario</option>
           </select>
         </div>
         <div class="filter-group">
@@ -55,10 +52,6 @@
           </select>
         </div>
       </div>
-      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px;align-items:center;">
-        <a href="#" style="font-size:13px;color:var(--primary);" @click.prevent="clearFilters">Limpiar Filtros</a>
-        <button class="btn btn-primary btn-sm" @click="loadData">Aplicar Filtros</button>
-      </div>
     </div>
 
     <!-- Timeline -->
@@ -76,14 +69,14 @@
           <span class="timeline-count">{{ group.items.length }} movimientos</span>
           <div style="flex:1;height:1px;background:var(--border);margin-left:4px;"></div>
         </div>
-        <div class="timeline-item" v-for="item in group.items" :key="item.id_movimiento" @click="openDetail(item)" style="cursor:pointer;">
+        <div class="timeline-item" v-for="item in group.items" :key="item.id_historial" @click="openDetail(item)" style="cursor:pointer;">
           <div>
-            <div class="timeline-time">⏰ {{ formatTime(item.fecha_movimiento) }}</div>
-            <div class="timeline-desc">{{ item.descripcion || buildDesc(item) }}</div>
+            <div class="timeline-time">⏰ {{ formatTime(item.fecha) }}</div>
+            <div class="timeline-desc">{{ buildDesc(item) }}</div>
           </div>
           <div>
-            <div class="timeline-user">{{ item.realizado_por_nombre || 'Sistema' }}</div>
-            <div class="timeline-area">🏢 {{ item.area || '–' }}</div>
+            <div class="timeline-user">{{ item.realizado_por || 'Sistema' }}</div>
+            <div class="timeline-area">{{ formatTableName(item.tabla) }}</div>
           </div>
           <a class="btn btn-ghost btn-sm" style="color:var(--primary);font-weight:600;white-space:nowrap;" @click.stop="openDetail(item)">
             Ver completo →
@@ -103,31 +96,41 @@
     </div>
 
     <!-- Detail Modal -->
-    <BaseModal v-model="showDetail" :title="`Detalles del Movimiento #${selected?.id_movimiento}`" :subtitle="selected ? formatFull(selected.fecha_movimiento) : ''" size="lg">
+    <BaseModal v-model="showDetail" :title="`Detalles del Movimiento #${selected?.id_historial}`" :subtitle="selected ? formatFull(selected.fecha) : ''" size="lg">
       <template v-if="selected">
         <div class="section-title" style="margin-top:0">INFORMACIÓN DEL MOVIMIENTO</div>
         <div class="card" style="padding:14px 16px;margin-bottom:14px;">
           <div class="detail-grid" style="grid-template-columns:1fr 1fr 1fr;">
-            <div class="detail-item"><label>Fecha y Hora</label><strong>{{ formatFull(selected.fecha_movimiento) }}</strong></div>
-            <div class="detail-item"><label>Realizado Por</label><strong>{{ selected.realizado_por_nombre || '–' }}</strong></div>
-            <div></div>
-            <div class="detail-item"><label>Tipo de Registro</label><strong>{{ selected.tipo_registro }}</strong></div>
-            <div class="detail-item"><label>Área / Ubicación</label><strong>{{ selected.area || '–' }}</strong></div>
-            <div class="detail-item"><label>Tipo de Movimiento</label><span class="badge badge-primary" style="font-size:12px;">{{ selected.tipo_movimiento }}</span></div>
+            <div class="detail-item"><label>Fecha y Hora</label><strong>{{ formatFull(selected.fecha) }}</strong></div>
+            <div class="detail-item"><label>Realizado Por</label><strong>{{ selected.realizado_por || 'Sistema' }}</strong></div>
+            <div class="detail-item"><label>ID Movimiento</label><strong style="font-family:var(--font-mono)">MOV-{{ String(selected.id_historial).padStart(4,'0') }}</strong></div>
+            <div class="detail-item"><label>Tipo de Registro</label><strong>{{ formatTableName(selected.tabla) }}</strong></div>
+            <div class="detail-item"><label>ID de Registro</label><strong style="font-family:var(--font-mono)">#{{ selected.registro_id }}</strong></div>
+            <div class="detail-item"><label>Tipo de Movimiento</label><span class="badge badge-primary" style="font-size:12px;">{{ formatOperation(selected.operacion) }}</span></div>
           </div>
         </div>
 
-        <div v-if="selected.campo_modificado" style="margin-bottom:14px;">
+        <div v-if="selected.cambios_detallados && selected.cambios_detallados.length > 0" style="margin-bottom:14px;">
           <div class="section-title">CAMBIOS DETALLADOS</div>
           <table class="data-table" style="border:1px solid var(--border);border-radius:var(--radius);">
             <thead>
               <tr><th>CAMPO</th><th>VALOR ANTERIOR</th><th>VALOR NUEVO</th></tr>
             </thead>
             <tbody>
-              <tr>
-                <td style="font-weight:600">{{ selected.campo_modificado }}</td>
-                <td><span style="background:var(--gray-100);padding:2px 8px;border-radius:4px;font-size:13px;font-style:italic;color:var(--gray-500);">{{ selected.valor_anterior || '–' }}</span></td>
-                <td><span class="badge badge-success" style="font-size:12px;">{{ selected.valor_nuevo || '–' }}</span></td>
+              <tr v-for="(cambio, idx) in selected.cambios_detallados" :key="idx">
+                <td style="font-weight:600">{{ cambio.campo_legible }}</td>
+                <td>
+                  <span v-if="cambio.valor_anterior" style="background:var(--gray-100);padding:2px 8px;border-radius:4px;font-size:13px;font-style:italic;color:var(--gray-500);">
+                    {{ cambio.valor_anterior }}
+                  </span>
+                  <span v-else style="color:var(--gray-400);font-size:13px;">–</span>
+                </td>
+                <td>
+                  <span v-if="cambio.valor_nuevo" class="badge badge-success" style="font-size:12px;">
+                    {{ cambio.valor_nuevo }}
+                  </span>
+                  <span v-else style="color:var(--gray-400);font-size:13px;">–</span>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -135,10 +138,10 @@
 
         <div class="section-title">INFORMACIÓN DEL REGISTRO AFECTADO</div>
         <div class="card" style="padding:16px;">
-          <div style="font-weight:700;font-size:14px;margin-bottom:12px;">{{ selected.tipo_registro }} #{{ selected.id_registro }}</div>
-          <button class="btn btn-secondary btn-block" style="font-size:13px;color:var(--primary);border-color:var(--primary-light);">
-            Ver registro completo →
-          </button>
+          <div style="font-weight:700;font-size:14px;margin-bottom:8px;">{{ formatTableName(selected.tabla) }} #{{ selected.registro_id }}</div>
+          <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px;">
+            Este movimiento afectó el registro identificado con el ID <strong>{{ selected.registro_id }}</strong>
+          </p>
         </div>
       </template>
       <template #footer>
@@ -150,7 +153,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import { historialApi, catalogosApi } from '@/services/api'
+import { vistasApi, catalogosApi } from '@/services/api'
 import BaseModal from '@/components/ui/BaseModal.vue'
 
 const items = ref([])
@@ -162,24 +165,18 @@ const selected = ref(null)
 const areas = ref([])
 
 const filters = reactive({
-  search: '', tipo_registro: '', tipo_movimiento: '',
-  fecha_desde: '', fecha_hasta: '', area_id: ''
+  search: '',
+  tipo_registro: '',
+  tipo_movimiento: '',
+  fecha_desde: '',
+  fecha_hasta: '',
+  area_id: ''
 })
-
-// Mock data for when historial endpoint is not available
-const mockData = [
-  { id_movimiento: 1247, tipo_registro: 'Equipo de Cómputo #245', id_registro: 245, tipo_movimiento: 'Edición', campo_modificado: 'Estado', valor_anterior: 'Bueno', valor_nuevo: 'Nuevo', realizado_por_nombre: 'Pérez Olmedo Adriana', area: 'Dirección de organizaciones', fecha_movimiento: '2025-02-11T14:32:00', observaciones: '' },
-  { id_movimiento: 1246, tipo_registro: 'MacBook Air M2', id_registro: 442, tipo_movimiento: 'Creación', campo_modificado: null, valor_anterior: null, valor_nuevo: null, realizado_por_nombre: 'Marta Sánchez', area: 'Recursos Humanos', fecha_movimiento: '2025-02-11T11:15:00', observaciones: '' },
-  { id_movimiento: 1245, tipo_registro: 'Escritorio Ergonómico', id_registro: 100, tipo_movimiento: 'Edición', campo_modificado: 'Estado', valor_anterior: 'Regular', valor_nuevo: 'Bueno', realizado_por_nombre: 'Juan Pérez', area: 'Administración', fecha_movimiento: '2025-02-11T09:45:00', observaciones: '' },
-  { id_movimiento: 1244, tipo_registro: 'Servidor Local Legacy-2018', id_registro: 50, tipo_movimiento: 'Eliminación', campo_modificado: null, valor_anterior: null, valor_nuevo: null, realizado_por_nombre: 'Admin Sistema', area: 'Seguridad', fecha_movimiento: '2025-02-10T17:50:00', observaciones: '' },
-  { id_movimiento: 1243, tipo_registro: 'iPhone 15 Pro Max', id_registro: 600, tipo_movimiento: 'Creación', campo_modificado: null, valor_anterior: null, valor_nuevo: null, realizado_por_nombre: 'Carlos Ruiz', area: 'IT y Sistemas', fecha_movimiento: '2025-02-10T16:20:00', observaciones: '' },
-  { id_movimiento: 1242, tipo_registro: 'Impresora Láser HP Color-JET', id_registro: 200, tipo_movimiento: 'Edición', campo_modificado: 'Responsable', valor_anterior: 'Juan', valor_nuevo: 'Marta Sánchez', realizado_por_nombre: 'Marta Sánchez', area: 'Recursos Humanos', fecha_movimiento: '2025-02-10T10:05:00', observaciones: '' },
-]
 
 const grouped = computed(() => {
   const map = {}
   items.value.forEach(item => {
-    const d = item.fecha_movimiento?.slice(0, 10)
+    const d = item.fecha?.slice(0, 10)
     if (!map[d]) map[d] = []
     map[d].push(item)
   })
@@ -204,51 +201,131 @@ function formatFull(d) {
   return new Date(d).toLocaleString('es-MX', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })
 }
 
+function formatTableName(tabla) {
+  const nombres = {
+    'equipos_computo': 'Equipo de Cómputo',
+    'mobiliario': 'Mobiliario',
+    'acceso': 'Acceso',
+    'usuario': 'Usuario',
+    'cat_areas': 'Área',
+    'cat_estados': 'Estado',
+    'cat_tipos_activo': 'Tipo de Activo',
+    'cat_tipos_mobiliario': 'Tipo de Mobiliario',
+    'especificaciones_equipo': 'Especificación'
+  }
+  return nombres[tabla] || tabla
+}
+
+function formatOperation(operacion) {
+  const nombres = {
+    'INSERT': 'Creación',
+    'UPDATE': 'Edición',
+    'DELETE': 'Eliminación'
+  }
+  return nombres[operacion] || operacion
+}
+
 function buildDesc(item) {
-  const type = item.tipo_movimiento?.toLowerCase()
-  if (type === 'creación' || type === 'creacion') return `Registro de nuevo ingreso al inventario: "${item.tipo_registro}"`
-  if (type === 'eliminación' || type === 'eliminacion') return `Se eliminó el registro de acceso obsoleto para "${item.tipo_registro}"`
-  if (item.campo_modificado) return `Se actualizó ${item.campo_modificado} en "${item.tipo_registro}"`
-  return `Movimiento en "${item.tipo_registro}"`
+  const operation = formatOperation(item.operacion)
+  const tableName = formatTableName(item.tabla)
+
+  if (item.operacion === 'INSERT') {
+    return `Registro de nuevo ingreso al inventario: "${tableName} #${item.registro_id}"`
+  }
+
+  if (item.operacion === 'DELETE') {
+    return `Se eliminó el registro: "${tableName} #${item.registro_id}"`
+  }
+
+  if (item.operacion === 'UPDATE' && item.cambios_detallados && item.cambios_detallados.length > 0) {
+    const primerCambio = item.cambios_detallados[0]
+    return `Se actualizó ${primerCambio.campo_legible} en "${tableName} #${item.registro_id}"`
+  }
+
+  return `${operation} en "${tableName} #${item.registro_id}"`
 }
 
 let searchTimeout = null
-function onSearch() { clearTimeout(searchTimeout); searchTimeout = setTimeout(loadData, 400) }
-function clearFilters() { Object.assign(filters, { search: '', tipo_registro: '', tipo_movimiento: '', fecha_desde: '', fecha_hasta: '', area_id: '' }); loadData() }
+function onSearch() {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    page.value = 1
+    loadData()
+  }, 400)
+}
+
+function clearFilters() {
+  Object.assign(filters, {
+    search: '',
+    tipo_registro: '',
+    tipo_movimiento: '',
+    fecha_desde: '',
+    fecha_hasta: '',
+    area_id: ''
+  })
+  loadData()
+}
 
 async function loadData() {
-  loading.value = true; page.value = 1
+  loading.value = true
+  page.value = 1
+
   try {
-    const res = await historialApi.list({ ...filters, page: 1, per_page: 20 })
-    items.value = res.data.movimientos || res.data
-    hasMore.value = res.data.pages > 1
-  } catch {
-    // Use mock data when endpoint is not available
-    items.value = mockData
+    const params = {
+      ...filters,
+      page: 1,
+      per_page: 20
+    }
+
+    const res = await vistasApi.listHistoriales(params)
+
+    items.value = res.data.movimientos || []
+    hasMore.value = res.data.has_next || false
+  } catch (error) {
+    items.value = []
     hasMore.value = false
-  } finally { loading.value = false }
+  } finally {
+    loading.value = false
+  }
 }
 
 async function loadMore() {
   page.value++
+
   try {
-    const res = await historialApi.list({ ...filters, page: page.value, per_page: 20 })
-    items.value.push(...(res.data.movimientos || res.data))
-    hasMore.value = res.data.pages > page.value
-  } catch { hasMore.value = false }
+    const params = {
+      ...filters,
+      page: page.value,
+      per_page: 20
+    }
+
+    const res = await vistasApi.listHistoriales(params)
+
+    items.value.push(...(res.data.movimientos || []))
+    hasMore.value = res.data.has_next || false
+  } catch (error) {
+    hasMore.value = false
+  }
 }
 
 async function openDetail(item) {
   try {
-    const res = await historialApi.get(item.id_movimiento)
+    const res = await vistasApi.getHistorial(item.id_historial)
     selected.value = res.data
-  } catch { selected.value = item }
+  } catch (error) {
+    selected.value = item
+  }
   showDetail.value = true
 }
 
 onMounted(async () => {
-  const res = await catalogosApi.getAreas()
-  areas.value = res.data
+  try {
+    const res = await catalogosApi.getAreas()
+    areas.value = res.data
+  } catch (error) {
+    console.error('Error loading areas:', error)
+  }
+
   loadData()
 })
 </script>
