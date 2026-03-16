@@ -45,10 +45,10 @@
           <input v-model="filters.fecha_hasta" type="date" class="form-input" @change="loadData" />
         </div>
         <div class="filter-group">
-          <label>Área</label>
-          <select v-model="filters.area_id" class="form-select" @change="loadData">
-            <option value="">Todas las áreas</option>
-            <option v-for="a in areas" :key="a.id_area" :value="a.id_area">{{ a.nombre_area }}</option>
+          <label>Usuario</label>
+          <select v-model="filters.usuario_id" class="form-select" @change="loadData">
+            <option value="">Todos los usuarios</option>
+            <option v-for="u in usuarios" :key="u.id_acceso" :value="u.id_acceso">{{ u.nombre_usuario }}</option>
           </select>
         </div>
       </div>
@@ -69,24 +69,26 @@
           <span class="timeline-count">{{ group.items.length }} movimientos</span>
           <div style="flex:1;height:1px;background:var(--border);margin-left:4px;"></div>
         </div>
-        <div class="timeline-item" v-for="item in group.items" :key="item.id_historial" @click="openDetail(item)" style="cursor:pointer;">
-          <div>
-            <div class="timeline-time">⏰ {{ formatTime(item.fecha) }}</div>
-            <div class="timeline-desc">{{ buildDesc(item) }}</div>
+        <div class="timeline-item-enhanced" v-for="item in group.items" :key="item.id_historial" @click="openDetail(item)">
+          <div class="timeline-left">
+            <div class="timeline-time">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              {{ formatTime(item.fecha) }}
+            </div>
+            <div class="timeline-desc-enhanced" v-html="buildDescWithColor(item)"></div>
           </div>
-          <div>
-            <div class="timeline-user">{{ item.realizado_por || 'Sistema' }}</div>
+          <div class="timeline-right">
+            <div class="timeline-user-enhanced">{{ item.realizado_por || 'Sistema' }}</div>
             <div class="timeline-area">{{ formatTableName(item.tabla) }}</div>
           </div>
-          <a class="btn btn-ghost btn-sm" style="color:var(--primary);font-weight:600;white-space:nowrap;" @click.stop="openDetail(item)">
-            Ver completo →
-          </a>
         </div>
       </div>
 
       <div class="load-more">
         <button v-if="hasMore" class="btn btn-secondary" @click="loadMore">Cargar más movimientos ↓</button>
-        <span v-else>— fin del historial —</span>
+        <span v-else>— Fin del historial —</span>
       </div>
     </div>
 
@@ -150,6 +152,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { vistasApi, catalogosApi } from '@/services/api'
 import BaseModal from '@/components/ui/BaseModal.vue'
+import { usuariosApi } from '../services/api'
 
 const items = ref([])
 const loading = ref(false)
@@ -157,7 +160,7 @@ const page = ref(1)
 const hasMore = ref(false)
 const showDetail = ref(false)
 const selected = ref(null)
-const areas = ref([])
+const usuarios = ref([])
 
 const filters = reactive({
   search: '',
@@ -165,7 +168,7 @@ const filters = reactive({
   tipo_movimiento: '',
   fecha_desde: '',
   fecha_hasta: '',
-  area_id: ''
+  usuario_id: ''
 })
 
 const grouped = computed(() => {
@@ -198,15 +201,16 @@ function formatFull(d) {
 
 function formatTableName(tabla) {
   const nombres = {
-    'equipos_computo': 'Equipo de Cómputo',
+    'equipos_computo': 'Equipo de cómputo',
     'mobiliario': 'Mobiliario',
     'acceso': 'Acceso',
     'usuario': 'Usuario',
     'cat_areas': 'Área',
     'cat_estados': 'Estado',
-    'cat_tipos_activo': 'Tipo de Activo',
-    'cat_tipos_mobiliario': 'Tipo de Mobiliario',
-    'especificaciones_equipo': 'Especificación'
+    'cat_tipos_activo': 'Tipo de activo',
+    'cat_tipos_mobiliario': 'Tipo de mobiliario',
+    'especificaciones_equipo': 'Especificación',
+    'permisos': 'Permiso'
   }
   return nombres[tabla] || tabla
 }
@@ -240,6 +244,12 @@ function buildDesc(item) {
   return `${operation} en "${tableName} #${item.registro_id}"`
 }
 
+function buildDescWithColor(item) {
+  const desc = buildDesc(item)
+  // Reemplazar el texto entre comillas con un span azul
+  return desc.replace(/"([^"]+)"/g, '<span style="color: var(--primary); font-weight: 700;">"$1"</span>')
+}
+
 let searchTimeout = null
 function onSearch() {
   clearTimeout(searchTimeout)
@@ -249,17 +259,6 @@ function onSearch() {
   }, 400)
 }
 
-function clearFilters() {
-  Object.assign(filters, {
-    search: '',
-    tipo_registro: '',
-    tipo_movimiento: '',
-    fecha_desde: '',
-    fecha_hasta: '',
-    area_id: ''
-  })
-  loadData()
-}
 
 async function loadData() {
   loading.value = true
@@ -315,10 +314,10 @@ async function openDetail(item) {
 
 onMounted(async () => {
   try {
-    const res = await catalogosApi.getAreas()
-    areas.value = res.data
+    const res = await usuariosApi.listAccesos()
+    usuarios.value = res.data
   } catch (error) {
-    console.error('Error loading areas:', error)
+    console.error('Error loading usuarios:', error)
   }
 
   loadData()
@@ -333,5 +332,91 @@ onMounted(async () => {
   align-items: end;
 }
 
-@media (max-width: 1100px) { .filter-grid { grid-template-columns: 1fr 1fr 1fr; } }
-</style>
+@media (max-width: 1100px) { 
+  .filter-grid { 
+    grid-template-columns: 1fr 1fr 1fr; 
+  } 
+}
+
+/* Enhanced timeline item with better spacing and alignment */
+.timeline-item-enhanced {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 24px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+  transition: border-color 0.15s;
+  min-height: 90px;
+  cursor: pointer;
+}
+
+.timeline-item-enhanced:hover {
+  border-color: var(--gray-400);
+}
+
+.timeline-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.timeline-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  min-width: 180px;
+  margin-left: auto;
+}
+
+.timeline-desc-enhanced {
+  font-size: 14px;
+  color: var(--gray-700);
+  line-height: 1.5;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.timeline-user-enhanced {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-900);
+  text-align: right;
+}
+
+.timeline-area {
+  font-size: 12px;
+  color: var(--gray-500);
+  text-align: right;
+}
+
+.timeline-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--gray-500);
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .timeline-item-enhanced {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    min-height: auto;
+  }
+
+  .timeline-right {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .timeline-user-enhanced,
+  .timeline-area {
+    text-align: left;
+  }
+}
+</style>  

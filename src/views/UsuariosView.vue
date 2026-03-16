@@ -31,7 +31,7 @@
     <div class="table-wrapper">
       <table class="data-table">
         <thead>
-          <tr><th>ID</th><th>NOMBRE ↕</th><th>NÓMINA</th><th>PUESTO</th><th>ÁREA</th><th>ACCIONES</th></tr>
+          <tr><th>ID</th><th>NOMBRE</th><th>NÓMINA</th><th>PUESTO</th><th>ÁREA</th><th>ACCIONES</th></tr>
         </thead>
         <tbody>
           <tr v-if="loading" class="loading-row"><td colspan="6"><span class="spinner"></span></td></tr>

@@ -590,7 +590,8 @@ h3 { font-size: 1.125rem; font-weight: 600; color: var(--gray-800); }
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 .timeline-date { font-weight: 700; font-size: 15px; color: var(--gray-800); }

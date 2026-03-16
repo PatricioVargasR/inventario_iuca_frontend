@@ -19,39 +19,38 @@
           <input v-model="filters.search" class="form-input" placeholder="Buscar por nombre, correo..." @input="onSearch" />
         </div>
       </div>
-<div class="filter-group">
-  <label>Módulo de acceso</label>
-  <select v-model="filters.modulo_id" class="form-select" @change="onModuloChange">
-    <option value="">Todos los módulos</option>
-    <option 
-      v-for="(value, key) in modulos_disponibles" 
-      :key="key" 
-      :value="key"
-    >
-      {{ value }}
-    </option>
-  </select>
-</div>
+      <div class="filter-group">
+        <label>Módulo de acceso</label>
+        <select v-model="filters.modulo" class="form-select" @change="onModuloChange">
+          <option value="">Todos los módulos</option>
+          <option
+            v-for="(value, key) in modulos_disponibles"
+            :key="key"
+            :value="key"
+          >
+            {{ value }}
+          </option>
+        </select>
+      </div>
 
-<div class="filter-group">
-  <label>Tipo de permisos</label>
-  <select 
-    v-model="filters.tipos_permiso"
-    class="form-select"
-    multiple
-    :disabled="!filters.modulo_id"
-    @change="loadData"
-  >
-    <option 
-      v-for="(value, key) in permisos_disponibles" 
-      :key="key" 
-      :value="key"
-    >
-      {{ value }}
-    </option>
-  </select>
-</div>
-
+      <div class="filter-group">
+        <label>Tipo de permisos</label>
+        <select
+          v-model="filters.permisos"
+          class="form-select"
+          multiple
+          :disabled="!filters.modulo"
+          @change="loadData"
+        >
+          <option
+            v-for="(value, key) in permisos_disponibles"
+            :key="key"
+            :value="key"
+          >
+            {{ value }}
+          </option>
+        </select>
+      </div>
       <div class="filter-group">
         <label>Áreas</label>
         <select v-model="filters.area_id" class="form-select" @change="loadData">
@@ -64,7 +63,7 @@
     <div class="table-wrapper">
       <table class="data-table">
         <thead>
-          <tr><th>ID</th><th>NOMBRE ↕</th><th>CORREO</th><th>PERMISOS</th><th>ÁREA</th><th>ÚLTIMO ACCESO</th><th>ACCIONES</th></tr>
+          <tr><th>ID</th><th>NOMBRE</th><th>CORREO</th><th>PERMISOS</th><th>ÁREA</th><th>ÚLTIMO ACCESO</th><th>ACCIONES</th></tr>
         </thead>
         <tbody>
           <tr v-if="loading" class="loading-row"><td colspan="7"><span class="spinner"></span></td></tr>
@@ -76,21 +75,43 @@
             <!-- <td>
               <span class="badge badge-primary" style="font-size:11.5px;">{{ acc.permisos}}</span>
             </td> -->
-            <td>
-              <div v-for="permiso in acc.permisos" :key="permiso.modulo" class="mb-1">
-
-                <strong style="text-transform: capitalize;">{{ permiso.modulo }}:</strong>
-
-                <span v-if="getPermisosActivos(permiso).length">
-                  {{ getPermisosActivos(permiso).join(' - ') }}
-                </span>
-
-                <span v-else>
-                  Sin permisos
-                </span>
-
-              </div>
-            </td>
+              <td>
+                <div class="permisos-grid">
+                  <div v-for="permiso in acc.permisos" :key="permiso.modulo" class="permiso-modulo-item">
+                    <div class="modulo-nombre">{{ formatModuloNombre(permiso.modulo) }}</div>
+                    <div class="permisos-badges">
+                      <span v-if="permiso.crear" class="permiso-badge permiso-crear" title="Crear">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        C
+                      </span>
+                      <span v-if="permiso.leer" class="permiso-badge permiso-leer" title="Leer">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        L
+                      </span>
+                      <span v-if="permiso.actualizar" class="permiso-badge permiso-actualizar" title="Actualizar">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                        A
+                      </span>
+                      <span v-if="permiso.eliminar" class="permiso-badge permiso-eliminar" title="Eliminar">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+                        </svg>
+                        E
+                      </span>
+                      <span v-if="!getPermisosActivos(permiso).length" class="permiso-badge permiso-ninguno">
+                        Sin permisos
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </td>
 
             <td>{{ acc.area || '–' }}</td>
             <td style="font-size:12px;color:var(--gray-400);font-family:var(--font-mono)">{{ formatDate(acc.ultimo_acceso) }}</td>
@@ -345,7 +366,7 @@ const loading = ref(false)
 const page = ref(1)
 const total = ref(0)
 const totalPages = ref(1)
-const filters = reactive({ search: '', modulo_id: '', tipo_id: '', area_id:'', tipos_permiso: [] })
+const filters = reactive({ search: '', modulo: '', permisos: [], area_id: '' })
 const catalogos = reactive({ areas: [] })
 const showDetail = ref(false)
 const showForm = ref(false)
@@ -389,9 +410,14 @@ async function loadData() {
     const params = { page: page.value, per_page: 20 }
     if (filters.search) params.search = filters.search
     if (filters.area_id) params.area_id = filters.area_id
-    if (filters.modulo_id) params.modulo_id = filters.modulo_id
-    if (filters.tipo_id) params.tipo_id = filters.tipo_id
-    if (filters.tipos_permiso) params.tipos_permiso = filters.tipos_permiso
+    if (filters.modulo) params.modulo = filters.modulo
+
+    // Enviar permisos como array
+    if (filters.permisos && filters.permisos.length > 0) {
+      filters.permisos.forEach((p, index) => {
+        params[`permisos[${index}]`] = p
+      })
+    }
 
     const res = await vistasApi.listAccesos(params)
     items.value = res.data.accesos
@@ -457,13 +483,147 @@ function getPermisosActivos(p) {
   }
 
 const onModuloChange = () => {
-
-  if (!filters.modulo_id) {
-    filters.tipos_permiso = []
+  if (!filters.modulo) {
+    filters.permisos = []
   }
-
   loadData()
+}
+
+function formatModuloNombre(modulo) {
+  const nombres = {
+    'computo': 'Cómputo',
+    'mobiliario': 'Mobiliario',
+    'responsable': 'Responsables',
+    'catalogos': 'Catálogos',
+    'historial': 'Historial',
+    'acceso': 'Accesos'
+  }
+  return nombres[modulo] || modulo
 }
 
 onMounted(() => { loadCatalogos(); loadData() })
 </script>
+
+<style>
+/* ===== PERMISOS GRID EN TABLA ===== */
+.permisos-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 280px;
+}
+
+.permiso-modulo-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.modulo-nombre {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gray-600);
+  min-width: 75px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.permisos-badges {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.permiso-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition: all 0.15s ease;
+}
+
+.permiso-badge svg {
+  flex-shrink: 0;
+}
+
+.permiso-crear {
+  background: #dcfce7;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.permiso-leer {
+  background: #dbeafe;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.permiso-actualizar {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.permiso-eliminar {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.permiso-ninguno {
+  background: var(--gray-100);
+  color: var(--gray-400);
+  border: 1px solid var(--gray-200);
+  font-style: italic;
+  font-weight: 500;
+}
+
+/* Hover effects */
+.permiso-crear:hover {
+  background: #bbf7d0;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(22, 163, 74, 0.15);
+}
+
+.permiso-leer:hover {
+  background: #bfdbfe;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.15);
+}
+
+.permiso-actualizar:hover {
+  background: #fde68a;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(217, 119, 6, 0.15);
+}
+
+.permiso-eliminar:hover {
+  background: #fecaca;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.15);
+}
+
+/* Responsive - para pantallas pequeñas */
+@media (max-width: 1400px) {
+  .permisos-grid {
+    max-width: 240px;
+  }
+  .modulo-nombre {
+    min-width: 65px;
+    font-size: 10px;
+  }
+  .permiso-badge {
+    font-size: 9px;
+    padding: 2px 5px;
+  }
+  .permiso-badge svg {
+    width: 8px;
+    height: 8px;
+  }
+}
+</style>

@@ -88,12 +88,12 @@
     <!-- Create/Edit Modal -->
     <BaseModal v-model="showForm" :title="editMode ? 'Actualizar Catálogo' : 'Nuevo Catálogo'" size="md">
       <div class="tab-selector">
-        <button v-for="t in catalogTypes" :key="t.key" type="button" class="tab-option" :class="{ active: currentType === t.key }" @click="currentType = t.key">{{ t.label }}</button>
+        <button v-for="t in catalogTypes" :key="t.key" type="button" class="tab-option" :class="{ active: currentType === t.key }" @click="currentType = t.key" :disabled="editMode">{{ t.label }}</button>
       </div>
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">Nombre del Tipo <span class="required">*</span></label>
-          <input v-model="form.nombre" class="form-input" :placeholder="namePlaceholder" required maxlength="30" />
+          <input v-model="form.nombre" class="form-input" :placeholder="namePlaceholder" required maxlength="30"/>
           <small style="color:var(--gray-400);font-size:11px;">{{ form.nombre.length }} / 30</small>
         </div>
         <div class="form-group">
