@@ -69,7 +69,7 @@ const showPass = ref(false)
 
 async function handleLogin() {
   const ok = await authStore.login(form.value.correo, form.value.password)
-  if (ok) router.push('/equipos')
+  if (ok) router.push('/accesos')
 }
 </script>
 
