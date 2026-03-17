@@ -346,11 +346,11 @@ const loading = ref(false)
 const page = ref(1)
 const total = ref(0)
 const totalPages = ref(1)
-const filters = reactive({ 
-  search: '', 
+const filters = reactive({
+  search: '',
   modulos: [],  // Cambio: ahora es un array
-  permisos: [], 
-  area_id: '' 
+  permisos: [],
+  area_id: ''
 })
 const catalogos = reactive({ areas: [] })
 const showDetail = ref(false)
@@ -366,7 +366,7 @@ const showPass = ref(false)
 const modulos_disponibles = {
   'computo': 'Cómputo',
   'mobiliario': 'Mobiliario',
-  'usuarios': 'Responsable',
+  'responsable': 'Responsable',
   'catalogos': 'Catálogos',
   'historial': 'Historial',
   'acceso': 'Acceso'
