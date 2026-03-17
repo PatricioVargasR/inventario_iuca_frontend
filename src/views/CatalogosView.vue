@@ -90,21 +90,21 @@
       <div class="tab-selector">
         <button v-for="t in catalogTypes" :key="t.key" type="button" class="tab-option" :class="{ active: currentType === t.key }" @click="currentType = t.key" :disabled="editMode">{{ t.label }}</button>
       </div>
-      <div class="form-grid">
+      <form id="catalogoForm" @submit.prevent="saveItem" class="form-grid">
         <div class="form-group">
           <label class="form-label">Nombre del Tipo <span class="required">*</span></label>
           <input v-model="form.nombre" class="form-input" :placeholder="namePlaceholder" required maxlength="30"/>
-          <small style="color:var(--gray-400);font-size:11px;">{{ form.nombre.length }} / 30</small>
+          <!-- <small style="color:var(--gray-400);font-size:11px;">{{ form.nombre.length }} / 30</small> -->
         </div>
         <div class="form-group">
-          <label class="form-label">Estado del Catálogo</label>
+          <label class="form-label">Estado del Catálogo <span class="required">*</span></label>
           <select v-model="form.estado_catalogo" class="form-select">
             <option value="activo">Activo</option>
             <option value="inactivo">Inactivo</option>
           </select>
         </div>
         <div v-if="currentType == 'estado'" class="form-group span-full">
-          <label class="form-label">Color del Estado</label>
+          <label class="form-label">Color del Estado <span class="required">*</span></label>
           <div style="display:flex; gap:10px; align-items:center;">
             <!-- Campo editable -->
             <input
@@ -120,7 +120,9 @@
               type="color"
               v-model="form.color_hex"
               style="width:50px; height:40px; padding:0; border:none; background:none; cursor:pointer;"
+              required
             />
+
           </div>
           <small style="color:var(--gray-400);font-size:11px;">
             Puedes elegir el color o escribir el código HEX manualmente.
@@ -131,10 +133,10 @@
           <textarea v-model="form.descripcion" class="form-textarea" placeholder="Breve descripción del tipo de activo..." maxlength="200"></textarea>
           <small style="color:var(--gray-400);font-size:11px;">{{ form.descripcion.length }} / 200 — Campo opcional para detalles técnicos</small>
         </div>
-      </div>
+      </form>
       <template #footer>
         <button class="btn btn-secondary" @click="showForm = false">Cancelar</button>
-        <button class="btn btn-primary" @click="saveItem" :disabled="saving">
+        <button class="btn btn-primary" form="catalogoForm" type="submit" :disabled="saving">
           <span v-if="saving" class="spinner" style="width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:white;"></span>
           <span v-else>Guardar Catálogo</span>
         </button>

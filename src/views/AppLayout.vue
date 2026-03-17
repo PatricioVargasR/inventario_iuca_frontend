@@ -65,8 +65,10 @@ const navLinks = [
   { to: '/equipos', label: 'Equipos' },
   { to: '/historial', label: 'Historial' },
   { to: '/mobiliario', label: 'Mobiliario' },
-  { to: '/usuarios', label: 'Usuarios' },
+  { to: '/usuarios', label: 'Responsables' },
 ]
+
+console.log(authStore)
 
 function toggleUserMenu() { userMenuOpen.value = !userMenuOpen.value }
 

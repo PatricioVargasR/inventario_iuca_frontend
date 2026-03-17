@@ -209,33 +209,37 @@
 
     <!-- Form Modal -->
     <BaseModal v-model="showForm" :title="editMode ? 'Editar Acceso' : 'Registro de Acceso'" subtitle="Sistema de Inventario IUCA" size="lg">
-      <form @submit.prevent="saveItem">
+      <form id="accesosForm" @submit.prevent="saveItem">
         <div class="section-title" style="margin-top:0;color:var(--primary);display:flex;align-items:center;gap:6px;">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
           INFORMACIÓN PERSONAL
         </div>
         <div class="form-grid">
-          <div class="form-group"><label class="form-label">Nombre Completo <span class="required">*</span></label><input v-model="form.nombre_usuario" class="form-input" placeholder="Ej. Juan Pérez" required /></div>
+          <div class="form-group">
+            <label class="form-label">Nombre Completo <span class="required">*</span></label>
+            <input v-model="form.nombre_usuario" class="form-input" placeholder="Ej. Juan Pérez" required />
+          </div>
           <div class="form-group"><label class="form-label">Correo Electrónico <span class="required">*</span></label><input v-model="form.correo_electronico" class="form-input" type="email" placeholder="usuario@iuca.edu.mx" required :disabled="editMode" /></div>
         </div>
         <div class="section-title" style="color:var(--primary);display:flex;align-items:center;gap:6px;">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
           INFORMACIÓN DE ACCESO
         </div>
         <div class="form-grid">
           <div class="form-group">
-            <label class="form-label">Contraseña <span class="required">*</span></label>
+            <label class="form-label">Contraseña <span v-if="!editMode" class="required">*</span></label>
             <div style="position:relative;">
-              <input v-model="form.password" :type="showPass ? 'text' : 'password'" class="form-input" placeholder="••••••••" :required="!editMode" style="padding-right:38px;" />
+              <input v-model="form.password" :type="showPass ? 'text' : 'password'" class="form-input" placeholder="••••••••" :required="!editMode" style="padding-right:38px;" maxlength="10" minlength="10"/>
               <button type="button" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--gray-400);" @click="showPass=!showPass">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
               </button>
             </div>
           </div>
-          <div class="form-group"><label class="form-label">Confirmar Contraseña <span class="required">*</span></label><input v-model="form.confirm_password" :type="showPass ? 'text' : 'password'" class="form-input" placeholder="••••••••" :required="!editMode" /></div>
-          <div class="form-group span-full">
-            <label class="form-label">Área Asignada</label>
-            <select v-model="form.area_id" class="form-select" style="max-width:260px;">
+          <div class="form-group">
+            <label class="form-label">Confirmar Contraseña <span v-if="!editMode"  class="required">*</span></label>
+            <input v-model="form.confirm_password" :type="showPass ? 'text' : 'password'" class="form-input" placeholder="••••••••" :required="!editMode" maxlength="10" minlength="10" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Área Asignada <span class="required">*</span></label>
+            <select v-model="form.area_id" class="form-select" style="max-width:260px;" required>
               <option value="">Seleccionar área</option>
               <option v-for="a in catalogos.areas" :key="a.id_area" :value="a.id_area">{{ a.nombre_area }}</option>
             </select>
@@ -322,7 +326,7 @@
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
           Cancelar
         </button>
-        <button class="btn btn-primary" @click="saveItem" :disabled="saving">
+        <button class="btn btn-primary" form="accesosForm" type="submit" :disabled="saving">
           <span v-if="saving" class="spinner" style="width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:white;"></span>
           <span v-else>{{ editMode ? 'Actualizar Usuario' : 'Registrar Usuario' }}</span>
         </button>
@@ -485,32 +489,32 @@ async function openEdit(acc) {
 }
 
 async function saveItem() {
-  if (form.password && form.password !== form.confirm_password) { 
+  if (form.password && form.password !== form.confirm_password) {
     alert('Las contraseñas no coinciden')
-    return 
+    return
   }
   saving.value = true
   try {
-    const payload = { 
-      nombre_usuario: form.nombre_usuario, 
-      correo_electronico: form.correo_electronico, 
-      area_id: form.area_id, 
-      permisos: form.permisos 
+    const payload = {
+      nombre_usuario: form.nombre_usuario,
+      correo_electronico: form.correo_electronico,
+      area_id: form.area_id,
+      permisos: form.permisos
     }
     if (form.password) payload.password = form.password
-    
+
     if (editMode.value) {
       await usuariosApi.updateAcceso(form._id, payload)
     } else {
       await usuariosApi.createAcceso(payload)
     }
-    
+
     showForm.value = false
     loadData()
-  } catch (e) { 
+  } catch (e) {
     alert(e.response?.data?.error || 'Error al guardar') 
-  } finally { 
-    saving.value = false 
+  } finally {
+    saving.value = false
   }
 }
 

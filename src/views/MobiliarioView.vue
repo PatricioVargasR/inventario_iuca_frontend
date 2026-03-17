@@ -122,13 +122,15 @@
 
     <!-- Form Modal -->
     <BaseModal v-model="showForm" :title="editMode ? 'Actualizar Mobiliario' : 'Nuevo Mobiliario'" size="lg">
-      <form @submit.prevent="saveItem">
-        <div class="section-title">Información General</div>
+      <form id="mobiliarioForm" @submit.prevent="saveItem">
+        <div class="section-title" style="color:var(--primary);display:flex;align-items:center;gap:6px;">
+          Información General
+        </div>
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">Tipo de Activo <span class="required">*</span></label>
             <select v-model="form.tipo_mobiliario_id" class="form-select" required>
-              <option value="">Mobiliario</option>
+              <option value="">Seleccionar...</option>
               <option v-for="t in catalogos.tipos" :key="t.id_tipo_mobiliario" :value="t.id_tipo_mobiliario">{{ t.nombre_tipo }}</option>
             </select>
           </div>
@@ -146,24 +148,31 @@
               <option v-for="u in catalogos.usuarios" :key="u.id_usuario" :value="u.id_usuario">{{ u.nombre_usuario }}</option>
             </select>
           </div>
-          <!-- <div class="form-group">
-            <label class="form-label">Tipo</label>
-            <input v-model="form.tipo" class="form-input" placeholder="Ej: Silla" />
-          </div> -->
         </div>
-        <div class="section-title">Detalles</div>
+        <div class="section-title" style="color:var(--primary);display:flex;align-items:center;gap:6px;">
+          Detalles
+        </div>
         <div class="form-grid">
-          <div class="form-group"><label class="form-label">Marca</label><input v-model="form.marca" class="form-input" placeholder="Ej: IKEA" /></div>
-          <div class="form-group"><label class="form-label">Modelo</label><input v-model="form.modelo" class="form-input" placeholder="Ej: Bekant" /></div>
-          <div class="form-group"><label class="form-label">Color</label><input v-model="form.color" class="form-input" placeholder="Ej: Café" /></div>
-          <div class="form-group"><label class="form-label">Sucursal</label><input v-model="form.sucursal_nombre" class="form-input" /></div>
-          <div class="form-group span-full"><label class="form-label">Observaciones</label><textarea v-model="form.observaciones" class="form-textarea" placeholder="Escriba cualquier observación relevante aquí..."></textarea></div>
-          <div class="form-group span-full"><label class="form-label">Características</label><textarea v-model="form.caracteristicas" class="form-textarea" placeholder="Escriba cualquier observación relevante aquí..."></textarea></div>
+          <div class="form-group"><label class="form-label">Marca <span class="required">*</span></label><input v-model="form.marca" class="form-input" placeholder="Ej: IKEA" required /></div>
+          <div class="form-group"><label class="form-label">Modelo <span class="required">*</span></label><input v-model="form.modelo" class="form-input" placeholder="Ej: Bekant" required="" /></div>
+          <div class="form-group"><label class="form-label">Color </label><input v-model="form.color" class="form-input" placeholder="Ej: Café" /></div>
+          <div class="form-group"><label class="form-label">Sucursal <span class="required">*</span></label><input v-model="form.sucursal_nombre" class="form-input" required="" /></div>
+          <div class="form-group span-full">
+            <label class="form-label">Observaciones</label>
+            <textarea v-model="form.observaciones" class="form-textarea" placeholder="Escriba cualquier observación relevante aquí..." maxlength="200"></textarea>
+            <small style="color:var(--gray-400);font-size:11px;">{{ form.observaciones.length }} / 200 — Campo opcional para observaciones</small>
+          </div>
+          <div class="form-group span-full">
+            <label class="form-label">Características</label>
+            <textarea v-model="form.caracteristicas" class="form-textarea" placeholder="Escriba cualquier observación relevante aquí..." maxlength="200"></textarea>
+            <small style="color:var(--gray-400);font-size:11px;">{{ form.caracteristicas.length }} / 200 — Campo opcional para detalles</small>
+
+          </div>
         </div>
       </form>
       <template #footer>
         <button class="btn btn-secondary" @click="showForm = false">Cancelar</button>
-        <button class="btn btn-primary" @click="saveItem" :disabled="saving">
+        <button class="btn btn-primary" type="submit" form="mobiliarioForm"  :disabled="saving">
           <span v-if="saving" class="spinner" style="width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:white;"></span>
           <span v-else>{{ editMode ? 'Crear' : 'Crear' }}</span>
         </button>

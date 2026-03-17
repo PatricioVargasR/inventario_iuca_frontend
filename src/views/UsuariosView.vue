@@ -80,18 +80,19 @@
 
     <!-- Form Modal -->
     <BaseModal v-model="showForm" :title="editMode ? 'Actualizar Responsable' : 'Nuevo Responsable'" size="sm">
-      <form @submit.prevent="saveItem">
+      <form id="usuariosForm" @submit.prevent="saveItem">
         <div class="form-grid">
           <div class="form-group">
-            <label class="form-label">Número de Nómina</label>
+            <label class="form-label">Número de Nómina </label>
             <div style="position:relative;">
               <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gray-400);font-weight:700;">#</span>
-              <input v-model="form.numero_nomina" class="form-input" placeholder="Opcional - 4 dígitos" style="padding-left:26px;" />
+              <input v-model="form.numero_nomina" class="form-input" placeholder="Opcional - 4 dígitos" style="padding-left:26px;" maxlength="4" />
             </div>
+            <small style="color:var(--gray-400);font-size:11px;">{{ form.numero_nomina.length }} / 04 — Campo opcional</small>
           </div>
           <div class="form-group">
-            <label class="form-label">Área de Adscripción</label>
-            <select v-model="form.area_id" class="form-select">
+            <label class="form-label">Área de Adscripción <span class="required">*</span></label>
+            <select v-model="form.area_id" class="form-select" required="">
               <option value="">Seleccionar área</option>
               <option v-for="a in catalogos.areas" :key="a.id_area" :value="a.id_area">{{ a.nombre_area }}</option>
             </select>
@@ -104,17 +105,17 @@
             </div>
           </div>
           <div class="form-group span-full">
-            <label class="form-label">Puesto</label>
+            <label class="form-label">Puesto <span class="required">*</span></label>
             <div style="position:relative;">
               <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gray-400);" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-              <input v-model="form.puesto" class="form-input" placeholder="Cargo que desempeña" style="padding-left:30px;" />
+              <input v-model="form.puesto" class="form-input" placeholder="Cargo que desempeña" style="padding-left:30px;" required />
             </div>
           </div>
         </div>
       </form>
       <template #footer>
         <button class="btn btn-secondary" @click="showForm = false">Cancelar</button>
-        <button class="btn btn-primary" @click="saveItem" :disabled="saving">
+        <button class="btn btn-primary" type="submit" form="usuariosForm" :disabled="saving">
           <span v-if="saving" class="spinner" style="width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:white;"></span>
           <span v-else>{{ editMode ? 'Actualizar Responsable' : 'Guardar Responsable' }}</span>
         </button>
