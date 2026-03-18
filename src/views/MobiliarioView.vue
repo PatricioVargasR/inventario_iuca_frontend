@@ -54,7 +54,7 @@
         <tbody>
           <tr v-if="loading" class="loading-row"><td colspan="9"><span class="spinner"></span></td></tr>
           <tr v-else-if="!items.length">
-            <td colspan="9"><div class="empty-state"><div class="empty-icon">🪑</div><p>No se encontró mobiliario</p></div></td>
+            <td colspan="9"><div class="empty-state"><div class="empty-icon"></div><p>No se encontró mobiliario</p></div></td>
           </tr>
           <tr v-else v-for="m in items" :key="m.id_mueble">
             <td><span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">MOB-{{ String(m.id_mueble).padStart(3,'0') }}</span></td>
@@ -85,7 +85,7 @@
     </div>
 
     <!-- Detail Modal -->
-    <BaseModal v-model="showDetail" title="Detalles del Equipo" size="lg">
+    <BaseModal v-model="showDetail" title="Detalles del equipo" size="lg">
       <template v-if="selected">
         <div class="detail-grid">
           <div class="detail-item"><label>ID</label><strong style="font-family:var(--font-mono)">MOB-{{ String(selected.id_mueble).padStart(3,'0') }}</strong></div>
@@ -121,7 +121,7 @@
     </BaseModal>
 
     <!-- Form Modal -->
-    <BaseModal v-model="showForm" :title="editMode ? 'Actualizar Mobiliario' : 'Nuevo Mobiliario'" size="lg">
+    <BaseModal v-model="showForm" :title="editMode ? 'Actualizar mobiliario' : 'Nuevo mobiliario'" size="lg">
       <form id="mobiliarioForm" @submit.prevent="saveItem">
         <div class="section-title" style="color:var(--primary);display:flex;align-items:center;gap:6px;">
           Información General
@@ -135,7 +135,7 @@
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Estado <span class="required">*</span></label>
+            <label class="form-label">Estado<span class="required">*</span></label>
             <select v-model="form.estado_id" class="form-select" required>
               <option value="">Seleccionar...</option>
               <option v-for="e in catalogos.estados" :key="e.id_estado" :value="e.id_estado">{{ e.nombre_estado }}</option>
@@ -181,7 +181,7 @@
 
     <ConfirmDialog
       v-model="showConfirm"
-      title="Eliminar Mobiliario"
+      title="Eliminar mobiliario"
       :message="`¿Estás seguro de eliminar el mobiliario '${toDelete?.tipo_mobiliario}'? Esta acción no se puede deshacer.`"
       :loading="deleting"
       @confirm="doDelete"

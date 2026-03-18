@@ -5,10 +5,10 @@
       <div class="login-logo">
         <span class="logo-bar"></span>
       </div>
-      <h1 class="login-title">Sistema de Inventario</h1>
+      <h1 class="login-title">Sistema de inventario</h1>
       <p class="login-org">IUCA – Tulancingo</p>
 
-      <h2 class="login-section">Iniciar Sesión</h2>
+      <h2 class="login-section">Iniciar sesión</h2>
 
       <form @submit.prevent="handleLogin" class="login-form">
         <div class="input-with-icon">

@@ -2,26 +2,26 @@
   <div class="page-container">
     <div class="page-header">
       <div>
-        <h1 class="page-title">Equipos de Cómputo</h1>
+        <h1 class="page-title">Equipos de cómputo</h1>
         <p class="page-subtitle">Gestión del inventario de equipos</p>
       </div>
       <button class="btn btn-primary" @click="openCreate">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Nuevo Equipo
+        Nuevo equipo
       </button>
     </div>
 
     <!-- Filtros -->
     <div class="filter-bar">
       <div class="filter-group search">
-        <label>Búsqueda General</label>
+        <label>Búsqueda general</label>
         <div class="input-with-icon">
           <svg class="input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input v-model="filters.search" class="form-input" placeholder="Buscar por marca, nombre..." @input="onSearch" />
         </div>
       </div>
       <div class="filter-group">
-        <label>Tipo de Equipo</label>
+        <label>Tipo de equipo</label>
         <select v-model="filters.tipo_activo_id" class="form-select" @change="loadData">
           <option value="">Todos los tipos</option>
           <option v-for="t in catalogos.tipos" :key="t.nombre_activo" :value="t.nombre_tipo">{{ t.nombre_tipo }}</option>
@@ -125,11 +125,11 @@
     <BaseModal v-model="showForm" :title="editMode ? 'Actualizar Equipo' : 'Nuevo Equipo'" size="lg">
       <form id="equipoForm" @submit.prevent="saveEquipo">
         <div class="section-title" style="color:var(--primary);display:flex;align-items:center;gap:6px;">
-          Información General
+          Información general
         </div>
         <div class="form-grid">
           <div class="form-group">
-            <label class="form-label">Tipo de Activo <span class="required">*</span></label>
+            <label class="form-label">Tipo de activo <span class="required">*</span></label>
             <select v-model="form.tipo_activo_id" class="form-select" required>
               <option value="">Seleccionar...</option>
               <option v-for="t in catalogos.tipos" :key="t.id_tipo_activo" :value="t.id_tipo_activo">{{ t.nombre_tipo }}</option>
@@ -143,7 +143,7 @@
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Nombre del Activo <span class="required">*</span></label>
+            <label class="form-label">Nombre del activo <span class="required">*</span></label>
             <input v-model="form.nombre_activo" class="form-input" placeholder="Ej: ThinkPad X1" required />
           </div>
           <div class="form-group">
@@ -161,7 +161,7 @@
         <div class="form-grid">
           <div class="form-group"><label class="form-label">Marca <span class="required">*</span></label><input v-model="form.marca" class="form-input" placeholder="Ej: Lenovo" required/></div>
           <div class="form-group"><label class="form-label">Modelo <span class="required">*</span></label><input v-model="form.modelo" class="form-input" placeholder="Ej: ThinkPad X1" required /></div>
-          <div class="form-group"><label class="form-label">Número de Serie <span class="required">*</span></label><input v-model="form.numero_serie" class="form-input" placeholder="Ej: ABC123XYZ456" required /></div>
+          <div class="form-group"><label class="form-label">Número de serie <span class="required">*</span></label><input v-model="form.numero_serie" class="form-input" placeholder="Ej: ABC123XYZ456" required /></div>
           <div class="form-group"><label class="form-label">Sucursal <span class="required">*</span></label><input v-model="form.sucursal_nombre" class="form-input" required /></div>
           <div class="form-group span-full">
             <label class="form-label">Observaciones</label>

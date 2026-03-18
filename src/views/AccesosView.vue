@@ -2,7 +2,7 @@
   <div class="page-container">
     <div class="page-header">
       <div>
-        <h1 class="page-title">Accesos al Sistema</h1>
+        <h1 class="page-title">Accesos al sistema</h1>
         <p class="page-subtitle">Usuarios con credenciales para acceder al sistema</p>
       </div>
       <button class="btn btn-primary" @click="openCreate">

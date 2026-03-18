@@ -58,7 +58,7 @@
     <div v-if="loading" style="text-align:center;padding:48px;"><span class="spinner" style="width:28px;height:28px;"></span></div>
 
     <div v-else-if="!grouped.length" class="card" style="padding:48px;text-align:center;color:var(--gray-400);">
-      <div style="font-size:36px;margin-bottom:12px;">📋</div>
+      <div style="font-size:36px;margin-bottom:12px;"></div>
       <p>No se encontraron movimientos en el rango seleccionado.</p>
     </div>
 

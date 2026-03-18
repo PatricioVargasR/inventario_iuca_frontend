@@ -7,13 +7,13 @@
       </div>
       <button class="btn btn-primary" @click="openCreate">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Nuevo Responsable
+        Nuevo responsable
       </button>
     </div>
 
     <div class="filter-bar">
       <div class="filter-group search">
-        <label>Búsqueda General</label>
+        <label>Búsqueda general</label>
         <div class="input-with-icon">
           <svg class="input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input v-model="filters.search" class="form-input" placeholder="Buscar por nombre, puesto..." @input="onSearch" />
@@ -62,7 +62,7 @@
     </div>
 
     <!-- Detail Modal -->
-    <BaseModal v-model="showDetail" title="Detalles del Responsable" size="sm">
+    <BaseModal v-model="showDetail" title="Detalles del responsable" size="sm">
       <template v-if="selected">
         <div class="detail-grid">
           <div class="detail-item"><label>ID</label><strong style="color:var(--primary);font-family:var(--font-mono)">ACC-{{ String(selected.id_usuario).padStart(3,'0') }}</strong></div>
@@ -79,11 +79,11 @@
     </BaseModal>
 
     <!-- Form Modal -->
-    <BaseModal v-model="showForm" :title="editMode ? 'Actualizar Responsable' : 'Nuevo Responsable'" size="sm">
+    <BaseModal v-model="showForm" :title="editMode ? 'Actualizar responsable' : 'Nuevo responsable'" size="sm">
       <form id="usuariosForm" @submit.prevent="saveItem">
         <div class="form-grid">
           <div class="form-group">
-            <label class="form-label">Número de Nómina </label>
+            <label class="form-label">Número de nómina </label>
             <div style="position:relative;">
               <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gray-400);font-weight:700;">#</span>
               <input v-model="form.numero_nomina" class="form-input" placeholder="Opcional - 4 dígitos" style="padding-left:26px;" maxlength="4" />
@@ -91,14 +91,14 @@
             <small style="color:var(--gray-400);font-size:11px;">{{ form.numero_nomina.length }} / 04 — Campo opcional</small>
           </div>
           <div class="form-group">
-            <label class="form-label">Área de Adscripción <span class="required">*</span></label>
+            <label class="form-label">Área de adscripción <span class="required">*</span></label>
             <select v-model="form.area_id" class="form-select" required="">
               <option value="">Seleccionar área</option>
               <option v-for="a in catalogos.areas" :key="a.id_area" :value="a.id_area">{{ a.nombre_area }}</option>
             </select>
           </div>
           <div class="form-group span-full">
-            <label class="form-label">Nombre Completo <span class="required">*</span></label>
+            <label class="form-label">Nombre completo <span class="required">*</span></label>
             <div style="position:relative;">
               <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gray-400);" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
               <input v-model="form.nombre_usuario" class="form-input" placeholder="Nombre completo del responsable" required style="padding-left:30px;" />
@@ -117,12 +117,12 @@
         <button class="btn btn-secondary" @click="showForm = false">Cancelar</button>
         <button class="btn btn-primary" type="submit" form="usuariosForm" :disabled="saving">
           <span v-if="saving" class="spinner" style="width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:white;"></span>
-          <span v-else>{{ editMode ? 'Actualizar Responsable' : 'Guardar Responsable' }}</span>
+          <span v-else>{{ editMode ? 'Actualizar responsable' : 'Guardar responsable' }}</span>
         </button>
       </template>
     </BaseModal>
 
-    <ConfirmDialog v-model="showConfirm" title="Eliminar Responsable" :message="`¿Estás seguro de eliminar el responsable '${toDelete?.nombre_usuario}'? Esta acción no se puede deshacer.`" :loading="deleting" @confirm="doDelete" />
+    <ConfirmDialog v-model="showConfirm" title="Eliminar responsable" :message="`¿Estás seguro de eliminar el responsable '${toDelete?.nombre_usuario}'? Esta acción no se puede deshacer.`" :loading="deleting" @confirm="doDelete" />
   </div>
 </template>
 

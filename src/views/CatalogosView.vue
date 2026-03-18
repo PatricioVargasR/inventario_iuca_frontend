@@ -2,7 +2,7 @@
   <div class="page-container">
     <div class="page-header">
       <div>
-        <h1 class="page-title">Catálogos del Sistema</h1>
+        <h1 class="page-title">Catálogos del sistema</h1>
         <p class="page-subtitle">Consultar catálogos y configuraciones</p>
       </div>
         <button class="btn btn-primary" @click="openCreate('tipo_activo')">
@@ -33,7 +33,7 @@
       <!-- Tipos de Activo -->
       <div class="catalog-card">
         <div class="catalog-card-header">
-          <span class="catalog-card-title">Tipos de Activo</span>
+          <span class="catalog-card-title">Tipos de activo</span>
         </div>
         <div v-if="loading.tipos" style="text-align:center;padding:20px;"><span class="spinner"></span></div>
         <div v-else>
@@ -69,7 +69,7 @@
       <!-- Tipos de Mobiliario -->
       <div class="catalog-card">
         <div class="catalog-card-header">
-          <span class="catalog-card-title">Tipos de Mobiliario</span>
+          <span class="catalog-card-title">Tipos de mobiliario</span>
         </div>
         <div v-if="loading.mobiliario" style="text-align:center;padding:20px;"><span class="spinner"></span></div>
         <div v-else>
@@ -92,19 +92,19 @@
       </div>
       <form id="catalogoForm" @submit.prevent="saveItem" class="form-grid">
         <div class="form-group">
-          <label class="form-label">Nombre del Tipo <span class="required">*</span></label>
+          <label class="form-label">Nombre del tipo <span class="required">*</span></label>
           <input v-model="form.nombre" class="form-input" :placeholder="namePlaceholder" required maxlength="30"/>
           <!-- <small style="color:var(--gray-400);font-size:11px;">{{ form.nombre.length }} / 30</small> -->
         </div>
         <div class="form-group">
-          <label class="form-label">Estado del Catálogo <span class="required">*</span></label>
+          <label class="form-label">Estado del catálogo <span class="required">*</span></label>
           <select v-model="form.estado_catalogo" class="form-select">
             <option value="activo">Activo</option>
             <option value="inactivo">Inactivo</option>
           </select>
         </div>
         <div v-if="currentType == 'estado'" class="form-group span-full">
-          <label class="form-label">Color del Estado <span class="required">*</span></label>
+          <label class="form-label">Color del estado <span class="required">*</span></label>
           <div style="display:flex; gap:10px; align-items:center;">
             <!-- Campo editable -->
             <input
@@ -138,7 +138,7 @@
         <button class="btn btn-secondary" @click="showForm = false">Cancelar</button>
         <button class="btn btn-primary" form="catalogoForm" type="submit" :disabled="saving">
           <span v-if="saving" class="spinner" style="width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:white;"></span>
-          <span v-else>Guardar Catálogo</span>
+          <span v-else>Guardar catálogo</span>
         </button>
       </template>
     </BaseModal>
@@ -148,10 +148,10 @@
       <template v-if="selected">
         <div class="detail-grid" style="grid-template-columns:1fr 1fr;">
           <div class="detail-item"><label>ID</label><strong style="color:var(--primary);font-family:var(--font-mono)">{{ selectedId }}</strong></div>
-          <div class="detail-item"><label>Tipo de Catálogo</label><strong>{{ currentTypeLabel }}</strong></div>
+          <div class="detail-item"><label>Tipo de catálogo</label><strong>{{ currentTypeLabel }}</strong></div>
           <div class="detail-item"><label>Nombre del tipo</label><strong>{{ selectedName }}</strong></div>
           <div class="detail-item">
-            <label>Estado del Catálogo</label>
+            <label>Estado del catálogo</label>
             <span
               :class=" selected.activo ? 'badge badge-success' : 'badge badge-danger'">
               {{ selected.activo ? 'Activo' : 'Inactivo'}}
