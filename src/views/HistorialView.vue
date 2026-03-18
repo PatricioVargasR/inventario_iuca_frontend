@@ -2,7 +2,7 @@
   <div class="page-container">
     <div class="page-header">
       <div>
-        <h1 class="page-title">Historial de Movimientos</h1>
+        <h1 class="page-title">Historial de movimientos</h1>
         <p class="page-subtitle">Registro completo de cambios y auditoría del sistema</p>
       </div>
     </div>
@@ -93,7 +93,7 @@
     </div>
 
     <!-- Detail Modal -->
-    <BaseModal v-model="showDetail" :title="`Detalles del Movimiento #${selected?.id_historial}`" :subtitle="selected ? formatFull(selected.fecha) : ''" size="lg">
+    <BaseModal v-model="showDetail" :title="`Detalles del movimiento #${selected?.id_historial}`" :subtitle="selected ? formatFull(selected.fecha) : ''" size="lg">
       <template v-if="selected">
         <div class="section-title" style="margin-top:0">INFORMACIÓN DEL MOVIMIENTO</div>
         <div class="card" style="padding:14px 16px;margin-bottom:14px;">

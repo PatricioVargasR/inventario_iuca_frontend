@@ -2,7 +2,7 @@
   <div class="page-container">
     <div class="page-header">
       <div>
-        <h1 class="page-title">Accesos al Sistema</h1>
+        <h1 class="page-title">Accesos al sistema</h1>
         <p class="page-subtitle">Usuarios con credenciales para acceder al sistema</p>
       </div>
       <button class="btn btn-primary" @click="openCreate">
@@ -16,7 +16,7 @@
       <div class="filters-row">
         <!-- Búsqueda -->
         <div class="filter-group search">
-          <label>Búsqueda General</label>
+          <label>Búsqueda general</label>
           <div class="input-with-icon">
             <svg class="input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input v-model="filters.search" class="form-input" placeholder="Buscar por nombre, puesto..." @input="onSearch" />
@@ -138,7 +138,7 @@
           <tbody>
             <tr v-for="p in selected.permisos" :key="p.modulo">
               <td><span style="text-transform: capitalize;">{{ p.modulo }}</span></td>
-<td>
+              <td>
                   <span
                     class="perm-icon"
                     :class="{ active: p.leer }"
@@ -208,7 +208,7 @@
     </BaseModal>
 
     <!-- Form Modal -->
-    <BaseModal v-model="showForm" :title="editMode ? 'Editar Acceso' : 'Registro de Acceso'" subtitle="Sistema de Inventario IUCA" size="lg">
+    <BaseModal v-model="showForm" :title="editMode ? 'Editar acceso' : 'Registro de acceso'" subtitle="Sistema de inventario IUCA" size="lg">
       <form id="accesosForm" @submit.prevent="saveItem">
         <div class="section-title" style="margin-top:0;color:var(--primary);display:flex;align-items:center;gap:6px;">
           INFORMACIÓN PERSONAL
@@ -333,7 +333,7 @@
       </template>
     </BaseModal>
 
-    <ConfirmDialog v-model="showConfirm" title="Eliminar Acceso" :message="`¿Estás seguro de eliminar el acceso '${toDelete?.nombre_usuario}'? Esta acción no se puede deshacer.`" :loading="deleting" @confirm="doDelete" />
+    <ConfirmDialog v-model="showConfirm" title="Eliminar acceso" :message="`¿Estás seguro de eliminar el acceso '${toDelete?.nombre_usuario}'? Esta acción no se puede deshacer.`" :loading="deleting" @confirm="doDelete" />
   </div>
 </template>
 

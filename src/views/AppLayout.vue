@@ -3,7 +3,7 @@
     <!-- Navbar -->
     <nav class="navbar">
       <div class="navbar-inner">
-        <RouterLink to="/accesos" class="nav-brand">Sistema de Inventario IUCA</RouterLink>
+        <RouterLink to="/accesos" class="nav-brand">Sistema de inventario IUCA</RouterLink>
 
         <div class="nav-links">
           <RouterLink
@@ -67,8 +67,6 @@ const navLinks = [
   { to: '/mobiliario', label: 'Mobiliario' },
   { to: '/usuarios', label: 'Responsables' },
 ]
-
-console.log(authStore)
 
 function toggleUserMenu() { userMenuOpen.value = !userMenuOpen.value }
 
