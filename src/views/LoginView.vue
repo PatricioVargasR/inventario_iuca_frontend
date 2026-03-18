@@ -47,7 +47,7 @@
 
         <button type="submit" class="btn btn-primary btn-block btn-lg" :disabled="authStore.loading" style="margin-top: 18px;">
           <span v-if="authStore.loading" class="spinner" style="width:16px;height:16px;border-width:2px;border-color:rgba(255,255,255,0.3);border-top-color:white;"></span>
-          <span v-else>Iniciar Sesión</span>
+          <span v-else>Iniciar sesión</span>
         </button>
       </form>
 
