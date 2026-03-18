@@ -18,7 +18,7 @@
           </div>
         </div>
         <div class="filter-group">
-          <label>Tipo de Registro</label>
+          <label>Tipo de registro</label>
           <select v-model="filters.tipo_registro" class="form-select" @change="loadData">
             <option value="">Todos</option>
             <option value="computo">Equipo</option>
@@ -28,7 +28,7 @@
           </select>
         </div>
         <div class="filter-group">
-          <label>Tipo de Movimiento</label>
+          <label>Tipo de movimiento</label>
           <select v-model="filters.tipo_movimiento" class="form-select" @change="loadData">
             <option value="">Todos</option>
             <option value="creacion">Creación</option>
@@ -37,11 +37,11 @@
           </select>
         </div>
         <div class="filter-group">
-          <label>Fecha Desde</label>
+          <label>Fecha desde</label>
           <input v-model="filters.fecha_desde" type="date" class="form-input" @change="loadData" />
         </div>
         <div class="filter-group">
-          <label>Fecha Hasta</label>
+          <label>Fecha hasta</label>
           <input v-model="filters.fecha_hasta" type="date" class="form-input" @change="loadData" />
         </div>
         <div class="filter-group">
@@ -98,12 +98,12 @@
         <div class="section-title" style="margin-top:0">INFORMACIÓN DEL MOVIMIENTO</div>
         <div class="card" style="padding:14px 16px;margin-bottom:14px;">
           <div class="detail-grid" style="grid-template-columns:1fr 1fr 1fr;">
-            <div class="detail-item"><label>Fecha y Hora</label><strong>{{ formatFull(selected.fecha) }}</strong></div>
-            <div class="detail-item"><label>Realizado Por</label><strong>{{ selected.realizado_por || 'Sistema' }}</strong></div>
-            <div class="detail-item"><label>ID Movimiento</label><strong style="font-family:var(--font-mono)">MOV-{{ String(selected.id_historial).padStart(4,'0') }}</strong></div>
-            <div class="detail-item"><label>Tipo de Registro</label><strong>{{ formatTableName(selected.tabla) }}</strong></div>
-            <div class="detail-item"><label>ID de Registro</label><strong style="font-family:var(--font-mono)">#{{ selected.registro_id }}</strong></div>
-            <div class="detail-item"><label>Tipo de Movimiento</label><span class="badge badge-primary" style="font-size:12px;">{{ formatOperation(selected.operacion) }}</span></div>
+            <div class="detail-item"><label>Fecha y hora</label><strong>{{ formatFull(selected.fecha) }}</strong></div>
+            <div class="detail-item"><label>Realizado por</label><strong>{{ selected.realizado_por || 'Sistema' }}</strong></div>
+            <div class="detail-item"><label>ID movimiento</label><strong style="font-family:var(--font-mono)">MOV-{{ String(selected.id_historial).padStart(4,'0') }}</strong></div>
+            <div class="detail-item"><label>Tipo de registro</label><strong>{{ formatTableName(selected.tabla) }}</strong></div>
+            <div class="detail-item"><label>ID de registro</label><strong style="font-family:var(--font-mono)">#{{ selected.registro_id }}</strong></div>
+            <div class="detail-item"><label>Tipo de movimiento</label><span class="badge badge-primary" style="font-size:12px;">{{ formatOperation(selected.operacion) }}</span></div>
           </div>
         </div>
 
@@ -317,7 +317,7 @@ onMounted(async () => {
     const res = await usuariosApi.listAccesos()
     usuarios.value = res.data
   } catch (error) {
-    console.error('Error loading usuarios:', error)
+    console.error('Error cargando usuarios:', error)
   }
 
   loadData()

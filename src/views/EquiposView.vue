@@ -56,7 +56,7 @@
         <tbody>
           <tr v-if="loading" class="loading-row"><td colspan="9"><span class="spinner"></span></td></tr>
           <tr v-else-if="!equipos.length">
-            <td colspan="9"><div class="empty-state"><div class="empty-icon">💻</div><p>No se encontraron equipos</p></div></td>
+            <td colspan="9"><div class="empty-state"><div class="empty-icon"></div><p>No se encontraron equipos</p></div></td>
           </tr>
           <tr v-else v-for="eq in equipos" :key="eq.id_activo">
             <td><span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">EQ{{ String(eq.id_activo).padStart(3,'0') }}</span></td>
@@ -87,7 +87,7 @@
     </div>
 
     <!-- Detail Modal -->
-    <BaseModal v-model="showDetail" title="Detalles del Equipo" size="lg">
+    <BaseModal v-model="showDetail" title="Detalles del equipo" size="lg">
       <template v-if="selected">
         <div class="detail-grid">
           <div class="detail-item"><label>ID</label><strong style="font-family:var(--font-mono)">{{ selected.id_activo }}</strong></div>
@@ -122,7 +122,7 @@
     </BaseModal>
 
     <!-- Create/Edit Modal -->
-    <BaseModal v-model="showForm" :title="editMode ? 'Actualizar Equipo' : 'Nuevo Equipo'" size="lg">
+    <BaseModal v-model="showForm" :title="editMode ? 'Actualizar equipo' : 'Nuevo equipo'" size="lg">
       <form id="equipoForm" @submit.prevent="saveEquipo">
         <div class="section-title" style="color:var(--primary);display:flex;align-items:center;gap:6px;">
           Información general
@@ -189,7 +189,7 @@
         <button class="btn btn-secondary" @click="showForm = false">Cancelar</button>
         <button class="btn btn-primary" form="equipoForm" type="submit" :disabled="saving">
           <span v-if="saving" class="spinner" style="width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:white;"></span>
-          <span v-else>{{ editMode ? 'Actualizar Equipo' : 'Crear' }}</span>
+          <span v-else>{{ editMode ? 'Actualizar equipo' : 'Crear' }}</span>
         </button>
       </template>
     </BaseModal>
@@ -197,7 +197,7 @@
     <!-- Confirm Delete -->
     <ConfirmDialog
       v-model="showConfirm"
-      :title="`Eliminar Equipo`"
+      :title="`Eliminar equipo`"
       :message="`¿Estás seguro de eliminar el equipo '${toDelete?.nombre_activo}'? Esta acción no se puede deshacer.`"
       :loading="deleting"
       @confirm="doDelete"

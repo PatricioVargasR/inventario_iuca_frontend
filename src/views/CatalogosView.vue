@@ -86,7 +86,7 @@
     </div>
 
     <!-- Create/Edit Modal -->
-    <BaseModal v-model="showForm" :title="editMode ? 'Actualizar Catálogo' : 'Nuevo Catálogo'" size="md">
+    <BaseModal v-model="showForm" :title="editMode ? 'Actualizar catálogo' : 'Nuevo catálogo'" size="md">
       <div class="tab-selector">
         <button v-for="t in catalogTypes" :key="t.key" type="button" class="tab-option" :class="{ active: currentType === t.key }" @click="currentType = t.key" :disabled="editMode">{{ t.label }}</button>
       </div>
@@ -144,7 +144,7 @@
     </BaseModal>
 
     <!-- Detail Modal -->
-    <BaseModal v-model="showDetail" title="Detalles del Responsable" size="sm">
+    <BaseModal v-model="showDetail" title="Detalles del responsable" size="sm">
       <template v-if="selected">
         <div class="detail-grid" style="grid-template-columns:1fr 1fr;">
           <div class="detail-item"><label>ID</label><strong style="color:var(--primary);font-family:var(--font-mono)">{{ selectedId }}</strong></div>

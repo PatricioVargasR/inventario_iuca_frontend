@@ -121,15 +121,15 @@
         <div class="section-title" style="margin-top:0;color:var(--primary)">INFORMACIÓN PERSONAL</div>
         <div class="detail-grid">
           <div class="detail-item"><label>ID</label><strong>{{ selected.id_acceso }}</strong></div>
-          <div class="detail-item"><label>Correo Electrónico</label><strong>{{ selected.correo_electronico }}</strong></div>
-          <div class="detail-item"><label>Nombre Completo</label><strong>{{ selected.nombre_usuario }}</strong></div>
-          <div class="detail-item"><label>Área Asignada</label><strong>{{ selected.area || '–' }}</strong></div>
+          <div class="detail-item"><label>Correo electrónico</label><strong>{{ selected.correo_electronico }}</strong></div>
+          <div class="detail-item"><label>Nombre completo</label><strong>{{ selected.nombre_usuario }}</strong></div>
+          <div class="detail-item"><label>Área asignada</label><strong>{{ selected.area || '–' }}</strong></div>
         </div>
         <div class="section-title" style="color:var(--primary)">INFORMACIÓN DE ACCESO</div>
         <div class="detail-grid" style="grid-template-columns:1fr 1fr 1fr;">
-          <div class="detail-item"><label>Fecha de Registro</label><strong>{{ selected.fecha_registro || '–' }}</strong></div>
-          <div class="detail-item"><label>Último Acceso</label><strong style="font-family:var(--font-mono);font-size:13px">{{ selected.ultimo_acceso || '–' }}</strong></div>
-          <div class="detail-item"><label>Cuenta Creada</label><strong>{{ selected.fecha_creacion?.slice(0,10) || '–' }}</strong></div>
+          <div class="detail-item"><label>Fecha de registro</label><strong>{{ selected.fecha_registro || '–' }}</strong></div>
+          <div class="detail-item"><label>Último acceso</label><strong style="font-family:var(--font-mono);font-size:13px">{{ selected.ultimo_acceso || '–' }}</strong></div>
+          <div class="detail-item"><label>Cuenta creada</label><strong>{{ selected.fecha_creacion?.slice(0,10) || '–' }}</strong></div>
         </div>
         <div class="section-title" style="color:var(--primary)">PERMISOS DEL ROL ASIGNADO</div>
         <div style="font-size:12.5px;color:var(--gray-500);margin-bottom:8px;">{{ selected.rol }} – Nivel {{ selected.nivel_acceso }}</div>
@@ -215,10 +215,10 @@
         </div>
         <div class="form-grid">
           <div class="form-group">
-            <label class="form-label">Nombre Completo <span class="required">*</span></label>
+            <label class="form-label">Nombre completo <span class="required">*</span></label>
             <input v-model="form.nombre_usuario" class="form-input" placeholder="Ej. Juan Pérez" required />
           </div>
-          <div class="form-group"><label class="form-label">Correo Electrónico <span class="required">*</span></label><input v-model="form.correo_electronico" class="form-input" type="email" placeholder="usuario@iuca.edu.mx" required :disabled="editMode" /></div>
+          <div class="form-group"><label class="form-label">Correo electrónico <span class="required">*</span></label><input v-model="form.correo_electronico" class="form-input" type="email" placeholder="usuario@iuca.edu.mx" required :disabled="editMode" /></div>
         </div>
         <div class="section-title" style="color:var(--primary);display:flex;align-items:center;gap:6px;">
           INFORMACIÓN DE ACCESO
@@ -234,11 +234,11 @@
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Confirmar Contraseña <span v-if="!editMode"  class="required">*</span></label>
+            <label class="form-label">Confirmar contraseña <span v-if="!editMode"  class="required">*</span></label>
             <input v-model="form.confirm_password" :type="showPass ? 'text' : 'password'" class="form-input" placeholder="••••••••" :required="!editMode" maxlength="10" minlength="10" />
           </div>
           <div class="form-group">
-            <label class="form-label">Área Asignada <span class="required">*</span></label>
+            <label class="form-label">Área asignada <span class="required">*</span></label>
             <select v-model="form.area_id" class="form-select" style="max-width:260px;" required>
               <option value="">Seleccionar área</option>
               <option v-for="a in catalogos.areas" :key="a.id_area" :value="a.id_area">{{ a.nombre_area }}</option>
@@ -328,7 +328,7 @@
         </button>
         <button class="btn btn-primary" form="accesosForm" type="submit" :disabled="saving">
           <span v-if="saving" class="spinner" style="width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:white;"></span>
-          <span v-else>{{ editMode ? 'Actualizar Usuario' : 'Registrar Usuario' }}</span>
+          <span v-else>{{ editMode ? 'Actualizar usuario' : 'Registrar usuario' }}</span>
         </button>
       </template>
     </BaseModal>
