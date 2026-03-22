@@ -1,40 +1,41 @@
 import api from './api'
 
-/**
- * Sistema de gestión de concurrencia en el frontend
- */
-
-// Cache de bloqueos activos
 const activeLocks = new Map()
-
-// Temporizadores para renovación de bloqueos
 const lockTimers = new Map()
 
 /**
- * Adquiere un bloqueo para editar un registro
+ * Adquirir bloqueo (edición o eliminación)
  */
-export async function acquireLock(tabla, registroId, duracionMinutos = 10) {
+export async function acquireLock(tabla, registroId, duracionMinutos = 10, tipoBloqueo = 'edicion') {
+  const key = `${tabla}:${registroId}`
+
   try {
     const res = await api.post('/concurrency/lock', {
       tabla,
       registro_id: registroId,
-      duracion_minutos: duracionMinutos
+      duracion_minutos: duracionMinutos,
+      tipo_bloqueo: tipoBloqueo
     })
 
-    const bloqueo = res.data.bloqueo
-    const lockKey = `${tabla}:${registroId}`
+    activeLocks.set(key, res.data.bloqueo)
 
-    // Guardar en cache
-    activeLocks.set(lockKey, bloqueo)
+    // Solo configurar renovación para bloqueos de edición (no para eliminación)
+    if (tipoBloqueo === 'edicion') {
+      const timerId = setInterval(async () => {
+        try {
+          await acquireLock(tabla, registroId, duracionMinutos, tipoBloqueo)
+        } catch (e) {
+          console.error('Error renovando bloqueo:', e)
+          clearInterval(timerId)
+          lockTimers.delete(key)
+          activeLocks.delete(key)
+        }
+      }, 5 * 60 * 1000) // 5 minutos
 
-    // Configurar renovación automática cada 5 minutos
-    const timer = setInterval(() => {
-      renewLock(tabla, registroId, duracionMinutos)
-    }, 5 * 60 * 1000) // 5 minutos
+      lockTimers.set(key, timerId)
+    }
 
-    lockTimers.set(lockKey, timer)
-
-    return { success: true, bloqueo }
+    return { success: true, bloqueo: res.data.bloqueo }
   } catch (error) {
     const errorData = error.response?.data
 
@@ -42,111 +43,75 @@ export async function acquireLock(tabla, registroId, duracionMinutos = 10) {
       return {
         success: false,
         locked: true,
-        bloqueo: errorData.bloqueo,
-        mensaje: errorData.mensaje
+        lockInfo: errorData.bloqueo
       }
     }
 
-    return {
-      success: false,
-      locked: false,
-      mensaje: errorData?.error || 'Error al adquirir bloqueo'
-    }
+    return { success: false, error: errorData?.mensaje || 'Error adquiriendo bloqueo' }
   }
 }
 
 /**
- * Renueva un bloqueo existente
- */
-async function renewLock(tabla, registroId, duracionMinutos = 10) {
-  try {
-    await api.post('/concurrency/lock', {
-      tabla,
-      registro_id: registroId,
-      duracion_minutos: duracionMinutos
-    })
-
-    console.log(`Bloqueo renovado: ${tabla}:${registroId}`)
-  } catch (error) {
-    console.error('Error renovando bloqueo:', error)
-  }
-}
-
-/**
- * Libera un bloqueo
+ * Liberar bloqueo
  */
 export async function releaseLock(tabla, registroId) {
-  const lockKey = `${tabla}:${registroId}`
+  const key = `${tabla}:${registroId}`
 
-  // Cancelar timer de renovación
-  const timer = lockTimers.get(lockKey)
-  if (timer) {
-    clearInterval(timer)
-    lockTimers.delete(lockKey)
+  const timerId = lockTimers.get(key)
+  if (timerId) {
+    clearInterval(timerId)
+    lockTimers.delete(key)
   }
 
-  // Remover de cache
-  activeLocks.delete(lockKey)
+  activeLocks.delete(key)
 
-  // Liberar en backend
   try {
     await api.post('/concurrency/unlock', {
       tabla,
       registro_id: registroId
     })
-
-    return true
+    return { success: true }
   } catch (error) {
     console.error('Error liberando bloqueo:', error)
-    return false
+    return { success: false }
   }
 }
 
 /**
- * Verifica si un registro está bloqueado
+ * Verificar estado de bloqueo
  */
 export async function checkLock(tabla, registroId) {
   try {
     const res = await api.get('/concurrency/check-lock', {
       params: { tabla, registro_id: registroId }
     })
-
     return res.data
   } catch (error) {
     console.error('Error verificando bloqueo:', error)
-    return { bloqueado: false, bloqueo: null }
+    return { locked: false }
   }
 }
 
 /**
- * Libera todos los bloqueos activos al cerrar sesión
+ * Liberar todos los bloqueos
  */
-export function releaseAllLocks() {
-  // Cancelar todos los timers
-  lockTimers.forEach(timer => clearInterval(timer))
+export async function releaseAllLocks() {
+  for (const [key, timerId] of lockTimers.entries()) {
+    clearInterval(timerId)
+  }
   lockTimers.clear()
 
-  // Liberar todos los bloqueos
   const promises = []
-  activeLocks.forEach((bloqueo, lockKey) => {
-    const [tabla, registroId] = lockKey.split(':')
-    promises.push(releaseLock(tabla, parseInt(registroId)))
-  })
-
-  activeLocks.clear()
-
-  return Promise.all(promises)
-}
-
-/**
- * Obtiene todos los bloqueos activos del usuario
- */
-export async function getMyLocks() {
-  try {
-    const res = await api.get('/concurrency/my-locks')
-    return res.data.bloqueos
-  } catch (error) {
-    console.error('Error obteniendo bloqueos:', error)
-    return []
+  for (const [key] of activeLocks.entries()) {
+    const [tabla, registroId] = key.split(':')
+    promises.push(
+      api.post('/concurrency/unlock', {
+        tabla,
+        registro_id: parseInt(registroId)
+      }).catch(e => console.error('Error liberando bloqueo:', e))
+    )
   }
+
+  await Promise.all(promises)
+  activeLocks.clear()
 }

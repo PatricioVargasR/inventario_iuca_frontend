@@ -226,6 +226,7 @@
       :message="`¿Estás seguro de eliminar el equipo '${toDelete?.nombre_activo}'? Esta acción no se puede deshacer.`"
       :loading="deleting"
       @confirm="doDelete"
+      @cancel="handleCancelDelete"
     />
 
     <!-- Concurrency Alert -->
@@ -302,6 +303,7 @@ const toDelete = ref(null)
 const editMode = ref(false)
 const saving = ref(false)
 const deleting = ref(false)
+const pendingDelete = ref(null) // Para manejar bloqueo de eliminación
 
 const lockWarning = ref(null)
 const currentLock = ref(null)
@@ -381,37 +383,49 @@ async function openEdit(eq) {
   editMode.value = true
   lockWarning.value = null
 
-  // Intentar adquirir bloqueo
-  const lockResult = await acquireLock('equipos_computo', eq.id_activo)
+  // Intentar adquirir bloqueo de edición
+  const lockResult = await acquireLock('equipos_computo', eq.id_activo, 10, 'edicion')
 
   if (!lockResult.success) {
-    // Otro usuario está editando
-    concurrencyAlert.title = 'Registro en Uso'
-    concurrencyAlert.message = lockResult.mensaje
-    concurrencyAlert.lockInfo = lockResult.bloqueo
-    concurrencyAlert.showRetry = true
-    showConcurrencyAlert.value = true
+    // Mostrar alerta si está bloqueado
+    if (lockResult.locked) {
+      const tipoAccion = lockResult.lockInfo.tipo_bloqueo === 'edicion' ? 'editando' : 'eliminando'
+      concurrencyAlert.title = 'Registro en Uso'
+      concurrencyAlert.message = `${lockResult.lockInfo.nombre_usuario} está ${tipoAccion} este equipo`
+      concurrencyAlert.lockInfo = lockResult.lockInfo
+      concurrencyAlert.showRetry = true
+      showConcurrencyAlert.value = true
+    } else {
+      alert(lockResult.error || 'Error al adquirir bloqueo')
+    }
     return
   }
 
+  // Bloqueo adquirido exitosamente
   currentLock.value = lockResult.bloqueo
 
   // Cargar datos del equipo
   const res = await equiposApi.get(eq.id_activo)
   const d = res.data
 
-  // Verificar si alguien más estaba editando
+  // Verificar si alguien más estaba editando antes
   if (d.editado_por && d.editado_por !== currentUserId.value) {
     lockWarning.value = `${d.nombre_editor} estaba editando este registro`
   }
 
+  // Llenar formulario
   Object.assign(form, {
-    tipo_activo_id: d.tipo_activo_id, estado_id: d.estado_id,
-    nombre_activo: d.nombre_activo, usuario_asignado_id: d.usuario_asignado_id || '',
-    marca: d.marca || '', modelo: d.modelo || '', numero_serie: d.numero_serie || '',
-    sucursal_nombre: d.sucursal_nombre || 'Tulancingo', observaciones: d.observaciones || '',
+    tipo_activo_id: d.tipo_activo_id,
+    estado_id: d.estado_id,
+    nombre_activo: d.nombre_activo,
+    usuario_asignado_id: d.usuario_asignado_id || '',
+    marca: d.marca || '',
+    modelo: d.modelo || '',
+    numero_serie: d.numero_serie || '',
+    sucursal_nombre: d.sucursal_nombre || 'Tulancingo',
+    observaciones: d.observaciones || '',
     especificaciones: d.especificaciones || [],
-    version: d.version // IMPORTANTE: Guardar versión
+    version: d.version
   })
   form._id = d.id_activo
   showForm.value = true
@@ -467,17 +481,56 @@ async function handleFormClose(shouldClose = true) {
   }
 }
 
-function confirmDelete(eq) { toDelete.value = eq; showConfirm.value = true }
+async function confirmDelete(eq) {
+  //
+  const lockResult = await acquireLock('equipos_computo', eq.id_activo, 0.5, 'eliminacion')
+
+  if (!lockResult.success) {
+    if (lockResult.locked) {
+
+      const tipoAccion = lockResult.lockInfo.tipo_bloqueo === 'edicion' ? 'editando' : 'eliminando'
+
+      concurrencyAlert.title = 'No se puede eliminar'
+      concurrencyAlert.message = `${lockResult.lockInfo.nombre_usuario} está ${tipoAccion} este equipo`
+      concurrencyAlert.lockInfo = lockResult.lockInfo
+      concurrencyAlert.showRetry = true
+      showConcurrencyAlert.value = true
+    } else {
+      alert(lockResult.error || 'Error al adquirir bloqueo')
+    }
+    return
+  }
+
+  pendingDelete.value = lockResult.bloqueo
+  toDelete.value = eq
+  showConfirm.value = true
+}
 
 async function doDelete() {
   deleting.value = true
   try {
+    // El bloqueo ya fue adquirido en confirmDelete
     await equiposApi.delete(toDelete.value.id_activo)
+
+    // Liberar bloqueo después de eliminar
+    if (pendingDelete.value) {
+      await releaseLock('equipos_computo', toDelete.value.id_activo)
+      pendingDelete.value = null
+    }
+
     showConfirm.value = false
     toDelete.value = null
     loadData()
-  } catch (e) { alert(e.response?.data?.error || 'Error al eliminar') }
-  finally { deleting.value = false }
+  } catch (e) {
+    // Liberar bloqueo en caso de error
+    if (pendingDelete.value) {
+      await releaseLock('equipos_computo', toDelete.value.id_activo)
+      pendingDelete.value = null
+    }
+    alert(e.response?.data?.error || 'Error al eliminar')
+  } finally {
+    deleting.value = false
+  }
 }
 
 // Handlers de concurrencia
@@ -487,10 +540,21 @@ function handleConcurrencyCancel() {
 
 async function handleConcurrencyRetry() {
   showConcurrencyAlert.value = false
+
   // Esperar un momento y reintentar
   setTimeout(() => {
-    const eq = equipos.value.find(e => e.id_activo === concurrencyAlert.lockInfo?.registro_id)
-    if (eq) openEdit(eq)
+    const registroId = concurrencyAlert.lockInfo?.registro_id
+    const eq = equipos.value.find(e => e.id_activo === registroId)
+
+    if (eq) {
+      // Si el alerta venía de un intento de eliminación
+      if (concurrencyAlert.title === 'No se puede eliminar') {
+        confirmDelete(eq)
+      } else {
+        // Si venía de edición
+        openEdit(eq)
+      }
+    }
   }, 1000)
 }
 
@@ -519,6 +583,15 @@ onBeforeUnmount(async () => {
     await releaseLock('equipos_computo', form._id)
   }
 })
+
+async function handleCancelDelete() {
+  if (pendingDelete.value && toDelete.value) {
+    await releaseLock('equipos_computo', toDelete.value.id_activo)
+    pendingDelete.value = null
+  }
+  toDelete.value = null
+  showConfirm.value = false
+}
 
 onMounted(() => { loadCatalogos(); loadData() })
 </script>
