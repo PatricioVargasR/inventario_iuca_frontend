@@ -13,15 +13,27 @@ api.interceptors.request.use(config => {
   return config
 })
 
-// Response interceptor → handle 401
+// Response interceptor → handle session invalidation
 api.interceptors.response.use(
   res => res,
   err => {
-    if (err.response?.status === 401) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
+    const errorData = err.response?.data
+
+    // Sesión invalidada desde otro dispositivo
+    if (errorData?.error === 'session_invalidated') {
+      // Limpiar TODO el localStorage
+      localStorage.clear()
+
+      // Redirigir a login con mensaje
+      window.location.href = '/login?session_invalidated=true'
+    }
+
+    // 401 genérico
+    if (err.response?.status === 401 && !errorData?.error) {
+      localStorage.clear()
       window.location.href = '/login'
     }
+
     return Promise.reject(err)
   }
 )
@@ -31,6 +43,7 @@ export const authApi = {
   login: (data) => api.post('/auth/login', data),
   me: () => api.get('/auth/me'),
   logout: () => api.post('/auth/logout')
+  // Eliminar forceLogout - ya no se usa
 }
 
 // ===== EQUIPOS =====
