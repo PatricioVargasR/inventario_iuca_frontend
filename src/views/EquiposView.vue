@@ -2,26 +2,26 @@
   <div class="page-container">
     <div class="page-header">
       <div>
-        <h1 class="page-title">Equipos de cómputo</h1>
+        <h1 class="page-title">Equipos de Cómputo</h1>
         <p class="page-subtitle">Gestión del inventario de equipos</p>
       </div>
       <button class="btn btn-primary" @click="openCreate">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Nuevo equipo
+        Nuevo Equipo
       </button>
     </div>
 
     <!-- Filtros -->
     <div class="filter-bar">
       <div class="filter-group search">
-        <label>Búsqueda general</label>
+        <label>Búsqueda General</label>
         <div class="input-with-icon">
           <svg class="input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input v-model="filters.search" class="form-input" placeholder="Buscar por marca, nombre..." @input="onSearch" />
         </div>
       </div>
       <div class="filter-group">
-        <label>Tipo de equipo</label>
+        <label>Tipo de Equipo</label>
         <select v-model="filters.tipo_activo_id" class="form-select" @change="loadData">
           <option value="">Todos los tipos</option>
           <option v-for="t in catalogos.tipos" :key="t.nombre_activo" :value="t.nombre_tipo">{{ t.nombre_tipo }}</option>
@@ -56,12 +56,20 @@
         <tbody>
           <tr v-if="loading" class="loading-row"><td colspan="9"><span class="spinner"></span></td></tr>
           <tr v-else-if="!equipos.length">
-            <td colspan="9"><div class="empty-state"><div class="empty-icon"></div><p>No se encontraron equipos</p></div></td>
+            <td colspan="9"><div class="empty-state"><div class="empty-icon">💻</div><p>No se encontraron equipos</p></div></td>
           </tr>
           <tr v-else v-for="eq in equipos" :key="eq.id_activo">
             <td><span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">EQ{{ String(eq.id_activo).padStart(3,'0') }}</span></td>
             <td>{{ eq.tipo_activo }}</td>
-            <td style="font-weight:600;color:var(--gray-800)">{{ eq.nombre_activo }}</td>
+            <td style="font-weight:600;color:var(--gray-800)">
+              {{ eq.nombre_activo }}
+              <!-- Indicador de edición activa -->
+              <span v-if="eq.editado_por && eq.editado_por !== currentUserId" class="editing-badge" :title="`${eq.nombre_editor} está editando`">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="12" r="10"/>
+                </svg>
+              </span>
+            </td>
             <td>{{ eq.marca || '–' }}</td>
             <td>{{ eq.modelo || '–' }}</td>
             <td><span style="font-family:var(--font-mono);font-size:12px">{{ eq.numero_serie || '–' }}</span></td>
@@ -72,7 +80,12 @@
                 <button class="action-btn view" @click="openDetail(eq)" title="Ver detalle">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
-                <button class="action-btn edit" @click="openEdit(eq)" title="Editar">
+                <button 
+                  class="action-btn edit"
+                  @click="openEdit(eq)"
+                  title="Editar"
+                  :disabled="eq.editado_por && eq.editado_por !== currentUserId"
+                >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
                 <button class="action-btn delete" @click="confirmDelete(eq)" title="Eliminar">
@@ -87,7 +100,7 @@
     </div>
 
     <!-- Detail Modal -->
-    <BaseModal v-model="showDetail" title="Detalles del equipo" size="lg">
+    <BaseModal v-model="showDetail" title="Detalles del Equipo" size="lg">
       <template v-if="selected">
         <div class="detail-grid">
           <div class="detail-item"><label>ID</label><strong style="font-family:var(--font-mono)">{{ selected.id_activo }}</strong></div>
@@ -122,14 +135,26 @@
     </BaseModal>
 
     <!-- Create/Edit Modal -->
-    <BaseModal v-model="showForm" :title="editMode ? 'Actualizar equipo' : 'Nuevo equipo'" size="lg">
+    <BaseModal v-model="showForm" :title="editMode ? 'Actualizar Equipo' : 'Nuevo Equipo'" size="lg" @update:model-value="handleFormClose">
+      <!-- Banner de advertencia si alguien más está editando -->
+      <div v-if="editMode && lockWarning" class="lock-warning">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <div>
+          <strong>Advertencia:</strong>
+          <span>{{ lockWarning }}</span>
+        </div>
+      </div>
+
       <form id="equipoForm" @submit.prevent="saveEquipo">
         <div class="section-title" style="color:var(--primary);display:flex;align-items:center;gap:6px;">
-          Información general
+          Información General
         </div>
         <div class="form-grid">
           <div class="form-group">
-            <label class="form-label">Tipo de activo <span class="required">*</span></label>
+            <label class="form-label">Tipo de Activo <span class="required">*</span></label>
             <select v-model="form.tipo_activo_id" class="form-select" required>
               <option value="">Seleccionar...</option>
               <option v-for="t in catalogos.tipos" :key="t.id_tipo_activo" :value="t.id_tipo_activo">{{ t.nombre_tipo }}</option>
@@ -143,7 +168,7 @@
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Nombre del activo <span class="required">*</span></label>
+            <label class="form-label">Nombre del Activo <span class="required">*</span></label>
             <input v-model="form.nombre_activo" class="form-input" placeholder="Ej: ThinkPad X1" required />
           </div>
           <div class="form-group">
@@ -161,7 +186,7 @@
         <div class="form-grid">
           <div class="form-group"><label class="form-label">Marca <span class="required">*</span></label><input v-model="form.marca" class="form-input" placeholder="Ej: Lenovo" required/></div>
           <div class="form-group"><label class="form-label">Modelo <span class="required">*</span></label><input v-model="form.modelo" class="form-input" placeholder="Ej: ThinkPad X1" required /></div>
-          <div class="form-group"><label class="form-label">Número de serie <span class="required">*</span></label><input v-model="form.numero_serie" class="form-input" placeholder="Ej: ABC123XYZ456" required /></div>
+          <div class="form-group"><label class="form-label">Número de Serie <span class="required">*</span></label><input v-model="form.numero_serie" class="form-input" placeholder="Ej: ABC123XYZ456" required /></div>
           <div class="form-group"><label class="form-label">Sucursal <span class="required">*</span></label><input v-model="form.sucursal_nombre" class="form-input" required /></div>
           <div class="form-group span-full">
             <label class="form-label">Observaciones</label>
@@ -186,10 +211,10 @@
         </div>
       </form>
       <template #footer>
-        <button class="btn btn-secondary" @click="showForm = false">Cancelar</button>
+        <button class="btn btn-secondary" @click="handleFormClose">Cancelar</button>
         <button class="btn btn-primary" form="equipoForm" type="submit" :disabled="saving">
           <span v-if="saving" class="spinner" style="width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:white;"></span>
-          <span v-else>{{ editMode ? 'Actualizar equipo' : 'Crear' }}</span>
+          <span v-else>{{ editMode ? 'Actualizar Equipo' : 'Crear' }}</span>
         </button>
       </template>
     </BaseModal>
@@ -197,21 +222,65 @@
     <!-- Confirm Delete -->
     <ConfirmDialog
       v-model="showConfirm"
-      :title="`Eliminar equipo`"
+      :title="`Eliminar Equipo`"
       :message="`¿Estás seguro de eliminar el equipo '${toDelete?.nombre_activo}'? Esta acción no se puede deshacer.`"
       :loading="deleting"
       @confirm="doDelete"
     />
+
+    <!-- Concurrency Alert -->
+    <ConcurrencyAlert
+      v-model="showConcurrencyAlert"
+      :title="concurrencyAlert.title"
+      :message="concurrencyAlert.message"
+      :lock-info="concurrencyAlert.lockInfo"
+      :show-retry="concurrencyAlert.showRetry"
+      @cancel="handleConcurrencyCancel"
+      @retry="handleConcurrencyRetry"
+    />
+
+    <!-- Conflict Resolution Modal -->
+    <BaseModal v-model="showConflictModal" title="Conflicto de Versión Detectado" size="lg">
+      <div class="conflict-warning">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <div>
+          <h4>El registro fue modificado por otro usuario</h4>
+          <p>Mientras editabas, otro usuario guardó cambios en este equipo. Puedes:</p>
+        </div>
+      </div>
+
+      <div class="conflict-options">
+        <div class="conflict-option">
+          <strong>Recargar datos actuales</strong>
+          <p>Descartar tus cambios y ver la versión más reciente del registro</p>
+        </div>
+      </div>
+
+      <template #footer>
+        <button class="btn btn-secondary" @click="handleConflictReload">
+          Recargar datos actuales
+        </button>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed, onBeforeUnmount } from 'vue'
 import { equiposApi, catalogosApi, usuariosApi, vistasApi } from '@/services/api'
+import { acquireLock, releaseLock } from '@/services/concurrency'
+import { useAuthStore } from '@/stores/auth'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
+import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
+
+const authStore = useAuthStore()
+const currentUserId = computed(() => authStore.user?.id_acceso)
 
 const equipos = ref([])
 const loading = ref(false)
@@ -225,17 +294,32 @@ const catalogos = reactive({ tipos: [], estados: [], usuarios: [] })
 const showDetail = ref(false)
 const showForm = ref(false)
 const showConfirm = ref(false)
+const showConcurrencyAlert = ref(false)
+const showConflictModal = ref(false)
+
 const selected = ref(null)
 const toDelete = ref(null)
 const editMode = ref(false)
 const saving = ref(false)
 const deleting = ref(false)
 
+const lockWarning = ref(null)
+const currentLock = ref(null)
+const conflictData = ref(null)
+
+const concurrencyAlert = reactive({
+  title: '',
+  message: '',
+  lockInfo: null,
+  showRetry: false,
+})
+
 const form = reactive({
   tipo_activo_id: '', estado_id: '', nombre_activo: '',
   usuario_asignado_id: '', marca: '', modelo: '',
   numero_serie: '', sucursal_nombre: 'Tulancingo',
-  observaciones: '', especificaciones: []
+  observaciones: '', especificaciones: [],
+  version: null // NUEVO: Para control de versiones
 })
 
 let searchTimeout = null
@@ -282,20 +366,52 @@ async function openDetail(eq) {
 
 function openCreate() {
   editMode.value = false
-  Object.assign(form, { tipo_activo_id: '', estado_id: '', nombre_activo: '', usuario_asignado_id: '', marca: '', modelo: '', numero_serie: '', sucursal_nombre: 'Tulancingo', observaciones: '', especificaciones: [] })
+  lockWarning.value = null
+  Object.assign(form, {
+    tipo_activo_id: '', estado_id: '', nombre_activo: '',
+    usuario_asignado_id: '', marca: '', modelo: '',
+    numero_serie: '', sucursal_nombre: 'Tulancingo',
+    observaciones: '', especificaciones: [],
+    version: null
+  })
   showForm.value = true
 }
 
 async function openEdit(eq) {
   editMode.value = true
+  lockWarning.value = null
+
+  // Intentar adquirir bloqueo
+  const lockResult = await acquireLock('equipos_computo', eq.id_activo)
+
+  if (!lockResult.success) {
+    // Otro usuario está editando
+    concurrencyAlert.title = 'Registro en Uso'
+    concurrencyAlert.message = lockResult.mensaje
+    concurrencyAlert.lockInfo = lockResult.bloqueo
+    concurrencyAlert.showRetry = true
+    showConcurrencyAlert.value = true
+    return
+  }
+
+  currentLock.value = lockResult.bloqueo
+
+  // Cargar datos del equipo
   const res = await equiposApi.get(eq.id_activo)
   const d = res.data
+
+  // Verificar si alguien más estaba editando
+  if (d.editado_por && d.editado_por !== currentUserId.value) {
+    lockWarning.value = `${d.nombre_editor} estaba editando este registro`
+  }
+
   Object.assign(form, {
     tipo_activo_id: d.tipo_activo_id, estado_id: d.estado_id,
     nombre_activo: d.nombre_activo, usuario_asignado_id: d.usuario_asignado_id || '',
     marca: d.marca || '', modelo: d.modelo || '', numero_serie: d.numero_serie || '',
     sucursal_nombre: d.sucursal_nombre || 'Tulancingo', observaciones: d.observaciones || '',
-    especificaciones: d.especificaciones || []
+    especificaciones: d.especificaciones || [],
+    version: d.version // IMPORTANTE: Guardar versión
   })
   form._id = d.id_activo
   showForm.value = true
@@ -307,15 +423,48 @@ function removeSpec(i) { form.especificaciones.splice(i, 1) }
 async function saveEquipo() {
   saving.value = true
   try {
-    if (editMode.value) {
-      await equiposApi.update(form._id, { ...form })
-    } else {
-      await equiposApi.create({ ...form })
+    const payload = {
+      ...form,
+      version: form.version // Enviar versión para validación
     }
-    showForm.value = false
+
+    if (editMode.value) {
+      await equiposApi.update(form._id, payload)
+    } else {
+      await equiposApi.create(payload)
+    }
+
+    await handleFormClose(true)
     loadData()
-  } catch (e) { alert(e.response?.data?.error || 'Error al guardar') }
-  finally { saving.value = false }
+  } catch (e) {
+    const errorData = e.response?.data
+
+    // Conflicto de versión
+    if (errorData?.error === 'conflict') {
+      conflictData.value = errorData
+      showConflictModal.value = true
+      saving.value = false
+      return
+    }
+
+    alert(errorData?.error || 'Error al guardar')
+  } finally {
+    saving.value = false
+  }
+}
+
+async function handleFormClose(shouldClose = true) {
+  // Liberar bloqueo si existe
+  if (currentLock.value && editMode.value) {
+    await releaseLock('equipos_computo', form._id)
+    currentLock.value = null
+  }
+
+  lockWarning.value = null
+
+  if (shouldClose) {
+    showForm.value = false
+  }
 }
 
 function confirmDelete(eq) { toDelete.value = eq; showConfirm.value = true }
@@ -331,5 +480,145 @@ async function doDelete() {
   finally { deleting.value = false }
 }
 
+// Handlers de concurrencia
+function handleConcurrencyCancel() {
+  showConcurrencyAlert.value = false
+}
+
+async function handleConcurrencyRetry() {
+  showConcurrencyAlert.value = false
+  // Esperar un momento y reintentar
+  setTimeout(() => {
+    const eq = equipos.value.find(e => e.id_activo === concurrencyAlert.lockInfo?.registro_id)
+    if (eq) openEdit(eq)
+  }, 1000)
+}
+
+// Handlers de conflicto
+async function handleConflictReload() {
+  // Recargar datos actuales
+  const res = await equiposApi.get(form._id)
+  const d = res.data
+
+  Object.assign(form, {
+    tipo_activo_id: d.tipo_activo_id, estado_id: d.estado_id,
+    nombre_activo: d.nombre_activo, usuario_asignado_id: d.usuario_asignado_id || '',
+    marca: d.marca || '', modelo: d.modelo || '', numero_serie: d.numero_serie || '',
+    sucursal_nombre: d.sucursal_nombre || 'Tulancingo', observaciones: d.observaciones || '',
+    especificaciones: d.especificaciones || [],
+    version: d.version // Actualizar versión
+  })
+
+  showConflictModal.value = false
+  alert('Datos recargados. Por favor verifica los cambios antes de guardar.')
+}
+
+// Limpiar bloqueos al salir
+onBeforeUnmount(async () => {
+  if (currentLock.value && form._id) {
+    await releaseLock('equipos_computo', form._id)
+  }
+})
+
 onMounted(() => { loadCatalogos(); loadData() })
 </script>
+
+<style scoped>
+.editing-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  color: #f59e0b;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.lock-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  color: #92400e;
+}
+
+.lock-warning svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.lock-warning strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.lock-warning span {
+  font-size: 12px;
+}
+
+.conflict-warning {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  background: #fef3c7;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.conflict-warning svg {
+  color: #d97706;
+  flex-shrink: 0;
+}
+
+.conflict-warning h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 6px;
+}
+
+.conflict-warning p {
+  font-size: 13px;
+  color: var(--gray-600);
+  margin: 0;
+}
+
+.conflict-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.conflict-option {
+  padding: 14px;
+  background: var(--gray-50);
+  border-radius: 8px;
+  border: 1px solid var(--gray-200);
+}
+
+.conflict-option strong {
+  display: block;
+  font-size: 14px;
+  color: var(--gray-900);
+  margin-bottom: 4px;
+}
+
+.conflict-option p {
+  font-size: 12px;
+  color: var(--gray-600);
+  margin: 0;
+}
+
+.action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+</style>
