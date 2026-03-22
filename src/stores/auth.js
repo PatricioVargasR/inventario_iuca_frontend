@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authApi } from '@/services/api'
-// import { releaseAllLocks } from '@/services/concurrency'
+import { releaseAllLocks } from '@/services/concurrency'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(JSON.parse(localStorage.getItem('user') || 'null'))
@@ -57,11 +57,11 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function logout() {
     // Liberar todos los bloqueos antes de cerrar sesión
-    // try {
-    //   await releaseAllLocks()
-    // } catch (e) {
-    //   console.error('Error liberando bloqueos:', e)
-    // }
+    try {
+      await releaseAllLocks()
+    } catch (e) {
+      console.error('Error liberando bloqueos:', e)
+    }
 
     // Cerrar sesión en backend
     try {

@@ -43,7 +43,6 @@ export const authApi = {
   login: (data) => api.post('/auth/login', data),
   me: () => api.get('/auth/me'),
   logout: () => api.post('/auth/logout')
-  // Eliminar forceLogout - ya no se usa
 }
 
 // ===== EQUIPOS =====
@@ -159,4 +158,12 @@ export const vistasApi = {
     return api.get('/historial/estadisticas')
   }
 
+}
+
+export const concurrencyApi = {
+  acquireLock: (data) => api.post('/concurrency/lock', data),
+  releaseLock: (data) => api.post('/concurrency/unlock', data),
+  checkLock: (params) => api.get('/concurrency/check-lock', { params }),
+  getActiveLocks: () => api.get('/concurrency/active-locks'),
+  getMyLocks: () => api.get('/concurrency/my-locks')
 }
