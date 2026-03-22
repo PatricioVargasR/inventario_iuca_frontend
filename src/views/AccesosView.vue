@@ -14,7 +14,6 @@
     <!-- Filtros Unificados -->
     <div class="filters-card">
       <div class="filters-row">
-        <!-- Búsqueda -->
         <div class="filter-group search">
           <label>Búsqueda general</label>
           <div class="input-with-icon">
@@ -22,7 +21,6 @@
             <input v-model="filters.search" class="form-input" placeholder="Buscar por nombre, puesto..." @input="onSearch" />
           </div>
         </div>
-        <!-- Área -->
         <div class="filter-group">
           <label>Áreas</label>
           <select v-model="filters.area_id" class="form-select" @change="loadData">
@@ -36,21 +34,10 @@
 
       <!-- Módulos -->
       <div class="filter-chips-section">
-        <label class="filter-label">
-          Módulos
-        </label>
+        <label class="filter-label">Módulos</label>
         <div class="chips-group">
-          <label
-            v-for="(value, key) in modulos_disponibles"
-            :key="key"
-            class="chip-checkbox"
-          >
-            <input
-              type="checkbox"
-              :value="key"
-              v-model="filters.modulos"
-              @change="onModuloChange"
-            />
+          <label v-for="(value, key) in modulos_disponibles" :key="key" class="chip-checkbox">
+            <input type="checkbox" :value="key" v-model="filters.modulos" @change="onModuloChange" />
             <span class="chip-text">{{ value }}</span>
           </label>
         </div>
@@ -69,13 +56,7 @@
             class="chip-checkbox"
             :class="{ disabled: filters.modulos.length === 0 }"
           >
-            <input
-              type="checkbox"
-              :value="key"
-              v-model="filters.permisos"
-              @change="loadData"
-              :disabled="filters.modulos.length === 0"
-            />
+            <input type="checkbox" :value="key" v-model="filters.permisos" @change="loadData" :disabled="filters.modulos.length === 0" />
             <span class="chip-text">{{ value }}</span>
           </label>
         </div>
@@ -138,66 +119,10 @@
           <tbody>
             <tr v-for="p in selected.permisos" :key="p.modulo">
               <td><span style="text-transform: capitalize;">{{ p.modulo }}</span></td>
-              <td>
-                  <span
-                    class="perm-icon"
-                    :class="{ active: p.leer }"
-                  >
-                    <svg v-if="p.leer" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                      <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-
-                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                  </span>
-                </td>
-                <td>
-                  <span
-                    class="perm-icon"
-                    :class="{ active: p.crear }"
-                  >
-                    <svg v-if="p.crear" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                      <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-
-                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                  </span>
-                </td>
-                <td>
-                  <span
-                    class="perm-icon"
-                    :class="{ active: p.actualizar }"
-                  >
-                    <svg v-if="p.actualizar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                      <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-
-                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                  </span>
-                </td>
-                <td>
-                  <span
-                    class="perm-icon"
-                    :class="{ active: p.eliminar }"
-                  >
-                    <svg v-if="p.eliminar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                      <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-
-                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                  </span>
-                </td>
+              <td><span class="perm-icon" :class="{ active: p.leer }"><svg v-if="p.leer" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
+              <td><span class="perm-icon" :class="{ active: p.crear }"><svg v-if="p.crear" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
+              <td><span class="perm-icon" :class="{ active: p.actualizar }"><svg v-if="p.actualizar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
+              <td><span class="perm-icon" :class="{ active: p.eliminar }"><svg v-if="p.eliminar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
             </tr>
           </tbody>
         </table>
@@ -208,7 +133,19 @@
     </BaseModal>
 
     <!-- Form Modal -->
-    <BaseModal v-model="showForm" :title="editMode ? 'Editar acceso' : 'Registro de acceso'" subtitle="Sistema de inventario IUCA" size="lg">
+    <BaseModal v-model="showForm" :title="editMode ? 'Editar acceso' : 'Registro de acceso'" subtitle="Sistema de inventario IUCA" size="lg" @update:model-value="handleFormClose">
+      <!-- Banner de advertencia si alguien más está editando -->
+      <div v-if="editMode && lockWarning" class="lock-warning">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <div>
+          <strong>Advertencia:</strong>
+          <span>{{ lockWarning }}</span>
+        </div>
+      </div>
+
       <form id="accesosForm" @submit.prevent="saveItem">
         <div class="section-title" style="margin-top:0;color:var(--primary);display:flex;align-items:center;gap:6px;">
           INFORMACIÓN PERSONAL
@@ -218,7 +155,10 @@
             <label class="form-label">Nombre completo <span class="required">*</span></label>
             <input v-model="form.nombre_usuario" class="form-input" placeholder="Ej. Juan Pérez" required />
           </div>
-          <div class="form-group"><label class="form-label">Correo electrónico <span class="required">*</span></label><input v-model="form.correo_electronico" class="form-input" type="email" placeholder="usuario@iuca.edu.mx" required :disabled="editMode" /></div>
+          <div class="form-group">
+            <label class="form-label">Correo electrónico <span class="required">*</span></label>
+            <input v-model="form.correo_electronico" class="form-input" type="email" placeholder="usuario@iuca.edu.mx" required :disabled="editMode" />
+          </div>
         </div>
         <div class="section-title" style="color:var(--primary);display:flex;align-items:center;gap:6px;">
           INFORMACIÓN DE ACCESO
@@ -234,7 +174,7 @@
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Confirmar contraseña <span v-if="!editMode"  class="required">*</span></label>
+            <label class="form-label">Confirmar contraseña <span v-if="!editMode" class="required">*</span></label>
             <input v-model="form.confirm_password" :type="showPass ? 'text' : 'password'" class="form-input" placeholder="••••••••" :required="!editMode" maxlength="10" minlength="10" />
           </div>
           <div class="form-group">
@@ -246,83 +186,23 @@
           </div>
         </div>
         <div style="margin-top:4px;">
-        <div class="section-title" style="color:var(--primary); margin-top: 20px;">PERMISOS DEL ROL ASIGNADO</div>
+          <div class="section-title" style="color:var(--primary); margin-top: 20px;">PERMISOS DEL ROL ASIGNADO</div>
           <table class="permissions-table">
             <thead><tr><th>MÓDULO</th><th>LEER</th><th>CREAR</th><th>EDITAR</th><th>ELIMINAR</th></tr></thead>
             <tbody>
               <tr v-for="p in form.permisos" :key="p.modulo">
                 <td>{{ p.modulo }}</td>
-                <td>
-                  <span
-                    class="perm-icon"
-                    :class="{ active: p.puede_leer }"
-                    @click="p.puede_leer = !p.puede_leer"
-                  >
-                    <svg v-if="p.puede_leer" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                      <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-
-                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                  </span>
-                </td>
-                <td>
-                  <span
-                    class="perm-icon"
-                    :class="{ active: p.puede_crear }"
-                    @click="p.puede_crear = !p.puede_crear"
-                  >
-                    <svg v-if="p.puede_crear" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                      <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-
-                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                  </span>
-                </td>
-                <td>
-                  <span
-                    class="perm-icon"
-                    :class="{ active: p.puede_actualizar }"
-                    @click="p.puede_actualizar = !p.puede_actualizar"
-                  >
-                    <svg v-if="p.puede_actualizar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                      <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-
-                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                  </span>
-                </td>
-                <td>
-                  <span
-                    class="perm-icon"
-                    :class="{ active: p.puede_eliminar }"
-                    @click="p.puede_eliminar = !p.puede_eliminar"
-                  >
-                    <svg v-if="p.puede_eliminar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                      <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-
-                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                  </span>
-                </td>
+                <td><span class="perm-icon" :class="{ active: p.puede_leer }" @click="p.puede_leer = !p.puede_leer"><svg v-if="p.puede_leer" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
+                <td><span class="perm-icon" :class="{ active: p.puede_crear }" @click="p.puede_crear = !p.puede_crear"><svg v-if="p.puede_crear" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
+                <td><span class="perm-icon" :class="{ active: p.puede_actualizar }" @click="p.puede_actualizar = !p.puede_actualizar"><svg v-if="p.puede_actualizar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
+                <td><span class="perm-icon" :class="{ active: p.puede_eliminar }" @click="p.puede_eliminar = !p.puede_eliminar"><svg v-if="p.puede_eliminar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
               </tr>
             </tbody>
           </table>
         </div>
       </form>
       <template #footer>
-        <button class="btn btn-secondary" @click="showForm = false">
+        <button class="btn btn-secondary" @click="handleFormClose">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
           Cancelar
         </button>
@@ -333,17 +213,65 @@
       </template>
     </BaseModal>
 
-    <ConfirmDialog v-model="showConfirm" title="Eliminar acceso" :message="`¿Estás seguro de eliminar el acceso '${toDelete?.nombre_usuario}'? Esta acción no se puede deshacer.`" :loading="deleting" @confirm="doDelete" />
+    <ConfirmDialog
+      v-model="showConfirm"
+      title="Eliminar acceso"
+      :message="`¿Estás seguro de eliminar el acceso '${toDelete?.nombre_usuario}'? Esta acción no se puede deshacer.`"
+      :loading="deleting"
+      @confirm="doDelete"
+      @cancel="handleCancelDelete"
+    />
+
+    <!-- Concurrency Alert -->
+    <ConcurrencyAlert
+      v-model="showConcurrencyAlert"
+      :title="concurrencyAlert.title"
+      :message="concurrencyAlert.message"
+      :lock-info="concurrencyAlert.lockInfo"
+      :show-retry="concurrencyAlert.showRetry"
+      @cancel="handleConcurrencyCancel"
+      @retry="handleConcurrencyRetry"
+    />
+
+    <!-- Conflict Resolution Modal -->
+    <BaseModal v-model="showConflictModal" title="Conflicto de Versión Detectado" size="lg">
+      <div class="conflict-warning">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <div>
+          <h4>El registro fue modificado por otro usuario</h4>
+          <p>Mientras editabas, otro usuario guardó cambios en este acceso. Puedes:</p>
+        </div>
+      </div>
+      <div class="conflict-options">
+        <div class="conflict-option">
+          <strong>Recargar datos actuales</strong>
+          <p>Descartar tus cambios y ver la versión más reciente del registro</p>
+        </div>
+      </div>
+      <template #footer>
+        <button class="btn btn-secondary" @click="handleConflictReload">
+          Recargar datos actuales
+        </button>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { usuariosApi, catalogosApi } from '@/services/api'
+import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
+import { usuariosApi, catalogosApi, vistasApi } from '@/services/api'
+import { acquireLock, releaseLock } from '@/services/concurrency'
+import { useAuthStore } from '@/stores/auth'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
+import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
 import Pagination from '@/components/ui/Pagination.vue'
-import { vistasApi } from '../services/api'
+
+const authStore = useAuthStore()
+const currentUserId = computed(() => authStore.user?.id_acceso)
 
 const items = ref([])
 const loading = ref(false)
@@ -352,20 +280,36 @@ const total = ref(0)
 const totalPages = ref(1)
 const filters = reactive({
   search: '',
-  modulos: [],  // Cambio: ahora es un array
+  modulos: [],
   permisos: [],
   area_id: ''
 })
 const catalogos = reactive({ areas: [] })
+
 const showDetail = ref(false)
 const showForm = ref(false)
 const showConfirm = ref(false)
+const showConcurrencyAlert = ref(false)
+const showConflictModal = ref(false)
+
 const selected = ref(null)
 const toDelete = ref(null)
 const editMode = ref(false)
 const saving = ref(false)
 const deleting = ref(false)
+const pendingDelete = ref(null)
 const showPass = ref(false)
+
+const lockWarning = ref(null)
+const currentLock = ref(null)
+const conflictData = ref(null)
+
+const concurrencyAlert = reactive({
+  title: '',
+  message: '',
+  lockInfo: null,
+  showRetry: false,
+})
 
 const modulos_disponibles = {
   'computo': 'Cómputo',
@@ -384,20 +328,22 @@ const permisos_disponibles = {
 }
 
 const defaultPermisos = [
-  { modulo: 'computo', puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
-  { modulo: 'mobiliario', puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
+  { modulo: 'computo',     puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
+  { modulo: 'mobiliario',  puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
   { modulo: 'responsable', puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
-  { modulo: 'catalogos', puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
-  { modulo: 'historial', puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
-  { modulo: 'acceso', puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false }
+  { modulo: 'catalogos',   puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
+  { modulo: 'historial',   puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
+  { modulo: 'acceso',      puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false }
 ]
+
 const form = reactive({
   nombre_usuario: '',
   correo_electronico: '',
   password: '',
   confirm_password: '',
   area_id: '',
-  permisos: JSON.parse(JSON.stringify(defaultPermisos)) 
+  permisos: JSON.parse(JSON.stringify(defaultPermisos)),
+  version: null
 })
 
 let searchTimeout = null
@@ -417,17 +363,12 @@ async function loadData() {
   loading.value = true
   try {
     const params = { page: page.value, per_page: 20 }
-
     if (filters.search) params.search = filters.search
     if (filters.area_id) params.area_id = filters.area_id
-
     const permisosObj = Object.fromEntries(
       filters.modulos.map(m => [m, filters.permisos])
     )
-
     params.permisos = JSON.stringify(permisosObj)
-
-
     const res = await vistasApi.listAccesos(params)
     items.value = res.data.accesos
     total.value = res.data.total
@@ -439,52 +380,88 @@ async function loadData() {
   }
 }
 
-function onSearch() { 
+function onSearch() {
   clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(loadData, 400) 
+  searchTimeout = setTimeout(loadData, 400)
 }
 
-function onPageChange(p) { 
+function onPageChange(p) {
   page.value = p
-  loadData() 
+  loadData()
+}
+
+function onModuloChange() {
+  if (filters.modulos.length === 0) filters.permisos = []
+  loadData()
 }
 
 async function openDetail(acc) {
   try {
     const res = await vistasApi.getAcceso(acc.id_acceso)
     selected.value = res.data
-  } catch { 
-    selected.value = acc 
+  } catch {
+    selected.value = acc
   }
   showDetail.value = true
 }
 
 function openCreate() {
   editMode.value = false
-  Object.assign(form, { 
-    nombre_usuario: '', 
-    correo_electronico: '', 
-    password: '', 
-    confirm_password: '', 
-    area_id: '', 
-    permisos: JSON.parse(JSON.stringify(defaultPermisos))
+  lockWarning.value = null
+  Object.assign(form, {
+    nombre_usuario: '',
+    correo_electronico: '',
+    password: '',
+    confirm_password: '',
+    area_id: '',
+    permisos: JSON.parse(JSON.stringify(defaultPermisos)),
+    version: null
   })
   showForm.value = true
 }
 
 async function openEdit(acc) {
   editMode.value = true
+  lockWarning.value = null
+
+  const lockResult = await acquireLock('acceso', acc.id_acceso, 10, 'edicion')
+
+  if (!lockResult.success) {
+    if (lockResult.locked) {
+      concurrencyAlert.title = 'Registro en Uso'
+      concurrencyAlert.message = lockResult.lockInfo.tipo_bloqueo === 'edicion'
+        ? `${lockResult.lockInfo.nombre_usuario} está editando este acceso`
+        : `No puedes editar este acceso porque ${lockResult.lockInfo.nombre_usuario} lo está eliminando`
+      concurrencyAlert.lockInfo = lockResult.lockInfo
+      concurrencyAlert.showRetry = true
+      showConcurrencyAlert.value = true
+    } else {
+      alert(lockResult.error || 'Error al adquirir bloqueo')
+    }
+    return
+  }
+
+  currentLock.value = lockResult.bloqueo
+
+  // ✅ usuariosApi.getAcceso en lugar de accesosApi.get
   const res = await usuariosApi.getAcceso(acc.id_acceso)
   const d = res.data
-  Object.assign(form, { 
-    nombre_usuario: d.nombre_usuario, 
-    correo_electronico: d.correo_electronico, 
-    area_id: d.area_id || '', 
-    password: '', 
-    confirm_password: '', 
-    permisos: d.permisos 
+
+  if (d.editado_por && d.editado_por !== currentUserId.value) {
+    lockWarning.value = `${d.nombre_editor} estaba editando este registro`
+  }
+
+  Object.assign(form, {
+    nombre_usuario: d.nombre_usuario,
+    correo_electronico: d.correo_electronico,
+    area_id: d.area_id || '',
+    password: '',
+    confirm_password: '',
+    permisos: d.permisos ? JSON.parse(JSON.stringify(d.permisos)) : JSON.parse(JSON.stringify(defaultPermisos)),
+    version: d.version,
+    _id: d.id_acceso
   })
-  form._id = acc.id_acceso
+
   showForm.value = true
 }
 
@@ -499,42 +476,130 @@ async function saveItem() {
       nombre_usuario: form.nombre_usuario,
       correo_electronico: form.correo_electronico,
       area_id: form.area_id,
-      permisos: form.permisos
+      permisos: form.permisos,
+      version: form.version
     }
     if (form.password) payload.password = form.password
 
     if (editMode.value) {
+      // ✅ usuariosApi.updateAcceso en lugar de accesosApi.update
       await usuariosApi.updateAcceso(form._id, payload)
     } else {
+      // ✅ usuariosApi.createAcceso en lugar de accesosApi.create
       await usuariosApi.createAcceso(payload)
     }
 
-    showForm.value = false
+    await handleFormClose(true)
     loadData()
   } catch (e) {
-    alert(e.response?.data?.error || 'Error al guardar') 
+    const errorData = e.response?.data
+    if (errorData?.error === 'conflict') {
+      conflictData.value = errorData
+      showConflictModal.value = true
+      saving.value = false
+      return
+    }
+    alert(errorData?.error || 'Error al guardar')
   } finally {
     saving.value = false
   }
 }
 
-function confirmDelete(acc) { 
+async function handleFormClose(shouldClose = true) {
+  if (currentLock.value && editMode.value) {
+    await releaseLock('acceso', form._id)
+    currentLock.value = null
+  }
+  lockWarning.value = null
+  if (shouldClose) showForm.value = false
+}
+
+async function confirmDelete(acc) {
+  const lockResult = await acquireLock('acceso', acc.id_acceso, 2, 'eliminacion')
+
+  if (!lockResult.success) {
+    if (lockResult.locked) {
+      concurrencyAlert.title = 'No se puede eliminar'
+      concurrencyAlert.message = lockResult.lockInfo.tipo_bloqueo === 'edicion'
+        ? `No puedes eliminar este acceso porque ${lockResult.lockInfo.nombre_usuario} lo está editando`
+        : `${lockResult.lockInfo.nombre_usuario} ya está eliminando este acceso`
+      concurrencyAlert.lockInfo = lockResult.lockInfo
+      concurrencyAlert.showRetry = true
+      showConcurrencyAlert.value = true
+    } else {
+      alert(lockResult.error || 'Error al adquirir bloqueo')
+    }
+    return
+  }
+
+  pendingDelete.value = lockResult.bloqueo
   toDelete.value = acc
-  showConfirm.value = true 
+  showConfirm.value = true
 }
 
 async function doDelete() {
   deleting.value = true
-  try { 
+  try {
+    // ✅ usuariosApi.deleteAcceso en lugar de accesosApi.delete
     await usuariosApi.deleteAcceso(toDelete.value.id_acceso)
+    if (pendingDelete.value) {
+      await releaseLock('acceso', toDelete.value.id_acceso)
+      pendingDelete.value = null
+    }
     showConfirm.value = false
     toDelete.value = null
-    loadData() 
-  } catch (e) { 
-    alert(e.response?.data?.error || 'Error') 
-  } finally { 
-    deleting.value = false 
+    loadData()
+  } catch (e) {
+    if (pendingDelete.value) {
+      await releaseLock('acceso', toDelete.value.id_acceso)
+      pendingDelete.value = null
+    }
+    alert(e.response?.data?.error || 'Error al eliminar')
+  } finally {
+    deleting.value = false
   }
+}
+
+async function handleCancelDelete() {
+  if (pendingDelete.value && toDelete.value) {
+    await releaseLock('acceso', toDelete.value.id_acceso)
+    pendingDelete.value = null
+  }
+  toDelete.value = null
+  showConfirm.value = false
+}
+
+function handleConcurrencyCancel() {
+  showConcurrencyAlert.value = false
+}
+
+async function handleConcurrencyRetry() {
+  showConcurrencyAlert.value = false
+  setTimeout(() => {
+    const registroId = concurrencyAlert.lockInfo?.registro_id
+    const acc = items.value.find(i => i.id_acceso === registroId)
+    if (acc) {
+      if (concurrencyAlert.title === 'No se puede eliminar') confirmDelete(acc)
+      else openEdit(acc)
+    }
+  }, 1000)
+}
+
+async function handleConflictReload() {
+  // ✅ usuariosApi.getAcceso en lugar de accesosApi.get
+  const res = await usuariosApi.getAcceso(form._id)
+  const d = res.data
+  Object.assign(form, {
+    nombre_usuario: d.nombre_usuario,
+    correo_electronico: d.correo_electronico,
+    area_id: d.area_id || '',
+    password: '',
+    confirm_password: '',
+    permisos: d.permisos ? JSON.parse(JSON.stringify(d.permisos)) : JSON.parse(JSON.stringify(defaultPermisos)),
+    version: d.version
+  })
+  showConflictModal.value = false
+  alert('Datos recargados. Por favor verifica los cambios antes de guardar.')
 }
 
 function clearFilters() {
@@ -545,29 +610,23 @@ function clearFilters() {
   loadData()
 }
 
-function onModuloChange() {
-  // Si no hay módulos seleccionados, limpiar permisos
-  if (filters.modulos.length === 0) {
-    filters.permisos = []
-  }
-  loadData()
-}
-
 function formatModuloNombre(modulo) {
   const nombres = {
-    'computo': 'Cómputo',
-    'mobiliario': 'Mobiliario',
-    'responsable': 'Responsables',
-    'catalogos': 'Catálogos',
-    'historial': 'Historial',
-    'acceso': 'Accesos'
+    'computo': 'Cómputo', 'mobiliario': 'Mobiliario', 'responsable': 'Responsables',
+    'catalogos': 'Catálogos', 'historial': 'Historial', 'acceso': 'Accesos'
   }
   return nombres[modulo] || modulo
 }
 
-onMounted(() => { 
+onBeforeUnmount(async () => {
+  if (currentLock.value && form._id) {
+    await releaseLock('acceso', form._id)
+  }
+})
+
+onMounted(() => {
   loadCatalogos()
-  loadData() 
+  loadData()
 })
 </script>
 

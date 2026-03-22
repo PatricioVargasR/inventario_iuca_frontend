@@ -114,7 +114,7 @@
         </div>
       </form>
       <template #footer>
-        <button class="btn btn-secondary" @click="showForm = false">Cancelar</button>
+        <button class="btn btn-secondary" @click="handleFormClose">Cancelar</button>
         <button class="btn btn-primary" type="submit" form="usuariosForm" :disabled="saving">
           <span v-if="saving" class="spinner" style="width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:white;"></span>
           <span v-else>{{ editMode ? 'Actualizar responsable' : 'Guardar responsable' }}</span>
@@ -122,17 +122,65 @@
       </template>
     </BaseModal>
 
-    <ConfirmDialog v-model="showConfirm" title="Eliminar responsable" :message="`¿Estás seguro de eliminar el responsable '${toDelete?.nombre_usuario}'? Esta acción no se puede deshacer.`" :loading="deleting" @confirm="doDelete" />
+    <ConfirmDialog
+      v-model="showConfirm"
+      title="Eliminar responsable"
+      :message="`¿Estás seguro de eliminar el responsable '${toDelete?.nombre_usuario}'? Esta acción no se puede deshacer.`"
+      :loading="deleting"
+      @confirm="doDelete"
+      @cancel="handleCancelDelete"
+    />
+
+    <!-- Concurrency Alert -->
+    <ConcurrencyAlert
+      v-model="showConcurrencyAlert"
+      :title="concurrencyAlert.title"
+      :message="concurrencyAlert.message"
+      :lock-info="concurrencyAlert.lockInfo"
+      :show-retry="concurrencyAlert.showRetry"
+      @cancel="handleConcurrencyCancel"
+      @retry="handleConcurrencyRetry"
+    />
+
+    <!-- Conflict Resolution Modal -->
+    <BaseModal v-model="showConflictModal" title="Conflicto de Versión Detectado" size="lg">
+      <div class="conflict-warning">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <div>
+          <h4>El registro fue modificado por otro usuario</h4>
+          <p>Mientras editabas, otro usuario guardó cambios en este responsable. Puedes:</p>
+        </div>
+      </div>
+      <div class="conflict-options">
+        <div class="conflict-option">
+          <strong>Recargar datos actuales</strong>
+          <p>Descartar tus cambios y ver la versión más reciente del registro</p>
+        </div>
+      </div>
+      <template #footer>
+        <button class="btn btn-secondary" @click="handleConflictReload">
+          Recargar datos actuales
+        </button>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { usuariosApi, catalogosApi } from '@/services/api'
+import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
+import { usuariosApi, catalogosApi, vistasApi } from '@/services/api'
+import { acquireLock, releaseLock } from '@/services/concurrency'
+import { useAuthStore } from '@/stores/auth'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
+import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
 import Pagination from '@/components/ui/Pagination.vue'
-import { vistasApi } from '../services/api'
+
+const authStore = useAuthStore()
+const currentUserId = computed(() => authStore.user?.id_acceso)
 
 const items = ref([])
 const catalogos = reactive({ areas: [] })
@@ -141,15 +189,38 @@ const page = ref(1)
 const total = ref(0)
 const totalPages = ref(1)
 const filters = reactive({ search: '', area_id: '' })
+
 const showDetail = ref(false)
 const showForm = ref(false)
 const showConfirm = ref(false)
+const showConcurrencyAlert = ref(false)
+const showConflictModal = ref(false)
+
 const selected = ref(null)
 const toDelete = ref(null)
 const editMode = ref(false)
 const saving = ref(false)
 const deleting = ref(false)
-const form = reactive({ nombre_usuario: '', numero_nomina: '', puesto: '', area_id: '' })
+const pendingDelete = ref(null)
+
+const lockWarning = ref(null)
+const currentLock = ref(null)
+const conflictData = ref(null)
+
+const concurrencyAlert = reactive({
+  title: '',
+  message: '',
+  lockInfo: null,
+  showRetry: false,
+})
+
+const form = reactive({
+  nombre_usuario: '',
+  numero_nomina: '',
+  puesto: '',
+  area_id: '',
+  version: null
+})
 
 let searchTimeout = null
 
@@ -162,10 +233,8 @@ async function loadData() {
   loading.value = true
   try {
     const params = { page: page.value, per_page: 20 }
-
     if (filters.search) params.search = filters.search
     if (filters.area_id) params.area_id = filters.area_id
-
     const res = await vistasApi.listResponsables(params)
     items.value = res.data.responsables
     total.value = res.data.total
@@ -173,7 +242,7 @@ async function loadData() {
   } catch (e) { console.error(e) } finally { loading.value = false }
 }
 
-function onSearch() { clearTimeout(searchTimeout); searchTimeout = setTimeout(loadData, 400) }
+function onSearch() { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { page.value = 1; loadData() }, 400) }
 function onPageChange(p) { page.value = p; loadData() }
 
 async function openDetail(u) {
@@ -184,39 +253,191 @@ async function openDetail(u) {
     selected.value = u
   }
   showDetail.value = true
-  }
+}
+
 function openCreate() {
   editMode.value = false
-  Object.assign(form, { nombre_usuario: '', numero_nomina: '', puesto: '', area_id: '' })
+  lockWarning.value = null
+  Object.assign(form, { nombre_usuario: '', numero_nomina: '', puesto: '', area_id: '', version: null })
   showForm.value = true
 }
 
 async function openEdit(u) {
   editMode.value = true
+  lockWarning.value = null
+
+  const lockResult = await acquireLock('usuario', u.id_usuario, 10, 'edicion')
+
+  if (!lockResult.success) {
+    if (lockResult.locked) {
+      concurrencyAlert.title = 'Registro en Uso'
+      concurrencyAlert.message = lockResult.lockInfo.tipo_bloqueo === 'edicion'
+        ? `${lockResult.lockInfo.nombre_usuario} está editando este responsable`
+        : `No puedes editar este responsable porque ${lockResult.lockInfo.nombre_usuario} lo está eliminando`
+      concurrencyAlert.lockInfo = lockResult.lockInfo
+      concurrencyAlert.showRetry = true
+      showConcurrencyAlert.value = true
+    } else {
+      alert(lockResult.error || 'Error al adquirir bloqueo')
+    }
+    return
+  }
+
+  currentLock.value = lockResult.bloqueo
+
   const res = await usuariosApi.getResponsable(u.id_usuario)
   const d = res.data
-  Object.assign(form, { nombre_usuario: d.nombre_usuario, numero_nomina: d.numero_nomina || '', puesto: d.puesto || '', area_id: d.area_id || '' })
-  form._id = u.id_usuario
+
+  if (d.editado_por && d.editado_por !== currentUserId.value) {
+    lockWarning.value = `${d.nombre_editor} estaba editando este registro`
+  }
+
+  Object.assign(form, {
+    nombre_usuario: d.nombre_usuario,
+    numero_nomina: d.numero_nomina || '',
+    puesto: d.puesto || '',
+    area_id: d.area_id || '',
+    version: d.version,
+    _id: d.id_usuario
+  })
+
   showForm.value = true
 }
 
 async function saveItem() {
   saving.value = true
   try {
-    if (editMode.value) await usuariosApi.updateResponsable(form._id, { ...form })
-    else await usuariosApi.createResponsable({ ...form })
-    showForm.value = false; loadData()
-  } catch (e) { alert(e.response?.data?.error || 'Error al guardar') } finally { saving.value = false }
+    const payload = {
+      nombre_usuario: form.nombre_usuario,
+      numero_nomina: form.numero_nomina || null,
+      puesto: form.puesto || null,
+      area_id: form.area_id || null,
+      version: form.version
+    }
+
+    if (editMode.value) {
+      await usuariosApi.updateResponsable(form._id, payload)
+    } else {
+      await usuariosApi.createResponsable(payload)
+    }
+
+    await handleFormClose(true)
+    loadData()
+  } catch (e) {
+    const errorData = e.response?.data
+    if (errorData?.error === 'conflict') {
+      conflictData.value = errorData
+      showConflictModal.value = true
+      saving.value = false
+      return
+    }
+    alert(errorData?.error || 'Error al guardar')
+  } finally {
+    saving.value = false
+  }
 }
 
-function confirmDelete(u) { toDelete.value = u; showConfirm.value = true }
+async function handleFormClose(shouldClose = true) {
+  if (currentLock.value && editMode.value) {
+    await releaseLock('usuario', form._id)
+    currentLock.value = null
+  }
+  lockWarning.value = null
+  if (shouldClose) showForm.value = false
+}
+
+async function confirmDelete(u) {
+  const lockResult = await acquireLock('usuario', u.id_usuario, 2, 'eliminacion')
+
+  if (!lockResult.success) {
+    if (lockResult.locked) {
+      concurrencyAlert.title = 'No se puede eliminar'
+      concurrencyAlert.message = lockResult.lockInfo.tipo_bloqueo === 'edicion'
+        ? `No puedes eliminar este responsable porque ${lockResult.lockInfo.nombre_usuario} lo está editando`
+        : `${lockResult.lockInfo.nombre_usuario} ya está eliminando este responsable`
+      concurrencyAlert.lockInfo = lockResult.lockInfo
+      concurrencyAlert.showRetry = true
+      showConcurrencyAlert.value = true
+    } else {
+      alert(lockResult.error || 'Error al adquirir bloqueo')
+    }
+    return
+  }
+
+  pendingDelete.value = lockResult.bloqueo
+  toDelete.value = u
+  showConfirm.value = true
+}
+
 async function doDelete() {
   deleting.value = true
-  try { await usuariosApi.deleteResponsable(toDelete.value.id_usuario); showConfirm.value = false; toDelete.value = null; loadData() }
-  catch (e) { alert(e.response?.data?.error || 'Error') } finally { deleting.value = false }
+  try {
+    await usuariosApi.deleteResponsable(toDelete.value.id_usuario)
+    if (pendingDelete.value) {
+      await releaseLock('usuario', toDelete.value.id_usuario)
+      pendingDelete.value = null
+    }
+    showConfirm.value = false
+    toDelete.value = null
+    loadData()
+  } catch (e) {
+    if (pendingDelete.value) {
+      await releaseLock('usuario', toDelete.value.id_usuario)
+      pendingDelete.value = null
+    }
+    alert(e.response?.data?.error || 'Error al eliminar')
+  } finally {
+    deleting.value = false
+  }
 }
 
-onMounted(async () => {
-  loadAreas(),  loadData()
+async function handleCancelDelete() {
+  if (pendingDelete.value && toDelete.value) {
+    await releaseLock('usuario', toDelete.value.id_usuario)
+    pendingDelete.value = null
+  }
+  toDelete.value = null
+  showConfirm.value = false
+}
+
+function handleConcurrencyCancel() {
+  showConcurrencyAlert.value = false
+}
+
+async function handleConcurrencyRetry() {
+  showConcurrencyAlert.value = false
+  setTimeout(() => {
+    const registroId = concurrencyAlert.lockInfo?.registro_id
+    const u = items.value.find(i => i.id_usuario === registroId)
+    if (u) {
+      if (concurrencyAlert.title === 'No se puede eliminar') confirmDelete(u)
+      else openEdit(u)
+    }
+  }, 1000)
+}
+
+async function handleConflictReload() {
+  const res = await usuariosApi.getResponsable(form._id)
+  const d = res.data
+  Object.assign(form, {
+    nombre_usuario: d.nombre_usuario,
+    numero_nomina: d.numero_nomina || '',
+    puesto: d.puesto || '',
+    area_id: d.area_id || '',
+    version: d.version
+  })
+  showConflictModal.value = false
+  alert('Datos recargados. Por favor verifica los cambios antes de guardar.')
+}
+
+onBeforeUnmount(async () => {
+  if (currentLock.value && form._id) {
+    await releaseLock('usuario', form._id)
+  }
+})
+
+onMounted(() => {
+  loadAreas()
+  loadData()
 })
 </script>

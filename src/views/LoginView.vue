@@ -139,7 +139,7 @@ async function handleLogin() {
   const result = await authStore.login(form.value.correo, form.value.password)
 
   if (result.success) {
-    router.push('/equipos')
+    router.push('/accesos')
   } else if (result.sessionActive) {
     // Sesión activa desde otra IP - solo mostrar información
     activeSessionInfo.value = result.sessionInfo

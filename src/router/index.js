@@ -31,17 +31,17 @@ const router = createRouter({
 
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
-  
+
   // Si la ruta es pública, permitir acceso
   if (to.meta.public) {
     return
   }
-  
+
   // Si no está autenticado, redirigir a login
   if (!auth.isAuthenticated) {
     return '/login'
   }
-  
+
   // VERIFICAR VALIDEZ DE LA SESIÓN EN CADA NAVEGACIÓN
   try {
     await auth.me() // Esto llamará al endpoint /me que valida el token
@@ -50,10 +50,10 @@ router.beforeEach(async (to) => {
     localStorage.clear()
     return '/login?session_invalidated=true'
   }
-  
+
   // Si está en login pero ya está autenticado, redirigir a equipos
   if (to.path === '/login' && auth.isAuthenticated) {
-    return '/equipos'
+    return '/accesos'
   }
 })
 
