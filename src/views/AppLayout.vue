@@ -1,9 +1,8 @@
 <template>
   <div class="app-layout">
-    <!-- Navbar -->
     <nav class="navbar">
       <div class="navbar-inner">
-        <RouterLink to="/accesos" class="nav-brand">Sistema de inventario IUCA</RouterLink>
+        <RouterLink :to="primeraRuta" class="nav-brand">Sistema de inventario IUCA</RouterLink>
 
         <div class="nav-links">
           <RouterLink
@@ -41,7 +40,6 @@
       </div>
     </nav>
 
-    <!-- Page content -->
     <main class="main-content">
       <RouterView />
     </main>
@@ -49,7 +47,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
@@ -59,14 +57,22 @@ const authStore = useAuthStore()
 const userMenuOpen = ref(false)
 const userMenuRef = ref(null)
 
-const navLinks = [
-  { to: '/accesos', label: 'Accesos' },
-  { to: '/catalogos', label: 'Catálogos' },
-  { to: '/equipos', label: 'Equipos' },
-  { to: '/historial', label: 'Historial' },
-  { to: '/mobiliario', label: 'Mobiliario' },
-  { to: '/usuarios', label: 'Responsables' },
+const TODAS_LAS_RUTAS = [
+  { to: '/equipos',    label: 'Equipos',      modulo: 'computo'     },
+  { to: '/mobiliario', label: 'Mobiliario',   modulo: 'mobiliario'  },
+  { to: '/usuarios',   label: 'Responsables', modulo: 'responsable' },
+  { to: '/catalogos',  label: 'Catálogos',    modulo: 'catalogos'   },
+  { to: '/historial',  label: 'Historial',    modulo: 'historial'   },
+  { to: '/accesos',    label: 'Accesos',      modulo: 'acceso'      },
 ]
+
+const navLinks = computed(() =>
+  TODAS_LAS_RUTAS
+    .filter(link => authStore.canDo(link.modulo, 'puede_leer'))
+    .sort((a, b) => a.label.localeCompare(b.label, 'es'))
+)
+
+const primeraRuta = computed(() => navLinks.value[0]?.to ?? '/login')
 
 function toggleUserMenu() { userMenuOpen.value = !userMenuOpen.value }
 

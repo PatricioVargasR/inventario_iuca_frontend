@@ -11,14 +11,14 @@ const routes = [
   {
     path: '/',
     component: () => import('@/views/AppLayout.vue'),
-    redirect: '/accesos',
+    redirect: '/equipos',
     children: [
-      { path: 'equipos', name: 'Equipos', component: () => import('@/views/EquiposView.vue') },
-      { path: 'mobiliario', name: 'Mobiliario', component: () => import('@/views/MobiliarioView.vue') },
-      { path: 'accesos', name: 'Accesos', component: () => import('@/views/AccesosView.vue') },
-      { path: 'catalogos', name: 'Catalogos', component: () => import('@/views/CatalogosView.vue') },
-      { path: 'historial', name: 'Historial', component: () => import('@/views/HistorialView.vue') },
-      { path: 'usuarios', name: 'Usuarios', component: () => import('@/views/UsuariosView.vue') },
+      { path: 'equipos',    name: 'Equipos',    component: () => import('@/views/EquiposView.vue'),    meta: { modulo: 'computo'     } },
+      { path: 'mobiliario', name: 'Mobiliario', component: () => import('@/views/MobiliarioView.vue'), meta: { modulo: 'mobiliario'  } },
+      { path: 'accesos',    name: 'Accesos',    component: () => import('@/views/AccesosView.vue'),    meta: { modulo: 'acceso'      } },
+      { path: 'catalogos',  name: 'Catalogos',  component: () => import('@/views/CatalogosView.vue'),  meta: { modulo: 'catalogos'   } },
+      { path: 'historial',  name: 'Historial',  component: () => import('@/views/HistorialView.vue'),  meta: { modulo: 'historial'   } },
+      { path: 'usuarios',   name: 'Usuarios',   component: () => import('@/views/UsuariosView.vue'),   meta: { modulo: 'responsable' } },
     ]
   },
   { path: '/:pathMatch(.*)*', redirect: '/' }
@@ -29,31 +29,39 @@ const router = createRouter({
   routes
 })
 
+const MODULOS_PRIORITY = [
+  { path: '/equipos',    modulo: 'computo'     },
+  { path: '/mobiliario', modulo: 'mobiliario'  },
+  { path: '/usuarios',   modulo: 'responsable' },
+  { path: '/catalogos',  modulo: 'catalogos'   },
+  { path: '/historial',  modulo: 'historial'   },
+  { path: '/accesos',    modulo: 'acceso'       },
+]
+
+function primeraRutaPermitida(auth) {
+  const encontrada = MODULOS_PRIORITY.find(r => auth.canDo(r.modulo, 'puede_leer'))
+  return encontrada?.path ?? '/login'
+}
+
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
 
-  // Si la ruta es pública, permitir acceso
-  if (to.meta.public) {
-    return
-  }
+  if (to.meta.public) return
 
-  // Si no está autenticado, redirigir a login
-  if (!auth.isAuthenticated) {
-    return '/login'
-  }
+  if (!auth.isAuthenticated) return '/login'
 
-  // VERIFICAR VALIDEZ DE LA SESIÓN EN CADA NAVEGACIÓN
   try {
-    await auth.me() // Esto llamará al endpoint /me que valida el token
-  } catch (error) {
-    // Si falla, limpiar y redirigir
+    await auth.me()
+  } catch {
     localStorage.clear()
     return '/login?session_invalidated=true'
   }
 
-  // Si está en login pero ya está autenticado, redirigir a equipos
-  if (to.path === '/login' && auth.isAuthenticated) {
-    return '/accesos'
+  if (to.path === '/login') return primeraRutaPermitida(auth)
+
+  const modulo = to.meta.modulo
+  if (modulo && !auth.canDo(modulo, 'puede_leer')) {
+    return primeraRutaPermitida(auth)
   }
 })
 
