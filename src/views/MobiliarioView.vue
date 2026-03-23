@@ -371,8 +371,8 @@ let searchTimeout = null
 
 async function loadCatalogos() {
   const [tipos, estados, usuarios] = await Promise.all([
-    catalogosApi.getTiposMobiliario(),
-    catalogosApi.getEstados(),
+    catalogosApi.getMobiliarioCompleto(),
+    catalogosApi.getEstadosCompleto(),
     usuariosApi.listResponsables()
   ])
   catalogos.tipos = tipos.data

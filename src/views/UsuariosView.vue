@@ -225,7 +225,7 @@ const form = reactive({
 let searchTimeout = null
 
 async function loadAreas() {
-  const areas = await catalogosApi.getAreas()
+  const areas = await catalogosApi.getAreasCompleto()
   catalogos.areas = areas.data
 }
 

@@ -437,7 +437,7 @@ function toggleTodos() {
 }
 
 async function loadCatalogos() {
-  const areas = await catalogosApi.getAreasSinPaginar()
+  const areas = await catalogosApi.getAreasCompleto()
   catalogos.areas = areas.data
 }
 

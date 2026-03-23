@@ -67,10 +67,13 @@ export const mobiliarioApi = {
 export const catalogosApi = {
   // ── GET con paginación y búsqueda ──
   getAreas:          (params) => api.get('/catalogos/areas',           { params }),
-  getAreasSinPaginar:      () => api.get('/catalogos/areas_sin_paginacion'),
+  getAreasCompleto:        () => api.get('/catalogos/areas-completo'             ),
   getTiposActivo:    (params) => api.get('/catalogos/tipos-activo',    { params }),
+  getTiposActivoCompleto:  () => api.get('/catalogos/tipos-activo-completo'      ),
   getEstados:        (params) => api.get('/catalogos/estados',         { params }),
+  getEstadosCompleto:      () => api.get('/catalogos/estados-completo'           ),
   getTiposMobiliario:(params) => api.get('/catalogos/tipos-mobiliario',{ params }),
+  getMobiliarioCompleto:   () => api.get('/catalogos/tipo-completo'  ),
 
   // ── GET individual (sin cambios) ──
   getArea:    (id) => api.get(`/catalogos/areas/${id}`),
