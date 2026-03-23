@@ -11,7 +11,7 @@ const routes = [
   {
     path: '/',
     component: () => import('@/views/AppLayout.vue'),
-    redirect: '/equipos',
+    redirect: '/accesos',
     children: [
       { path: 'equipos', name: 'Equipos', component: () => import('@/views/EquiposView.vue') },
       { path: 'mobiliario', name: 'Mobiliario', component: () => import('@/views/MobiliarioView.vue') },
