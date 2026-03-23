@@ -3,7 +3,7 @@
     <div class="login-bg"></div>
     <div class="login-card">
       <div class="login-logo">
-        <span class="logo-bar"></span>
+        <img :src="logo" alt="Logo IUCA" class="logo-img" />
       </div>
       <h1 class="login-title">Sistema de Inventario</h1>
       <p class="login-org">IUCA – Tulancingo</p>
@@ -124,6 +124,8 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import logo from '@/assets/logo-iuca-exp.png'
+
 
 const router = useRouter()
 const route = useRoute()
@@ -371,4 +373,12 @@ onMounted(() => {
   margin: 0 auto 20px;
   font-size: 32px;
 }
+
+.logo-img {
+  width: 90px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.15));
+}
+
 </style>
