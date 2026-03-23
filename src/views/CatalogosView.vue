@@ -147,8 +147,31 @@
     </div>
 
     <!-- Create/Edit Modal -->
-    <BaseModal v-model="showForm" :title="editMode ? `Actualizar ${tabActual.labelSingular.toLowerCase()}` : `Nuevo ${tabActual.labelSingular.toLowerCase()}`" size="md" @update:model-value="handleFormClose">
+    <BaseModal
+      v-model="showForm"
+      :title="editMode ? `Actualizar ${tabActual.labelSingular.toLowerCase()}` : 'Nuevo catálogo'"
+      size="md"
+      @update:model-value="handleFormClose"
+    >
       <form id="catalogoForm" @submit.prevent="saveItem" class="form-grid">
+
+        <!-- Selector de tipo solo al crear -->
+        <div v-if="!editMode" class="form-group span-full">
+          <label class="form-label">Tipo de catálogo <span class="required">*</span></label>
+          <div class="catalog-type-selector">
+            <button
+              v-for="tab in tabs"
+              :key="tab.key"
+              type="button"
+              class="catalog-type-btn"
+              :class="{ active: formTab === tab.key }"
+              @click="formTab = tab.key"
+            >
+              {{ tab.labelSingular }}
+            </button>
+          </div>
+        </div>
+
         <div class="form-group">
           <label class="form-label">Nombre <span class="required">*</span></label>
           <input v-model="form.nombre" class="form-input" :placeholder="tabActual.placeholder" required maxlength="50" />
@@ -160,7 +183,7 @@
             <option value="inactivo">Inactivo</option>
           </select>
         </div>
-        <div v-if="activeTab === 'estado'" class="form-group span-full">
+        <div v-if="(editMode && activeTab === 'estado') || (!editMode && formTab === 'estado')" class="form-group span-full">
           <label class="form-label">Color <span class="required">*</span></label>
           <div style="display:flex;gap:10px;align-items:center;">
             <input type="text" v-model="form.color_hex" class="form-input" placeholder="#000000" maxlength="7" style="max-width:120px;" />
@@ -173,6 +196,7 @@
           <textarea v-model="form.descripcion" class="form-textarea" placeholder="Descripción opcional..." maxlength="200"></textarea>
           <small style="color:var(--gray-400);font-size:11px;">{{ form.descripcion.length }} / 200</small>
         </div>
+
       </form>
       <template #footer>
         <button class="btn btn-secondary" @click="handleFormClose">Cancelar</button>
@@ -258,23 +282,23 @@ const authStore = useAuthStore()
 
 const tabs = [
   { key: 'area',            label: 'Áreas',               labelSingular: 'Área',               placeholder: 'Ej: Dirección, Sistemas...'  },
-  { key: 'tipo_activo',     label: 'Tipos de activo',     labelSingular: 'Tipo de activo',     placeholder: 'Ej: Laptop, Escritorio...'   },
   { key: 'estado',          label: 'Estados',             labelSingular: 'Estado',             placeholder: 'Ej: Bueno, Regular...'       },
+  { key: 'tipo_activo',     label: 'Tipos de activo',     labelSingular: 'Tipo de activo',     placeholder: 'Ej: Laptop, Escritorio...'   },
   { key: 'tipo_mobiliario', label: 'Tipos de mobiliario', labelSingular: 'Tipo de mobiliario', placeholder: 'Ej: Silla, Mesa...'          },
 ]
 
 const TABLA_MAP = {
   area:            'cat_areas',
-  tipo_activo:     'cat_tipos_activo',
   estado:          'cat_estados',
+  tipo_activo:     'cat_tipos_activo',
   tipo_mobiliario: 'cat_tipos_mobiliario',
 }
 
 // Mapa: key del tab → key de la respuesta del backend
 const DATA_KEY = {
   area:            'areas',
-  tipo_activo:     'tipos_activo',
   estado:          'estados',
+  tipo_activo:     'tipos_activo',
   tipo_mobiliario: 'tipos_mobiliario',
 }
 
@@ -286,6 +310,7 @@ const page       = ref(1)
 const total      = ref(0)
 const totalPages = ref(1)
 const perPage    = 10
+const formTab = ref('area')
 
 // Items del tab activo (solo la página actual)
 const items = ref([])
@@ -411,9 +436,9 @@ function onPageChange(p) {
 }
 
 // ── CRUD ────────────────────────────────────────────────────────
-function openCreate(type) {
-  activeTab.value = type
-  editMode.value  = false
+function openCreate() {
+  editMode.value = false
+  formTab.value  = activeTab.value
   Object.assign(form, { nombre: '', descripcion: '', estado_catalogo: 'activo', color_hex: '', version: null, _id: null })
   showForm.value = true
 }
@@ -486,8 +511,9 @@ async function handleFormClose(shouldClose = true) {
 }
 
 async function saveItem() {
-  saving.value = true
+  const tipo = editMode.value ? activeTab.value : formTab.value
 
+  saving.value = true
   const accion  = editMode.value ? 'update' : 'create'
   const payload = {
     descripcion: form.descripcion,
@@ -495,29 +521,28 @@ async function saveItem() {
     ...(form.version != null && { version: form.version }),
   }
 
-  if (activeTab.value === 'estado') payload.color_hex = form.color_hex
+  if (tipo === 'estado') payload.color_hex = form.color_hex
 
-  const campoNombre = activeTab.value === 'area'   ? 'nombre_area'
-    : activeTab.value === 'estado'                  ? 'nombre_estado'
+  const campoNombre = tipo === 'area'  ? 'nombre_area'
+    : tipo === 'estado'                ? 'nombre_estado'
     : 'nombre_tipo'
   payload[campoNombre] = form.nombre
 
   const metodoMap = {
     area:            { create: 'createArea',           update: 'updateArea'           },
-    tipo_activo:     { create: 'createTipoActivo',     update: 'updateTipoActivo'     },
     estado:          { create: 'createEstado',         update: 'updateEstado'         },
+    tipo_activo:     { create: 'createTipoActivo',     update: 'updateTipoActivo'     },
     tipo_mobiliario: { create: 'createTipoMobiliario', update: 'updateTipoMobiliario' },
   }
 
   try {
-    const metodo = metodoMap[activeTab.value][accion]
+    const metodo = metodoMap[tipo][accion]
     if (editMode.value) {
       await catalogosApi[metodo](form._id, payload)
     } else {
       await catalogosApi[metodo](payload)
     }
     await handleFormClose(true)
-    // Recargar tab actual y actualizar contadores
     loadAllCounts()
     loadTab()
   } catch (e) {
@@ -656,5 +681,33 @@ onMounted(async () => {
   background: var(--primary-light);
   color: var(--primary);
 }
+.catalog-type-selector {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 
+.catalog-type-btn {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1.5px solid var(--gray-200);
+  background: var(--gray-50);
+  color: var(--gray-600);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.catalog-type-btn:hover {
+  border-color: var(--primary);
+  background: var(--gray-100);
+}
+
+.catalog-type-btn.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+}
 </style>

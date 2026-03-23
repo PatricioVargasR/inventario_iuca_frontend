@@ -204,7 +204,7 @@
             </thead>
             <tbody>
               <tr v-for="p in permisosComoArray()" :key="p.modulo">
-                <td>{{ p.modulo }}</td>
+                <td>{{ formatModuloNombre(p.modulo) }}</td>
                 <td>
                   <span class="perm-icon" :class="{ active: p.puede_leer }" @click="togglePermiso(p, 'puede_leer')">
                     <svg v-if="p.puede_leer" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
@@ -345,28 +345,28 @@ const concurrencyAlert = reactive({
 })
 
 const modulos_disponibles = {
-  'computo': 'Cómputo',
-  'mobiliario': 'Mobiliario',
+  'acceso':      'Acceso',
+  'catalogos':   'Catálogos',
+  'computo':     'Cómputo',
+  'historial':   'Historial',
+  'mobiliario':  'Mobiliario',
   'responsable': 'Responsable',
-  'catalogos': 'Catálogos',
-  'historial': 'Historial',
-  'acceso': 'Acceso'
 }
 
 const permisos_disponibles = {
-  'puede_leer': 'Leer',
-  'puede_crear': 'Crear',
   'puede_actualizar': 'Actualizar',
-  'puede_eliminar': 'Eliminar'
+  'puede_crear':      'Crear',
+  'puede_eliminar':   'Eliminar',
+  'puede_leer':       'Leer',
 }
 
 const defaultPermisos = [
+  { modulo: 'acceso',      puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
+  { modulo: 'catalogos',   puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
   { modulo: 'computo',     puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
+  { modulo: 'historial',   puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
   { modulo: 'mobiliario',  puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
   { modulo: 'responsable', puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
-  { modulo: 'catalogos',   puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
-  { modulo: 'historial',   puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
-  { modulo: 'acceso',      puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false }
 ]
 
 const form = reactive({
@@ -684,13 +684,6 @@ async function handleConflictReload() {
   alert('Datos recargados. Por favor verifica los cambios antes de guardar.')
 }
 
-function clearFilters() {
-  filters.search = ''
-  filters.area_id = ''
-  filters.modulos = []
-  filters.permisos = []
-  loadData()
-}
 
 function formatModuloNombre(modulo) {
   const nombres = {
@@ -705,6 +698,7 @@ onBeforeUnmount(async () => {
     await releaseLock('acceso', form._id)
   }
 })
+
 
 onMounted(() => {
   loadCatalogos()
