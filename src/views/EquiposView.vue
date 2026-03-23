@@ -59,7 +59,7 @@
             <td colspan="9"><div class="empty-state"><div class="empty-icon">💻</div><p>No se encontraron equipos</p></div></td>
           </tr>
           <tr v-else v-for="eq in equipos" :key="eq.id_activo">
-            <td><span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">EQ{{ String(eq.id_activo).padStart(3,'0') }}</span></td>
+            <td><span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">EQ-{{ String(eq.id_activo).padStart(3,'0') }}</span></td>
             <td>{{ eq.tipo_activo }}</td>
             <td style="font-weight:600;color:var(--gray-800)">
               {{ eq.nombre_activo }}
@@ -73,8 +73,8 @@
             <td>{{ eq.marca || '–' }}</td>
             <td>{{ eq.modelo || '–' }}</td>
             <td><span style="font-family:var(--font-mono);font-size:12px">{{ eq.numero_serie || '–' }}</span></td>
-            <td><StatusBadge :estado="eq.estado" /></td>
-            <td>{{ eq.responsable || '–' }}</td>
+            <td><StatusBadge :estado="eq.estado" :color="eq.color_estado" /></td>
+            <td>{{ eq.responsable || '–' }}, </td>
             <td>
               <div class="actions-cell">
                 <button class="action-btn view" @click="openDetail(eq)" title="Ver detalle">
@@ -109,7 +109,7 @@
           <div class="detail-item"><label>Tipo</label><strong>{{ selected.tipo_activo }}</strong></div>
           <div class="detail-item"><label>Número de Serie</label><strong style="font-family:var(--font-mono)">{{ selected.numero_serie || '–' }}</strong></div>
           <div class="detail-item"><label>Nombre</label><strong>{{ selected.nombre_activo }}</strong></div>
-          <div class="detail-item"><label>Estado</label><StatusBadge :estado="selected.estado" /></div>
+          <div class="detail-item"><label>Estado</label><StatusBadge :estado="selected.estado" :color="selected.color_estado" /></div>
           <div class="detail-item"><label>Marca</label><strong>{{ selected.marca || '–' }}</strong></div>
           <div class="detail-item"><label>Responsable</label><strong>{{ selected.responsable || '–' }}</strong></div>
         </div>

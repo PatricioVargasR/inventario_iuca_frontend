@@ -71,7 +71,7 @@
           <tr v-else v-for="mueble in mobiliario" :key="mueble.id_mueble">
             <td>
               <span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">
-                MB{{ String(mueble.id_mueble).padStart(3,'0') }}
+                MB-{{ String(mueble.id_mueble).padStart(3,'0') }}
               </span>
             </td>
             <td style="font-weight:600;color:var(--gray-800)">
@@ -86,7 +86,7 @@
             <td>{{ mueble.marca || '–' }}</td>
             <td>{{ mueble.modelo || '–' }}</td>
             <td>{{ mueble.color || '–' }}</td>
-            <td><StatusBadge :estado="mueble.estado" /></td>
+            <td><StatusBadge :estado="mueble.estado" :color="mueble.color_estado" /></td>
             <td>{{ mueble.responsable || '–' }}</td>
             <td>
               <div class="actions-cell">
@@ -135,7 +135,7 @@
           <div class="detail-item"><label>Marca</label><strong>{{ selected.marca || '–' }}</strong></div>
           <div class="detail-item"><label>Modelo</label><strong>{{ selected.modelo || '–' }}</strong></div>
           <div class="detail-item"><label>Color</label><strong>{{ selected.color || '–' }}</strong></div>
-          <div class="detail-item"><label>Estado</label><StatusBadge :estado="selected.estado" /></div>
+          <div class="detail-item"><label>Estado</label><StatusBadge :estado="selected.estado" :color="selected.color_estado" /></div>
           <div class="detail-item"><label>Responsable</label><strong>{{ selected.responsable || '–' }}</strong></div>
           <div class="detail-item"><label>Fecha Asignación</label><strong>{{ formatDate(selected.fecha_asignacion) }}</strong></div>
         </div>
