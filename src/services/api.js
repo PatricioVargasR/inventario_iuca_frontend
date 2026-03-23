@@ -65,38 +65,32 @@ export const mobiliarioApi = {
 
 // ===== CATÁLOGOS =====
 export const catalogosApi = {
-  // GET (ya existentes)
-  getAreas: () => api.get('/catalogos/areas'),
-  getArea: (id) => api.get(`/catalogos/areas/${id}`),
+  // ── GET con paginación y búsqueda ──
+  getAreas:          (params) => api.get('/catalogos/areas',           { params }),
+  getAreasSinPaginar:      () => api.get('/catalogos/areas_sin_paginacion'),
+  getTiposActivo:    (params) => api.get('/catalogos/tipos-activo',    { params }),
+  getEstados:        (params) => api.get('/catalogos/estados',         { params }),
+  getTiposMobiliario:(params) => api.get('/catalogos/tipos-mobiliario',{ params }),
 
-  getTiposActivo: () => api.get('/catalogos/tipos-activo'),
-  getActivo: (id) => api.get(`/catalogos/activo/${id}`),
-
-  getEstados: () => api.get('/catalogos/estados'),
-  getEstado: (id) => api.get(`/catalogos/estados/${id}`),
-
-  getTiposMobiliario: () => api.get('/catalogos/tipos-mobiliario'),
+  // ── GET individual (sin cambios) ──
+  getArea:    (id) => api.get(`/catalogos/areas/${id}`),
+  getActivo:  (id) => api.get(`/catalogos/activo/${id}`),
+  getEstado:  (id) => api.get(`/catalogos/estados/${id}`),
   getMobiliario: (id) => api.get(`/catalogos/mobiliario/${id}`),
 
-  // CRUD Areas (endpoints faltantes)
-  createArea: (data) => api.post('/catalogos/areas', data),
-  updateArea: (id, data) => api.put(`/catalogos/areas/${id}`, data),
-  deleteArea: (id) => api.delete(`/catalogos/areas/${id}`),
-
-  // CRUD Tipos Activo
-  createTipoActivo: (data) => api.post('/catalogos/tipos-activo', data),
-  updateTipoActivo: (id, data) => api.put(`/catalogos/tipos-activo/${id}`, data),
-  deleteTipoActivo: (id) => api.delete(`/catalogos/tipos-activo/${id}`),
-
-  // CRUD Estados
-  createEstado: (data) => api.post('/catalogos/estados', data),
-  updateEstado: (id, data) => api.put(`/catalogos/estados/${id}`, data),
-  deleteEstado: (id) => api.delete(`/catalogos/estados/${id}`),
-
-  // CRUD Tipos Mobiliario
-  createTipoMobiliario: (data) => api.post('/catalogos/tipos-mobiliario', data),
+  // ── CRUD (sin cambios) ──
+  createArea:           (data)     => api.post('/catalogos/areas', data),
+  updateArea:           (id, data) => api.put(`/catalogos/areas/${id}`, data),
+  deleteArea:           (id)       => api.delete(`/catalogos/areas/${id}`),
+  createTipoActivo:     (data)     => api.post('/catalogos/tipos-activo', data),
+  updateTipoActivo:     (id, data) => api.put(`/catalogos/tipos-activo/${id}`, data),
+  deleteTipoActivo:     (id)       => api.delete(`/catalogos/tipos-activo/${id}`),
+  createEstado:         (data)     => api.post('/catalogos/estados', data),
+  updateEstado:         (id, data) => api.put(`/catalogos/estados/${id}`, data),
+  deleteEstado:         (id)       => api.delete(`/catalogos/estados/${id}`),
+  createTipoMobiliario: (data)     => api.post('/catalogos/tipos-mobiliario', data),
   updateTipoMobiliario: (id, data) => api.put(`/catalogos/tipos-mobiliario/${id}`, data),
-  deleteTipoMobiliario: (id) => api.delete(`/catalogos/tipos-mobiliario/${id}`),
+  deleteTipoMobiliario: (id)       => api.delete(`/catalogos/tipos-mobiliario/${id}`),
 }
 
 // ===== USUARIOS / RESPONSABLES =====
