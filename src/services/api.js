@@ -76,7 +76,7 @@ export const catalogosApi = {
   getEstado: (id) => api.get(`/catalogos/estados/${id}`),
 
   getTiposMobiliario: () => api.get('/catalogos/tipos-mobiliario'),
-  getMobiliario: (id) => api.get(`/catalogos/mobiliario /${id}`),
+  getMobiliario: (id) => api.get(`/catalogos/mobiliario/${id}`),
 
   // CRUD Areas (endpoints faltantes)
   createArea: (data) => api.post('/catalogos/areas', data),
