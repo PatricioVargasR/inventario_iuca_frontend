@@ -186,16 +186,49 @@
           </div>
         </div>
         <div style="margin-top:4px;">
-          <div class="section-title" style="color:var(--primary); margin-top: 20px;">PERMISOS DEL ROL ASIGNADO</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;margin-bottom:12px;">
+            <div class="section-title" style="color:var(--primary);margin:0;">PERMISOS DEL ROL ASIGNADO</div>
+            <label class="select-all-label">
+              <input
+                type="checkbox"
+                :checked="todosSeleccionados"
+                :indeterminate.prop="algunosSeleccionados"
+                @change="toggleTodos"
+              />
+              <span>Seleccionar todos</span>
+            </label>
+          </div>
           <table class="permissions-table">
-            <thead><tr><th>MÓDULO</th><th>LEER</th><th>CREAR</th><th>EDITAR</th><th>ELIMINAR</th></tr></thead>
+            <thead>
+              <tr><th>MÓDULO</th><th>LEER</th><th>CREAR</th><th>EDITAR</th><th>ELIMINAR</th></tr>
+            </thead>
             <tbody>
-              <tr v-for="p in form.permisos" :key="p.modulo">
+              <tr v-for="p in permisosComoArray()" :key="p.modulo">
                 <td>{{ p.modulo }}</td>
-                <td><span class="perm-icon" :class="{ active: p.puede_leer }" @click="p.puede_leer = !p.puede_leer"><svg v-if="p.puede_leer" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
-                <td><span class="perm-icon" :class="{ active: p.puede_crear }" @click="p.puede_crear = !p.puede_crear"><svg v-if="p.puede_crear" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
-                <td><span class="perm-icon" :class="{ active: p.puede_actualizar }" @click="p.puede_actualizar = !p.puede_actualizar"><svg v-if="p.puede_actualizar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
-                <td><span class="perm-icon" :class="{ active: p.puede_eliminar }" @click="p.puede_eliminar = !p.puede_eliminar"><svg v-if="p.puede_eliminar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
+                <td>
+                  <span class="perm-icon" :class="{ active: p.puede_leer }" @click="togglePermiso(p, 'puede_leer')">
+                    <svg v-if="p.puede_leer" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </span>
+                </td>
+                <td>
+                  <span class="perm-icon" :class="{ active: p.puede_crear }" @click="togglePermiso(p, 'puede_crear')">
+                    <svg v-if="p.puede_crear" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </span>
+                </td>
+                <td>
+                  <span class="perm-icon" :class="{ active: p.puede_actualizar }" @click="togglePermiso(p, 'puede_actualizar')">
+                    <svg v-if="p.puede_actualizar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </span>
+                </td>
+                <td>
+                  <span class="perm-icon" :class="{ active: p.puede_eliminar }" @click="togglePermiso(p, 'puede_eliminar')">
+                    <svg v-if="p.puede_eliminar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </span>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -352,6 +385,55 @@ function formatDate(d) {
   if (!d) return '–'
   const dt = new Date(d)
   return dt.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + dt.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+}
+
+// Campos que "dependen" de leer — si alguno está activo, leer se fuerza
+const DEPENDEN_DE_LEER = ['puede_crear', 'puede_actualizar', 'puede_eliminar']
+
+function togglePermiso(p, campo) {
+  const nuevoValor = !p[campo]
+  p[campo] = nuevoValor
+
+  // Si se activa crear/editar/eliminar y leer estaba apagado → encender leer
+  if (nuevoValor && DEPENDEN_DE_LEER.includes(campo) && !p.puede_leer) {
+    p.puede_leer = true
+  }
+
+  // Si se desactiva leer → desactivar también los dependientes
+  if (!nuevoValor && campo === 'puede_leer') {
+    p.puede_crear = false
+    p.puede_actualizar = false
+    p.puede_eliminar = false
+  }
+}
+
+// Normaliza permisos sin importar si llegan como array o como objeto
+function permisosComoArray() {
+  if (Array.isArray(form.permisos)) return form.permisos
+  return Object.values(form.permisos)
+}
+
+const todosSeleccionados = computed(() =>
+  permisosComoArray().every(p =>
+    p.puede_leer && p.puede_crear && p.puede_actualizar && p.puede_eliminar
+  )
+)
+
+const algunosSeleccionados = computed(() =>
+  !todosSeleccionados.value &&
+  permisosComoArray().some(p =>
+    p.puede_leer || p.puede_crear || p.puede_actualizar || p.puede_eliminar
+  )
+)
+
+function toggleTodos() {
+  const activar = !todosSeleccionados.value
+  permisosComoArray().forEach(p => {
+    p.puede_leer       = activar
+    p.puede_crear      = activar
+    p.puede_actualizar = activar
+    p.puede_eliminar   = activar
+  })
 }
 
 async function loadCatalogos() {
@@ -972,18 +1054,38 @@ onMounted(() => {
   .advanced-filters {
     padding: 16px;
   }
-  
+
   .checkbox-group {
     gap: 8px;
   }
-  
+
   .checkbox-label {
     padding: 6px 10px;
     font-size: 12px;
   }
-  
+
   .filter-section-header {
     font-size: 12px;
   }
+}
+
+.select-all-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-600);
+  cursor: pointer;
+  user-select: none;
+}
+.select-all-label input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+.select-all-label:hover {
+  color: var(--primary);
 }
 </style>
