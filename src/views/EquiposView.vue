@@ -203,9 +203,68 @@
             Agregar
           </button>
         </div>
-        <div v-for="(spec, i) in form.especificaciones" :key="i" class="spec-row">
-          <input v-model="spec.nombre_especificacion" class="form-input" placeholder="RAM, Procesador..." />
-          <input v-model="spec.valor_especificacion" class="form-input" placeholder="16GB, Intel i7..." />
+
+        <!-- Chips de acceso rápido cuando no hay tipo seleccionado o hay sugerencias disponibles -->
+        <div v-if="form.tipo_activo_id && specSuggestions.length" class="spec-quick-chips">
+          <span class="spec-chips-label">Agregar rápido:</span>
+          <button
+            v-for="sug in specSuggestions"
+            :key="sug.nombre"
+            type="button"
+            class="spec-chip-btn"
+            :class="{ used: form.especificaciones.some(s => s.nombre_especificacion === sug.nombre) }"
+            @click="!form.especificaciones.some(s => s.nombre_especificacion === sug.nombre) && (form.especificaciones.push({ nombre_especificacion: sug.nombre, valor_especificacion: '', _placeholder: sug.placeholder }))"
+            :title="form.especificaciones.some(s => s.nombre_especificacion === sug.nombre) ? 'Ya agregado' : `Agregar: ${sug.nombre}`"
+          >
+            <svg v-if="form.especificaciones.some(s => s.nombre_especificacion === sug.nombre)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            <svg v-else width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            {{ sug.nombre }}
+          </button>
+        </div>
+        <div v-else-if="!form.tipo_activo_id" class="spec-hint">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Selecciona un tipo de equipo para ver sugerencias de especificaciones
+        </div>
+
+        <div
+          v-for="(spec, i) in form.especificaciones"
+          :key="i"
+          class="spec-row"
+          :class="`spec-row-${i}`"
+        >
+          <!-- Campo nombre con dropdown de sugerencias -->
+          <div class="spec-nombre-wrapper">
+            <input
+              v-model="spec.nombre_especificacion"
+              class="form-input"
+              placeholder="RAM, Procesador..."
+              @focus="openSuggestions(i)"
+              @input="openSuggestions(i)"
+              @blur="closeSuggestions"
+            />
+            <!-- Dropdown -->
+            <div v-if="activeSuggestionIndex === i && filteredSuggestions(i).length" class="spec-suggestions-dropdown">
+              <button
+                v-for="sug in filteredSuggestions(i)"
+                :key="sug.nombre"
+                type="button"
+                class="spec-suggestion-item"
+                :class="{ used: form.especificaciones.some((s, idx) => idx !== i && s.nombre_especificacion === sug.nombre) }"
+                @mousedown.prevent="applySuggestion(i, sug)"
+              >
+                <span class="sug-nombre">{{ sug.nombre }}</span>
+                <span class="sug-ejemplo">{{ sug.placeholder }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Campo valor con placeholder dinámico -->
+          <input
+            v-model="spec.valor_especificacion"
+            class="form-input spec-value-input"
+            :placeholder="spec._placeholder || 'Valor...'"
+          />
+
           <button type="button" class="spec-delete" @click="removeSpec(i)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
@@ -271,7 +330,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed, onBeforeUnmount } from 'vue'
+import { ref, reactive, onMounted, computed, onBeforeUnmount, nextTick } from 'vue'
 import { equiposApi, catalogosApi, usuariosApi, vistasApi } from '@/services/api'
 import { acquireLock, releaseLock } from '@/services/concurrency'
 import { useAuthStore } from '@/stores/auth'
@@ -324,6 +383,98 @@ const form = reactive({
   observaciones: '', especificaciones: [],
   version: null // NUEVO: Para control de versiones
 })
+
+// Mapa de especificaciones sugeridas por tipo de equipo
+// La clave es el nombre_tipo tal como viene del catálogo (lowercase para comparar)
+const SPECS_MAP = {
+  'pc': [
+    { nombre: 'Procesador',       placeholder: 'Ej: Intel Core i7-12700, 3.6GHz' },
+    { nombre: 'Núcleos',          placeholder: 'Ej: 8' },
+    { nombre: 'Memoria RAM',      placeholder: 'Ej: 16 GB' },
+    { nombre: 'Disco Duro (HDD)', placeholder: 'Ej: 1 TB' },
+    { nombre: 'SSD',              placeholder: 'Ej: 500 GB' },
+    { nombre: 'Tarjeta de Video', placeholder: 'Ej: NVIDIA Quadro P1000' },
+    { nombre: 'VRAM',             placeholder: 'Ej: 4 GB' },
+    { nombre: 'Sistema Operativo',placeholder: 'Ej: Windows 10 Pro 64 bits' },
+  ],
+  'laptop': [
+    { nombre: 'Procesador',       placeholder: 'Ej: Intel Core i7-4810MQ, 2.7GHz' },
+    { nombre: 'Memoria RAM',      placeholder: 'Ej: 32 GB' },
+    { nombre: 'SSD',              placeholder: 'Ej: 446 GB' },
+    { nombre: 'Disco Duro (HDD)', placeholder: 'Ej: 500 GB' },
+    { nombre: 'Tarjeta de Video', placeholder: 'Ej: NVIDIA Quadro K2100M' },
+    { nombre: 'Sistema Operativo',placeholder: 'Ej: Windows 10 Enterprise 64 bits' },
+    { nombre: 'Pantalla',         placeholder: 'Ej: 15.6" FHD' },
+  ],
+  'monitor': [
+    { nombre: 'Tamaño',           placeholder: 'Ej: 24"' },
+    { nombre: 'Resolución',       placeholder: 'Ej: 1920x1080' },
+    { nombre: 'Panel',            placeholder: 'Ej: IPS, TN, VA' },
+    { nombre: 'Frecuencia',       placeholder: 'Ej: 144 Hz' },
+    { nombre: 'Tipo de conexión', placeholder: 'Ej: HDMI, DisplayPort' },
+  ],
+  'impresora': [
+    { nombre: 'Tipo',             placeholder: 'Ej: Láser, Inyección de tinta' },
+    { nombre: 'Tecnología',       placeholder: 'Ej: Monocromática, Color' },
+    { nombre: 'Conectividad',     placeholder: 'Ej: USB, WiFi, Red' },
+    { nombre: 'Velocidad',        placeholder: 'Ej: 30 ppm' },
+  ],
+  'teléfono': [
+    { nombre: 'Memoria RAM',      placeholder: 'Ej: 3 GB' },
+    { nombre: 'Almacenamiento',   placeholder: 'Ej: 64 GB' },
+    { nombre: 'Sistema Operativo',placeholder: 'Ej: Android 11' },
+    { nombre: 'IMEI',             placeholder: 'Ej: 867166067556000' },
+  ],
+  'default': [
+    { nombre: 'Procesador',       placeholder: 'Ej: Intel Core i7' },
+    { nombre: 'Memoria RAM',      placeholder: 'Ej: 16 GB' },
+    { nombre: 'Almacenamiento',   placeholder: 'Ej: 500 GB' },
+    { nombre: 'Sistema Operativo',placeholder: 'Ej: Windows 10' },
+  ]
+}
+
+// Devuelve la lista de sugerencias según el tipo de activo seleccionado en el form
+const specSuggestions = computed(() => {
+  const tipo = catalogos.tipos.find(t => t.id_tipo_activo === form.tipo_activo_id)
+  if (!tipo) return SPECS_MAP['default']
+  const key = tipo.nombre_tipo.toLowerCase()
+  // Buscar coincidencia parcial en las claves del mapa
+  const match = Object.keys(SPECS_MAP).find(k => key.includes(k))
+  return SPECS_MAP[match] || SPECS_MAP['default']
+})
+
+// Estado del dropdown de sugerencias
+const activeSuggestionIndex = ref(null) // índice de la fila de spec que tiene el dropdown abierto
+const suggestionFilter = ref('')        // texto del input para filtrar sugerencias
+
+function openSuggestions(i) {
+  activeSuggestionIndex.value = i
+  suggestionFilter.value = form.especificaciones[i].nombre_especificacion
+}
+
+function closeSuggestions() {
+  // Pequeño delay para que el click en la sugerencia alcance a dispararse
+  setTimeout(() => { activeSuggestionIndex.value = null }, 150)
+}
+
+function applySuggestion(i, sugerencia) {
+  form.especificaciones[i].nombre_especificacion = sugerencia.nombre
+  form.especificaciones[i]._placeholder = sugerencia.placeholder
+  activeSuggestionIndex.value = null
+  // Enfocar el campo de valor para que el usuario pueda escribir de inmediato
+  nextTick(() => {
+    const inputs = document.querySelectorAll(`.spec-row-${i} .spec-value-input`)
+    if (inputs[0]) inputs[0].focus()
+  })
+}
+
+// Sugerencias filtradas por lo que el usuario ya escribió
+function filteredSuggestions(i) {
+  const texto = (form.especificaciones[i].nombre_especificacion || '').toLowerCase()
+  return specSuggestions.value.filter(s =>
+    s.nombre.toLowerCase().includes(texto)
+  )
+}
 
 let searchTimeout = null
 
@@ -694,5 +845,124 @@ onMounted(() => { loadCatalogos(); loadData() })
 .action-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* Chips de acceso rápido */
+.spec-quick-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: var(--gray-50);
+  border: 1px dashed var(--gray-300);
+  border-radius: 8px;
+}
+
+.spec-chips-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gray-400);
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.spec-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 14px;
+  border: 1.5px solid var(--gray-300);
+  background: white;
+  color: var(--gray-600);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.spec-chip-btn:hover:not(.used) {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light, #eef2ff);
+  transform: translateY(-1px);
+}
+
+.spec-chip-btn.used {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #16a34a;
+  cursor: default;
+  opacity: 0.75;
+}
+
+/* Hint sin tipo seleccionado */
+.spec-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--gray-400);
+  margin-bottom: 10px;
+  font-style: italic;
+}
+
+/* Wrapper con posición relativa para el dropdown */
+.spec-nombre-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+/* Dropdown de sugerencias */
+.spec-suggestions-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  z-index: 100;
+  overflow: hidden;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.spec-suggestion-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.spec-suggestion-item:hover:not(.used) {
+  background: var(--gray-50);
+}
+
+.spec-suggestion-item.used {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.sug-nombre {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.sug-ejemplo {
+  font-size: 11px;
+  color: var(--gray-400);
 }
 </style>
