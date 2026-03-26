@@ -9,14 +9,14 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
-        Nuevo Mueble
+        Nuevo mueble
       </button>
     </div>
 
     <!-- Filtros -->
     <div class="filter-bar">
       <div class="filter-group search">
-        <label>Búsqueda General</label>
+        <label>Búsqueda general</label>
         <div class="input-with-icon">
           <svg class="input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -25,7 +25,7 @@
         </div>
       </div>
       <div class="filter-group">
-        <label>Tipo de Mobiliario</label>
+        <label>Tipo de mobiliario</label>
         <select v-model="filters.tipo_mobiliario_id" class="form-select" @change="loadData">
           <option value="">Todos los tipos</option>
           <option v-for="t in catalogos.tipos" :key="t.nombre_tipo" :value="t.nombre_tipo">{{ t.nombre_tipo }}</option>
@@ -52,8 +52,8 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>ID</th><th>TIPO</th><th>MARCA</th><th>MODELO</th>
-            <th>COLOR</th><th>ESTADO</th><th>RESPONSABLE</th><th>ACCIONES</th>
+            <th>ID</th><th>Tipo</th><th>Marca</th><th>Modelo</th>
+            <th>Color</th><th>Estado</th><th>Responsable</th><th>Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -169,11 +169,11 @@
 
       <form id="mobiliarioForm" @submit.prevent="saveMobiliario">
         <div class="section-title" style="color:var(--primary);display:flex;align-items:center;gap:6px;">
-          Información General
+          Información general
         </div>
         <div class="form-grid">
           <div class="form-group">
-            <label class="form-label">Tipo de Mobiliario <span class="required">*</span></label>
+            <label class="form-label">Tipo de mobiliario <span class="required">*</span></label>
             <select v-model="form.tipo_mobiliario_id" class="form-select" required>
               <option value="">Seleccionar...</option>
               <option v-for="t in catalogos.tipos" :key="t.id_tipo_mobiliario" :value="t.id_tipo_mobiliario">
@@ -218,7 +218,7 @@
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Fecha de Asignación</label>
+            <label class="form-label">Fecha de asignación</label>
             <input v-model="form.fecha_asignacion" type="date" class="form-input" />
           </div>
           <div class="form-group">

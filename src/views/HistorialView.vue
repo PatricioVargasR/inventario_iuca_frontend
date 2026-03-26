@@ -69,11 +69,11 @@
         <thead>
           <tr>
             <th>ID</th>
-            <th>MOVIMIENTO</th>
-            <th>DESCRIPCIÓN</th>
-            <th>REGISTRO</th>
-            <th>USUARIO</th>
-            <th>HORA</th>
+            <th>Movimiento</th>
+            <th>Descripción</th>
+            <th>Registro</th>
+            <th>Usuario</th>
+            <th>Hora</th>
           </tr>
         </thead>
         <tbody>
@@ -139,7 +139,7 @@
     <!-- Detail Modal -->
     <BaseModal v-model="showDetail" :title="`Detalles del movimiento #${selected?.id_historial}`" :subtitle="selected ? formatFull(selected.fecha) : ''" size="lg">
       <template v-if="selected">
-        <div class="section-title" style="margin-top:0">INFORMACIÓN DEL MOVIMIENTO</div>
+        <div class="section-title" style="margin-top:0">Información del movimiento</div>
         <div class="card" style="padding:14px 16px;margin-bottom:14px;">
           <div class="detail-grid" style="grid-template-columns:1fr 1fr 1fr;">
             <div class="detail-item"><label>Fecha y hora</label><strong>{{ formatFull(selected.fecha) }}</strong></div>
@@ -152,10 +152,10 @@
         </div>
 
         <div v-if="selected.cambios_detallados && selected.cambios_detallados.length > 0" style="margin-bottom:14px;">
-          <div class="section-title">CAMBIOS DETALLADOS</div>
+          <div class="section-title">Cambios detallados</div>
           <table class="data-table" style="border:1px solid var(--border);border-radius:var(--radius);">
             <thead>
-              <tr><th>CAMPO</th><th>VALOR ANTERIOR</th><th>VALOR NUEVO</th></tr>
+              <tr><th>Campo</th><th>Valor anterior</th><th>Valor nuevo</th></tr>
             </thead>
             <tbody>
               <tr v-for="(cambio, idx) in selected.cambios_detallados" :key="idx">
@@ -173,7 +173,7 @@
           </table>
         </div>
 
-        <div class="section-title">INFORMACIÓN DEL REGISTRO AFECTADO</div>
+        <div class="section-title">Información del registro afectado</div>
         <div class="card" style="padding:16px;">
           <div style="font-weight:700;font-size:14px;margin-bottom:8px;">{{ formatTableName(selected.tabla) }} #{{ selected.registro_id }}</div>
           <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px;">

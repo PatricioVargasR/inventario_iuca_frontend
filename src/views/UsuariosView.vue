@@ -31,7 +31,7 @@
     <div class="table-wrapper">
       <table class="data-table">
         <thead>
-          <tr><th>ID</th><th>NOMBRE</th><th>NÓMINA</th><th>PUESTO</th><th>ÁREA</th><th>ACCIONES</th></tr>
+          <tr><th>ID</th><th>Nombre</th><th>Nómina</th><th>Puesto</th><th>Área</th><th>Acciones</th></tr>
         </thead>
         <tbody>
           <tr v-if="loading" class="loading-row"><td colspan="6"><span class="spinner"></span></td></tr>
@@ -66,11 +66,11 @@
       <template v-if="selected">
         <div class="detail-grid">
           <div class="detail-item"><label>ID</label><strong style="color:var(--primary);font-family:var(--font-mono)">ACC-{{ String(selected.id_usuario).padStart(3,'0') }}</strong></div>
-          <div class="detail-item"><label>Área de Adscripción</label><strong>{{ selected.area || '–' }}</strong></div>
+          <div class="detail-item"><label>Área de adscripción</label><strong>{{ selected.area || '–' }}</strong></div>
           <div class="detail-item"><label>Puesto</label><strong>{{ selected.puesto || '–' }}</strong></div>
-          <div class="detail-item"><label>Número de Nómina</label><strong style="font-family:var(--font-mono)">{{ selected.numero_nomina || '–' }}</strong></div>
-          <div class="detail-item"><label>Nombre Completo</label><strong>{{ selected.nombre_usuario }}</strong></div>
-          <div class="detail-item"><label>Fecha de Creación</label><strong>{{ selected.fecha_creacion?.slice(0,10) || '–' }}</strong></div>
+          <div class="detail-item"><label>Número de nómina</label><strong style="font-family:var(--font-mono)">{{ selected.numero_nomina || '–' }}</strong></div>
+          <div class="detail-item"><label>Nombre completo</label><strong>{{ selected.nombre_usuario }}</strong></div>
+          <div class="detail-item"><label>Fecha de creación</label><strong>{{ selected.fecha_creacion?.slice(0,10) || '–' }}</strong></div>
         </div>
       </template>
       <template #footer>

@@ -83,7 +83,7 @@
           <div class="modal-box modal-sm" @click.stop>
             <div class="confirm-content">
               <div class="confirm-icon" style="background:#fee2e2;">🔒</div>
-              <h3>Sesión Activa en Otro Dispositivo</h3>
+              <h3>Sesión activa en otro dispositivo</h3>
               <p style="margin-bottom:12px;">Ya tienes una sesión activa desde otra ubicación</p>
               <div class="session-details">
                 <div class="session-detail-item">

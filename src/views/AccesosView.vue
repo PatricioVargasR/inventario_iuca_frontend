@@ -66,7 +66,7 @@
     <div class="table-wrapper">
       <table class="data-table">
         <thead>
-          <tr><th>ID</th><th>NOMBRE</th><th>CORREO</th><th>ÁREA</th><th>ÚLTIMO ACCESO</th><th>ACCIONES</th></tr>
+          <tr><th>ID</th><th>Nombre</th><th>Correo</th><th>Área</th><th>Último acceso</th><th>Acciones</th></tr>
         </thead>
         <tbody>
           <tr v-if="loading" class="loading-row"><td colspan="7"><span class="spinner"></span></td></tr>
@@ -99,23 +99,23 @@
     <!-- Detail Modal -->
     <BaseModal v-model="showDetail" title="Detalles del Acceso" size="lg">
       <template v-if="selected">
-        <div class="section-title" style="margin-top:0;color:var(--primary)">INFORMACIÓN PERSONAL</div>
+        <div class="section-title" style="margin-top:0;color:var(--primary)">Información personal</div>
         <div class="detail-grid">
           <div class="detail-item"><label>ID</label><strong>{{ selected.id_acceso }}</strong></div>
           <div class="detail-item"><label>Correo electrónico</label><strong>{{ selected.correo_electronico }}</strong></div>
           <div class="detail-item"><label>Nombre completo</label><strong>{{ selected.nombre_usuario }}</strong></div>
           <div class="detail-item"><label>Área asignada</label><strong>{{ selected.area || '–' }}</strong></div>
         </div>
-        <div class="section-title" style="color:var(--primary)">INFORMACIÓN DE ACCESO</div>
+        <div class="section-title" style="color:var(--primary)">Información de acceso</div>
         <div class="detail-grid" style="grid-template-columns:1fr 1fr 1fr;">
           <div class="detail-item"><label>Fecha de registro</label><strong>{{ selected.fecha_registro || '–' }}</strong></div>
           <div class="detail-item"><label>Último acceso</label><strong style="font-family:var(--font-mono);font-size:13px">{{ selected.ultimo_acceso || '–' }}</strong></div>
           <div class="detail-item"><label>Cuenta creada</label><strong>{{ selected.fecha_creacion?.slice(0,10) || '–' }}</strong></div>
         </div>
-        <div class="section-title" style="color:var(--primary)">PERMISOS DEL ROL ASIGNADO</div>
+        <div class="section-title" style="color:var(--primary)">Permisos de rol asignados</div>
         <div style="font-size:12.5px;color:var(--gray-500);margin-bottom:8px;">{{ selected.rol }} – Nivel {{ selected.nivel_acceso }}</div>
         <table class="permissions-table">
-          <thead><tr><th>MÓDULO</th><th>LEER</th><th>CREAR</th><th>EDITAR</th><th>ELIMINAR</th></tr></thead>
+          <thead><tr><th>Módulo</th><th>Leer</th><th>Crear</th><th>Editar</th><th>Eliminar</th></tr></thead>
           <tbody>
             <tr v-for="p in selected.permisos" :key="p.modulo">
               <td><span style="text-transform: capitalize;">{{ p.modulo }}</span></td>
@@ -148,7 +148,7 @@
 
       <form id="accesosForm" @submit.prevent="saveItem">
         <div class="section-title" style="margin-top:0;color:var(--primary);display:flex;align-items:center;gap:6px;">
-          INFORMACIÓN PERSONAL
+          Información personal
         </div>
         <div class="form-grid">
           <div class="form-group">
@@ -161,7 +161,7 @@
           </div>
         </div>
         <div class="section-title" style="color:var(--primary);display:flex;align-items:center;gap:6px;">
-          INFORMACIÓN DE ACCESO
+          Información de acceso
         </div>
         <div class="form-grid">
           <div class="form-group">
@@ -187,7 +187,7 @@
         </div>
         <div style="margin-top:4px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;margin-bottom:12px;">
-            <div class="section-title" style="color:var(--primary);margin:0;">PERMISOS DEL ROL ASIGNADO</div>
+            <div class="section-title" style="color:var(--primary);margin:0;">Permisos del rol asignado</div>
             <label class="select-all-label">
               <input
                 type="checkbox"
@@ -200,7 +200,7 @@
           </div>
           <table class="permissions-table">
             <thead>
-              <tr><th>MÓDULO</th><th>LEER</th><th>CREAR</th><th>EDITAR</th><th>ELIMINAR</th></tr>
+              <tr><th>Módulo</th><th>Leer</th><th>Crear</th><th>Editar</th><th>Eliminar</th></tr>
             </thead>
             <tbody>
               <tr v-for="p in permisosComoArray()" :key="p.modulo">
@@ -525,7 +525,7 @@ async function openEdit(acc) {
 
   currentLock.value = lockResult.bloqueo
 
-  // ✅ usuariosApi.getAcceso en lugar de accesosApi.get
+  // usuariosApi.getAcceso en lugar de accesosApi.get
   const res = await usuariosApi.getAcceso(acc.id_acceso)
   const d = res.data
 
@@ -564,10 +564,10 @@ async function saveItem() {
     if (form.password) payload.password = form.password
 
     if (editMode.value) {
-      // ✅ usuariosApi.updateAcceso en lugar de accesosApi.update
+      // usuariosApi.updateAcceso en lugar de accesosApi.update
       await usuariosApi.updateAcceso(form._id, payload)
     } else {
-      // ✅ usuariosApi.createAcceso en lugar de accesosApi.create
+      // usuariosApi.createAcceso en lugar de accesosApi.create
       await usuariosApi.createAcceso(payload)
     }
 
@@ -622,7 +622,7 @@ async function confirmDelete(acc) {
 async function doDelete() {
   deleting.value = true
   try {
-    // ✅ usuariosApi.deleteAcceso en lugar de accesosApi.delete
+    // usuariosApi.deleteAcceso en lugar de accesosApi.delete
     await usuariosApi.deleteAcceso(toDelete.value.id_acceso)
     if (pendingDelete.value) {
       await releaseLock('acceso', toDelete.value.id_acceso)
@@ -668,7 +668,7 @@ async function handleConcurrencyRetry() {
 }
 
 async function handleConflictReload() {
-  // ✅ usuariosApi.getAcceso en lugar de accesosApi.get
+  // usuariosApi.getAcceso en lugar de accesosApi.get
   const res = await usuariosApi.getAcceso(form._id)
   const d = res.data
   Object.assign(form, {

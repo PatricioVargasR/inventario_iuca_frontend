@@ -48,9 +48,9 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>ID</th><th>TIPO</th><th>NOMBRE</th><th>MARCA</th>
-            <th>MODELO</th><th>NO. SERIE</th><th>ESTADO</th>
-            <th>RESPONSABLE</th><th>ACCIONES</th>
+            <th>ID</th><th>Tipo</th><th>Nombre</th><th>Marca</th>
+            <th>Modelo</th><th>NO. Serie</th><th>Estado</th>
+            <th>Responsable</th><th>Acciones</th>
           </tr>
         </thead>
         <tbody>

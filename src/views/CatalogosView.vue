@@ -61,12 +61,12 @@
         <thead>
           <tr>
             <th>ID</th>
-            <th>NOMBRE</th>
-            <th>DESCRIPCIÓN</th>
-            <th v-if="activeTab === 'estado'">COLOR</th>
-            <th>ESTADO</th>
-            <th>CREADO</th>
-            <th>ACCIONES</th>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th v-if="activeTab === 'estado'">Color</th>
+            <th>Estado</th>
+            <th>Creado</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
