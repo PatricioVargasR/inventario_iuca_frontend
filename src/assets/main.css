@@ -371,6 +371,13 @@ h3 { font-size: 1.125rem; font-weight: 600; color: var(--gray-800); }
   max-height: 90vh;
   overflow-y: auto;
   animation: slideUp 0.2s ease;
+
+    /* 👇 CAMBIO CLAVE */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* en lugar de auto */
+
+  animation: slideUp 0.2s ease;
 }
 
 .modal-box.modal-sm { max-width: 420px; }
@@ -408,7 +415,12 @@ h3 { font-size: 1.125rem; font-weight: 600; color: var(--gray-800); }
 }
 .modal-close:hover { background: var(--gray-200); color: var(--gray-700); }
 
-.modal-body { padding: 20px 24px; }
+.modal-body {
+  padding: 20px 24px;
+
+  flex: 1;
+  overflow-y: auto;
+}
 
 .modal-footer {
   padding: 16px 24px 20px;
@@ -420,6 +432,12 @@ h3 { font-size: 1.125rem; font-weight: 600; color: var(--gray-800); }
   position: sticky;
   bottom: 0;
 }
+
+.modal-header,
+.modal-footer {
+  flex-shrink: 0;
+}
+
 
 /* ===== SECTION DIVIDER ===== */
 .section-title {

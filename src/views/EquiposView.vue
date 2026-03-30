@@ -74,7 +74,7 @@
             <td>{{ eq.modelo || '–' }}</td>
             <td><span style="font-family:var(--font-mono);font-size:12px">{{ eq.numero_serie || '–' }}</span></td>
             <td><StatusBadge :estado="eq.estado" :color="eq.color_estado" /></td>
-            <td>{{ eq.responsable || '–' }}, </td>
+            <td>{{ eq.responsable || '–' }} </td>
             <td>
               <div class="actions-cell">
                 <button class="action-btn view" @click="openDetail(eq)" title="Ver detalle">

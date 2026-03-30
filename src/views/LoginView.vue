@@ -5,7 +5,7 @@
       <div class="login-logo">
         <img :src="logo" alt="Logo IUCA" class="logo-img" />
       </div>
-      <h1 class="login-title">Sistema de Inventario</h1>
+      <h1 class="login-title">Sistema de inventario</h1>
       <p class="login-org">IUCA – Tulancingo</p>
 
       <!-- Alerta de sesión invalidada -->
@@ -19,7 +19,7 @@
         </div>
       </div>
 
-      <h2 class="login-section">Iniciar Sesión</h2>
+      <h2 class="login-section">Iniciar sesión</h2>
 
       <form @submit.prevent="handleLogin" class="login-form">
         <div class="input-with-icon">
@@ -69,7 +69,7 @@
 
         <button type="submit" class="btn btn-primary btn-block btn-lg" :disabled="authStore.loading" style="margin-top: 18px;">
           <span v-if="authStore.loading" class="spinner" style="width:16px;height:16px;border-width:2px;border-color:rgba(255,255,255,0.3);border-top-color:white;"></span>
-          <span v-else>Iniciar Sesión</span>
+          <span v-else>Iniciar sesión</span>
         </button>
       </form>
 
