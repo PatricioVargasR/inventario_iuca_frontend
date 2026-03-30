@@ -116,8 +116,8 @@
         <div v-if="selected.especificaciones" style="margin-top:16px;">
           <div class="section-title">Especificaciones</div>
           <div class="specs-box">
-            <div 
-              v-for="(spec, i) in selected.especificaciones.split('|')" 
+            <div
+              v-for="(spec, i) in selected.especificaciones.split('|')"
               :key="i"
               class="spec-item"
             >
@@ -492,7 +492,7 @@ async function loadCatalogos() {
 async function loadData() {
   loading.value = true
   try {
-    const params = { page: page.value, per_page: 20 }
+    const params = { page: page.value, per_page: 5 }
     if (filters.search) params.search = filters.search
     if (filters.tipo_activo_id) params.tipo_activo_id = filters.tipo_activo_id
     if (filters.estado_id) params.estado_id = filters.estado_id
