@@ -82,7 +82,7 @@
             <!-- ID -->
             <td>
               <span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">
-                CAT-{{ String(getItemId(item)).padStart(3,'0') }}
+                {{ getItemId(item) }}
               </span>
             </td>
 

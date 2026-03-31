@@ -59,9 +59,9 @@
             <td colspan="9"><div class="empty-state"><div class="empty-icon">💻</div><p>No se encontraron equipos</p></div></td>
           </tr>
           <tr v-else v-for="eq in equipos" :key="eq.id_activo">
-            <td><span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">EQ-{{ String(eq.id_activo).padStart(3,'0') }}</span></td>
+            <td><span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">{{ eq.id_activo }}</span></td>
             <td>{{ eq.tipo_activo }}</td>
-            <td style="font-weight:600;color:var(--gray-800)">
+            <td style="font-weight:700;color:var(--gray-800)">
               {{ eq.nombre_activo }}
               <!-- Indicador de edición activa -->
               <span v-if="eq.editado_por && eq.editado_por !== currentUserId" class="editing-badge" :title="`${eq.nombre_editor} está editando`">

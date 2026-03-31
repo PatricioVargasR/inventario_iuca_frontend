@@ -72,7 +72,7 @@
           <tr v-if="loading" class="loading-row"><td colspan="7"><span class="spinner"></span></td></tr>
           <tr v-else-if="!items.length"><td colspan="7"><div class="empty-state"><div class="empty-icon">🔑</div><p>No hay accesos registrados</p></div></td></tr>
           <tr v-else v-for="acc in items" :key="acc.id_acceso">
-            <td><span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">ACC-{{ String(acc.id_acceso).padStart(3,'0') }}</span></td>
+            <td><span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">{{ acc.id_acceso }}</span></td>
             <td style="font-weight:700;">{{ acc.nombre_usuario }}</td>
             <td style="color:var(--gray-500);font-size:13px;">{{ acc.correo_electronico }}</td>
             <td>{{ acc.area || '–' }}</td>
@@ -117,12 +117,21 @@
         <table class="permissions-table">
           <thead><tr><th>Módulo</th><th>Leer</th><th>Crear</th><th>Editar</th><th>Eliminar</th></tr></thead>
           <tbody>
-            <tr v-for="p in selected.permisos" :key="p.modulo">
+            <tr
+              v-for="p in [...selected.permisos].sort((a, b) =>
+              a.modulo.localeCompare(b.modulo))"
+              :key="p.modulo"
+            >
               <td><span style="text-transform: capitalize;">{{ p.modulo }}</span></td>
-              <td><span class="perm-icon" :class="{ active: p.leer }"><svg v-if="p.leer" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
-              <td><span class="perm-icon" :class="{ active: p.crear }"><svg v-if="p.crear" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
-              <td><span class="perm-icon" :class="{ active: p.actualizar }"><svg v-if="p.actualizar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
-              <td><span class="perm-icon" :class="{ active: p.eliminar }"><svg v-if="p.eliminar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
+              <td>
+                <span class="perm-icon" :class="{ active: p.leer }">
+                  <svg v-if="p.leer" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </span>
+              </td>
+              <td><span v-if="p.modulo!=='historial'" class="perm-icon" :class="{ active: p.crear }"><svg v-if="p.crear" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
+              <td><span v-if="p.modulo!=='historial'" class="perm-icon" :class="{ active: p.actualizar }"><svg v-if="p.actualizar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
+              <td><span v-if="p.modulo!=='historial'" class="perm-icon" :class="{ active: p.eliminar }"><svg v-if="p.eliminar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
             </tr>
           </tbody>
         </table>
@@ -203,7 +212,10 @@
               <tr><th>Módulo</th><th>Leer</th><th>Crear</th><th>Editar</th><th>Eliminar</th></tr>
             </thead>
             <tbody>
-              <tr v-for="p in permisosComoArray()" :key="p.modulo">
+              <tr
+                v-for="p in [...permisosComoArray()].sort((a, b) =>
+                  a.modulo.localeCompare(b.modulo))"
+                :key="p.modulo">
                 <td>{{ formatModuloNombre(p.modulo) }}</td>
                 <td>
                   <span class="perm-icon" :class="{ active: p.puede_leer }" @click="togglePermiso(p, 'puede_leer')">
@@ -212,19 +224,19 @@
                   </span>
                 </td>
                 <td>
-                  <span class="perm-icon" :class="{ active: p.puede_crear }" @click="togglePermiso(p, 'puede_crear')">
+                  <span  v-if="p.modulo!=='historial'" class="perm-icon" :class="{ active: p.puede_crear }" @click="togglePermiso(p, 'puede_crear')">
                     <svg v-if="p.puede_crear" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
                     <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   </span>
                 </td>
                 <td>
-                  <span class="perm-icon" :class="{ active: p.puede_actualizar }" @click="togglePermiso(p, 'puede_actualizar')">
+                  <span  v-if="p.modulo!=='historial'" class="perm-icon" :class="{ active: p.puede_actualizar }" @click="togglePermiso(p, 'puede_actualizar')">
                     <svg v-if="p.puede_actualizar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
                     <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   </span>
                 </td>
                 <td>
-                  <span class="perm-icon" :class="{ active: p.puede_eliminar }" @click="togglePermiso(p, 'puede_eliminar')">
+                  <span  v-if="p.modulo!=='historial'" class="perm-icon" :class="{ active: p.puede_eliminar }" @click="togglePermiso(p, 'puede_eliminar')">
                     <svg v-if="p.puede_eliminar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
                     <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   </span>

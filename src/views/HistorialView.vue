@@ -97,7 +97,7 @@
             >
               <td>
                 <span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">
-                  MOV-{{ String(item.id_historial).padStart(4,'0') }}
+                  {{ item.id_historial }}
                 </span>
               </td>
               <td>

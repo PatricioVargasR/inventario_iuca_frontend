@@ -71,7 +71,7 @@
           <tr v-else v-for="mueble in mobiliario" :key="mueble.id_mueble">
             <td>
               <span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">
-                MB-{{ String(mueble.id_mueble).padStart(3,'0') }}
+                {{ mueble.id_mueble }}
               </span>
             </td>
             <td style="font-weight:600;color:var(--gray-800)">
