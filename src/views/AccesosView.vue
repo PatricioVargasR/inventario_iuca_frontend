@@ -99,20 +99,20 @@
     <!-- Detail Modal -->
     <BaseModal v-model="showDetail" title="Detalles del Acceso" size="lg">
       <template v-if="selected">
-        <div class="section-title" style="margin-top:0;color:var(--primary)">Información personal</div>
+        <div class="section-title" style="margin-top:0;">Información personal</div>
         <div class="detail-grid">
           <div class="detail-item"><label>ID</label><strong>{{ selected.id_acceso }}</strong></div>
           <div class="detail-item"><label>Correo electrónico</label><strong>{{ selected.correo_electronico }}</strong></div>
           <div class="detail-item"><label>Nombre completo</label><strong>{{ selected.nombre_usuario }}</strong></div>
           <div class="detail-item"><label>Área asignada</label><strong>{{ selected.area || '–' }}</strong></div>
         </div>
-        <div class="section-title" style="color:var(--primary)">Información de acceso</div>
+        <div class="section-title">Información de acceso</div>
         <div class="detail-grid" style="grid-template-columns:1fr 1fr 1fr;">
           <div class="detail-item"><label>Fecha de registro</label><strong>{{ selected.fecha_registro || '–' }}</strong></div>
           <div class="detail-item"><label>Último acceso</label><strong style="font-family:var(--font-mono);font-size:13px">{{ selected.ultimo_acceso || '–' }}</strong></div>
           <div class="detail-item"><label>Cuenta creada</label><strong>{{ selected.fecha_creacion?.slice(0,10) || '–' }}</strong></div>
         </div>
-        <div class="section-title" style="color:var(--primary)">Permisos de rol asignados</div>
+        <div class="section-title">Permisos de rol asignados</div>
         <div style="font-size:12.5px;color:var(--gray-500);margin-bottom:8px;">{{ selected.rol }} – Nivel {{ selected.nivel_acceso }}</div>
         <table class="permissions-table">
           <thead><tr><th>Módulo</th><th>Leer</th><th>Crear</th><th>Editar</th><th>Eliminar</th></tr></thead>
@@ -147,7 +147,7 @@
       </div>
 
       <form id="accesosForm" @submit.prevent="saveItem">
-        <div class="section-title" style="margin-top:0;color:var(--primary);display:flex;align-items:center;gap:6px;">
+        <div class="section-title" style="margin-top:0;display:flex;align-items:center;gap:6px;">
           Información personal
         </div>
         <div class="form-grid">
@@ -160,7 +160,7 @@
             <input v-model="form.correo_electronico" class="form-input" type="email" placeholder="usuario@iuca.edu.mx" required :disabled="editMode" />
           </div>
         </div>
-        <div class="section-title" style="color:var(--primary);display:flex;align-items:center;gap:6px;">
+        <div class="section-title" style="display:flex;align-items:center;gap:6px;">
           Información de acceso
         </div>
         <div class="form-grid">
@@ -187,7 +187,7 @@
         </div>
         <div style="margin-top:4px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;margin-bottom:12px;">
-            <div class="section-title" style="color:var(--primary);margin:0;">Permisos del rol asignado</div>
+            <div class="section-title" style="margin:0;">Permisos del rol asignado</div>
             <label class="select-all-label">
               <input
                 type="checkbox"

@@ -167,7 +167,7 @@
               :class="{ active: formTab === tab.key }"
               @click="formTab = tab.key"
             >
-              {{ tab.labelSingular }}
+              {{ tab.label }}
             </button>
           </div>
         </div>
@@ -281,10 +281,10 @@ import Pagination from '@/components/ui/Pagination.vue'
 const authStore = useAuthStore()
 
 const tabs = [
-  { key: 'area',            label: 'Áreas',               labelSingular: 'Área',               placeholder: 'Ej: Dirección, Sistemas...'  },
-  { key: 'estado',          label: 'Estados',             labelSingular: 'Estado',             placeholder: 'Ej: Bueno, Regular...'       },
-  { key: 'tipo_activo',     label: 'Tipos de activo',     labelSingular: 'Tipo de activo',     placeholder: 'Ej: Laptop, Escritorio...'   },
-  { key: 'tipo_mobiliario', label: 'Tipos de mobiliario', labelSingular: 'Tipo de mobiliario', placeholder: 'Ej: Silla, Mesa...'          },
+  { key: 'area',            label: 'Áreas',               labelSingular: 'área',               placeholder: 'Ej: Dirección, Sistemas...'  },
+  { key: 'estado',          label: 'Estados',             labelSingular: 'estado',             placeholder: 'Ej: Bueno, Regular...'       },
+  { key: 'tipo_activo',     label: 'Tipos de activo',     labelSingular: 'tipo de activo',     placeholder: 'Ej: Laptop, Escritorio...'   },
+  { key: 'tipo_mobiliario', label: 'Tipos de mobiliario', labelSingular: 'tipo de mobiliario', placeholder: 'Ej: Silla, Mesa...'          },
 ]
 
 const TABLA_MAP = {

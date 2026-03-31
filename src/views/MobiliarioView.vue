@@ -168,7 +168,7 @@
       </div>
 
       <form id="mobiliarioForm" @submit.prevent="saveMobiliario">
-        <div class="section-title" style="color:var(--primary);display:flex;align-items:center;gap:6px;">
+        <div class="section-title" style="display:flex;align-items:center;gap:6px;">
           Información general
         </div>
         <div class="form-grid">
@@ -200,7 +200,7 @@
           </div>
         </div>
 
-        <div class="section-title" style="color:var(--primary);display:flex;align-items:center;gap:6px;">
+        <div class="section-title" style="display:flex;align-items:center;gap:6px;">
           Detalles
         </div>
         <div class="form-grid">
