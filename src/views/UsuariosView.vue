@@ -65,7 +65,7 @@
     <BaseModal v-model="showDetail" title="Detalles del responsable" size="sm">
       <template v-if="selected">
         <div class="detail-grid">
-          <div class="detail-item"><label>ID</label><strong style="color:var(--primary);font-family:var(--font-mono)">ACC-{{ String(selected.id_usuario).padStart(3,'0') }}</strong></div>
+          <div class="detail-item"><label>ID</label><strong style="font-family:var(--font-mono)">{{ selected.id_usuario }}</strong></div>
           <div class="detail-item"><label>Área de adscripción</label><strong>{{ selected.area || '–' }}</strong></div>
           <div class="detail-item"><label>Puesto</label><strong>{{ selected.puesto || '–' }}</strong></div>
           <div class="detail-item"><label>Número de nómina</label><strong style="font-family:var(--font-mono)">{{ selected.numero_nomina || '–' }}</strong></div>

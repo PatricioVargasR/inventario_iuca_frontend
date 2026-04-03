@@ -213,7 +213,7 @@
         <div class="detail-grid">
           <div class="detail-item">
             <label>ID</label>
-            <strong style="font-family:var(--font-mono);color:var(--primary)">{{ getItemId(selected) }}</strong>
+            <strong style="font-family:var(--font-mono)">{{ getItemId(selected) }}</strong>
           </div>
           <div class="detail-item">
             <label>Estado</label>

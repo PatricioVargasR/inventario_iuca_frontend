@@ -137,7 +137,6 @@
           <div class="detail-item"><label>Color</label><strong>{{ selected.color || '–' }}</strong></div>
           <div class="detail-item"><label>Estado</label><StatusBadge :estado="selected.estado" :color="selected.color_estado" /></div>
           <div class="detail-item"><label>Responsable</label><strong>{{ selected.responsable || '–' }}</strong></div>
-          <div class="detail-item"><label>Fecha Asignación</label><strong>{{ formatDate(selected.fecha_asignacion) }}</strong></div>
         </div>
         <div v-if="selected.caracteristicas" style="margin-top:16px;">
           <div class="section-title">Características</div>
@@ -216,10 +215,6 @@
                 {{ u.nombre_usuario }}
               </option>
             </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Fecha de asignación</label>
-            <input v-model="form.fecha_asignacion" type="date" class="form-input" />
           </div>
           <div class="form-group">
             <label class="form-label">Sucursal <span class="required">*</span></label>
@@ -362,7 +357,6 @@ const form = reactive({
   observaciones: '',
   estado_id: '',
   usuario_asignado_id: '',
-  fecha_asignacion: '',
   sucursal_nombre: 'Tulancingo',
   version: null
 })
@@ -427,7 +421,6 @@ function openCreate() {
     observaciones: '',
     estado_id: '',
     usuario_asignado_id: '',
-    fecha_asignacion: '',
     sucursal_nombre: 'Tulancingo',
     version: null
   })
@@ -477,7 +470,6 @@ async function openEdit(mueble) {
     observaciones: d.observaciones || '',
     estado_id: d.estado_id,
     usuario_asignado_id: d.usuario_asignado_id || '',
-    fecha_asignacion: d.fecha_asignacion || '',
     sucursal_nombre: d.sucursal_nombre || 'Tulancingo',
     version: d.version
   })
@@ -624,7 +616,6 @@ async function handleConflictReload() {
     observaciones: d.observaciones || '',
     estado_id: d.estado_id,
     usuario_asignado_id: d.usuario_asignado_id || '',
-    fecha_asignacion: d.fecha_asignacion || '',
     sucursal_nombre: d.sucursal_nombre || 'Tulancingo',
     version: d.version
   })

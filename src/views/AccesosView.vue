@@ -108,12 +108,10 @@
         </div>
         <div class="section-title">Información de acceso</div>
         <div class="detail-grid" style="grid-template-columns:1fr 1fr 1fr;">
-          <div class="detail-item"><label>Fecha de registro</label><strong>{{ selected.fecha_registro || '–' }}</strong></div>
           <div class="detail-item"><label>Último acceso</label><strong style="font-family:var(--font-mono);font-size:13px">{{ selected.ultimo_acceso || '–' }}</strong></div>
           <div class="detail-item"><label>Cuenta creada</label><strong>{{ selected.fecha_creacion?.slice(0,10) || '–' }}</strong></div>
         </div>
         <div class="section-title">Permisos de rol asignados</div>
-        <div style="font-size:12.5px;color:var(--gray-500);margin-bottom:8px;">{{ selected.rol }} – Nivel {{ selected.nivel_acceso }}</div>
         <table class="permissions-table">
           <thead><tr><th>Módulo</th><th>Leer</th><th>Crear</th><th>Editar</th><th>Eliminar</th></tr></thead>
           <tbody>
