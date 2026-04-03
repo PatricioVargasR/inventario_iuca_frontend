@@ -63,18 +63,15 @@
             <td>{{ eq.tipo_activo }}</td>
             <td style="font-weight:700;color:var(--gray-800)">
               {{ eq.nombre_activo }}
-              <!-- Indicador de edición activa -->
-              <span v-if="eq.editado_por && eq.editado_por !== currentUserId" class="editing-badge" :title="`${eq.nombre_editor} está editando`">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                  <circle cx="12" cy="12" r="10"/>
-                </svg>
+              <span v-if="eq.editado_por && eq.editado_por !== currentUserId" class="editing-badge">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
               </span>
             </td>
             <td>{{ eq.marca || '–' }}</td>
             <td>{{ eq.modelo || '–' }}</td>
             <td><span style="font-family:var(--font-mono);font-size:12px">{{ eq.numero_serie || '–' }}</span></td>
             <td><StatusBadge :estado="eq.estado" :color="eq.color_estado" /></td>
-            <td>{{ eq.responsable || '–' }} </td>
+            <td>{{ eq.responsable || '–' }}</td>
             <td>
               <div class="actions-cell">
                 <button class="action-btn view" @click="openDetail(eq)" title="Ver detalle">
@@ -116,13 +113,7 @@
         <div v-if="selected.especificaciones" style="margin-top:16px;">
           <div class="section-title">Especificaciones</div>
           <div class="specs-box">
-            <div
-              v-for="(spec, i) in selected.especificaciones.split('|')"
-              :key="i"
-              class="spec-item"
-            >
-              {{ spec.trim() }}
-            </div>
+            <div v-for="(spec, i) in selected.especificaciones.split('|')" :key="i" class="spec-item">{{ spec.trim() }}</div>
           </div>
         </div>
         <div v-if="selected.observaciones" style="margin-top:14px;">
@@ -137,40 +128,37 @@
 
     <!-- Create/Edit Modal -->
     <BaseModal v-model="showForm" :title="editMode ? 'Actualizar Equipo' : 'Nuevo Equipo'" size="lg" @update:model-value="handleFormClose">
-      <!-- Banner de advertencia si alguien más está editando -->
       <div v-if="editMode && lockWarning" class="lock-warning">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
           <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
-        <div>
-          <strong>Advertencia:</strong>
-          <span>{{ lockWarning }}</span>
-        </div>
+        <div><strong>Advertencia:</strong><span>{{ lockWarning }}</span></div>
       </div>
 
-      <form id="equipoForm" @submit.prevent="saveEquipo">
-        <div class="section-title" style="display:flex;align-items:center;gap:6px;">
-          Información General
-        </div>
+      <form id="equipoForm" @submit.prevent="saveEquipo" novalidate>
+        <div class="section-title" style="display:flex;align-items:center;gap:6px;">Información General</div>
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">Tipo de Activo <span class="required">*</span></label>
-            <select v-model="form.tipo_activo_id" class="form-select" required>
+            <select v-model="form.tipo_activo_id" class="form-select" :class="{ 'input-error': formErrors.tipo_activo_id }" required>
               <option value="">Seleccionar...</option>
               <option v-for="t in catalogos.tipos" :key="t.id_tipo_activo" :value="t.id_tipo_activo">{{ t.nombre_tipo }}</option>
             </select>
+            <span v-if="formErrors.tipo_activo_id" class="field-error">{{ formErrors.tipo_activo_id }}</span>
           </div>
           <div class="form-group">
             <label class="form-label">Estado <span class="required">*</span></label>
-            <select v-model="form.estado_id" class="form-select" required>
+            <select v-model="form.estado_id" class="form-select" :class="{ 'input-error': formErrors.estado_id }" required>
               <option value="">Seleccionar...</option>
               <option v-for="e in catalogos.estados" :key="e.id_estado" :value="e.id_estado">{{ e.nombre_estado }}</option>
             </select>
+            <span v-if="formErrors.estado_id" class="field-error">{{ formErrors.estado_id }}</span>
           </div>
           <div class="form-group">
             <label class="form-label">Nombre del Activo <span class="required">*</span></label>
-            <input v-model="form.nombre_activo" class="form-input" placeholder="Ej: ThinkPad X1" required />
+            <input v-model="form.nombre_activo" class="form-input" :class="{ 'input-error': formErrors.nombre_activo }" placeholder="Ej: ThinkPad X1" maxlength="50" />
+            <span v-if="formErrors.nombre_activo" class="field-error">{{ formErrors.nombre_activo }}</span>
           </div>
           <div class="form-group">
             <label class="form-label">Responsable</label>
@@ -181,18 +169,32 @@
           </div>
         </div>
 
-        <div class="section-title" style="display:flex;align-items:center;gap:6px;">
-          Detalles
-        </div>
+        <div class="section-title">Detalles</div>
         <div class="form-grid">
-          <div class="form-group"><label class="form-label">Marca <span class="required">*</span></label><input v-model="form.marca" class="form-input" placeholder="Ej: Lenovo" required/></div>
-          <div class="form-group"><label class="form-label">Modelo <span class="required">*</span></label><input v-model="form.modelo" class="form-input" placeholder="Ej: ThinkPad X1" required /></div>
-          <div class="form-group"><label class="form-label">Número de Serie <span class="required">*</span></label><input v-model="form.numero_serie" class="form-input" placeholder="Ej: ABC123XYZ456" required /></div>
-          <div class="form-group"><label class="form-label">Sucursal <span class="required">*</span></label><input v-model="form.sucursal_nombre" class="form-input" required /></div>
+          <div class="form-group">
+            <label class="form-label">Marca <span class="required">*</span></label>
+            <input v-model="form.marca" class="form-input" :class="{ 'input-error': formErrors.marca }" placeholder="Ej: Lenovo" maxlength="50" />
+            <span v-if="formErrors.marca" class="field-error">{{ formErrors.marca }}</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Modelo <span class="required">*</span></label>
+            <input v-model="form.modelo" class="form-input" :class="{ 'input-error': formErrors.modelo }" placeholder="Ej: ThinkPad X1" maxlength="50" />
+            <span v-if="formErrors.modelo" class="field-error">{{ formErrors.modelo }}</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Número de Serie <span class="required">*</span></label>
+            <input v-model="form.numero_serie" class="form-input" :class="{ 'input-error': formErrors.numero_serie }" placeholder="Ej: ABC123XYZ456" maxlength="50" />
+            <span v-if="formErrors.numero_serie" class="field-error">{{ formErrors.numero_serie }}</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sucursal <span class="required">*</span></label>
+            <input v-model="form.sucursal_nombre" class="form-input" :class="{ 'input-error': formErrors.sucursal_nombre }" maxlength="50" />
+            <span v-if="formErrors.sucursal_nombre" class="field-error">{{ formErrors.sucursal_nombre }}</span>
+          </div>
           <div class="form-group span-full">
             <label class="form-label">Observaciones</label>
-            <textarea v-model="form.observaciones" class="form-textarea" placeholder="Escriba cualquier observación relevante aquí..." maxlength="200"></textarea>
-            <small style="color:var(--gray-400);font-size:11px;">{{ form.observaciones.length }} / 200 — Campo opcional para detalles</small>
+            <textarea v-model="form.observaciones" class="form-textarea" placeholder="Observaciones relevantes..." maxlength="500"></textarea>
+            <small style="color:var(--gray-400);font-size:11px;">{{ form.observaciones.length }} / 500</small>
           </div>
         </div>
 
@@ -204,7 +206,6 @@
           </button>
         </div>
 
-        <!-- Chips de acceso rápido cuando no hay tipo seleccionado o hay sugerencias disponibles -->
         <div v-if="form.tipo_activo_id && specSuggestions.length" class="spec-quick-chips">
           <span class="spec-chips-label">Agregar rápido:</span>
           <button
@@ -214,7 +215,6 @@
             class="spec-chip-btn"
             :class="{ used: form.especificaciones.some(s => s.nombre_especificacion === sug.nombre) }"
             @click="!form.especificaciones.some(s => s.nombre_especificacion === sug.nombre) && (form.especificaciones.push({ nombre_especificacion: sug.nombre, valor_especificacion: '', _placeholder: sug.placeholder }))"
-            :title="form.especificaciones.some(s => s.nombre_especificacion === sug.nombre) ? 'Ya agregado' : `Agregar: ${sug.nombre}`"
           >
             <svg v-if="form.especificaciones.some(s => s.nombre_especificacion === sug.nombre)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
             <svg v-else width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -232,17 +232,16 @@
           class="spec-row"
           :class="`spec-row-${i}`"
         >
-          <!-- Campo nombre con dropdown de sugerencias -->
           <div class="spec-nombre-wrapper">
             <input
               v-model="spec.nombre_especificacion"
               class="form-input"
+              :class="{ 'input-error': specErrors[i]?.nombre }"
               placeholder="RAM, Procesador..."
               @focus="openSuggestions(i)"
               @input="openSuggestions(i)"
               @blur="closeSuggestions"
             />
-            <!-- Dropdown -->
             <div v-if="activeSuggestionIndex === i && filteredSuggestions(i).length" class="spec-suggestions-dropdown">
               <button
                 v-for="sug in filteredSuggestions(i)"
@@ -257,24 +256,28 @@
               </button>
             </div>
           </div>
-
-          <!-- Campo valor con placeholder dinámico -->
-          <input
-            v-model="spec.valor_especificacion"
-            class="form-input spec-value-input"
-            :placeholder="spec._placeholder || 'Valor...'"
-          />
-
+          <div style="flex:1">
+            <input
+              v-model="spec.valor_especificacion"
+              class="form-input spec-value-input"
+              :class="{ 'input-error': specErrors[i]?.valor }"
+              :placeholder="spec._placeholder || 'Valor...'"
+            />
+          </div>
           <button type="button" class="spec-delete" @click="removeSpec(i)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
+
+        <!-- Error global de specs -->
+        <p v-if="formErrors.especificaciones" class="field-error" style="margin-top:6px;">{{ formErrors.especificaciones }}</p>
       </form>
+
       <template #footer>
         <button class="btn btn-secondary" @click="handleFormClose">Cancelar</button>
         <button class="btn btn-primary" form="equipoForm" type="submit" :disabled="saving">
           <span v-if="saving" class="spinner" style="width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:white;"></span>
-          <span v-else>{{ editMode ? 'Actualizar Equipo' : 'Crear' }}</span>
+          <span v-else>{{ editMode ? 'Actualizar Equipo' : 'Crear Equipo' }}</span>
         </button>
       </template>
     </BaseModal>
@@ -282,8 +285,8 @@
     <!-- Confirm Delete -->
     <ConfirmDialog
       v-model="showConfirm"
-      :title="`Eliminar Equipo`"
-      :message="`¿Estás seguro de eliminar el equipo '${toDelete?.nombre_activo}'? Esta acción no se puede deshacer.`"
+      title="Eliminar Equipo"
+      :message="`¿Estás seguro de eliminar '${toDelete?.nombre_activo}'? Esta acción no se puede deshacer.`"
       :loading="deleting"
       @confirm="doDelete"
       @cancel="handleCancelDelete"
@@ -300,7 +303,7 @@
       @retry="handleConcurrencyRetry"
     />
 
-    <!-- Conflict Resolution Modal -->
+    <!-- Conflict Modal -->
     <BaseModal v-model="showConflictModal" title="Conflicto de Versión Detectado" size="lg">
       <div class="conflict-warning">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -309,21 +312,17 @@
         </svg>
         <div>
           <h4>El registro fue modificado por otro usuario</h4>
-          <p>Mientras editabas, otro usuario guardó cambios en este equipo. Puedes:</p>
+          <p>Mientras editabas, otro usuario guardó cambios en este equipo.</p>
         </div>
       </div>
-
       <div class="conflict-options">
         <div class="conflict-option">
           <strong>Recargar datos actuales</strong>
           <p>Descartar tus cambios y ver la versión más reciente del registro</p>
         </div>
       </div>
-
       <template #footer>
-        <button class="btn btn-secondary" @click="handleConflictReload">
-          Recargar datos actuales
-        </button>
+        <button class="btn btn-secondary" @click="handleConflictReload">Recargar datos actuales</button>
       </template>
     </BaseModal>
   </div>
@@ -334,6 +333,7 @@ import { ref, reactive, onMounted, computed, onBeforeUnmount, nextTick } from 'v
 import { equiposApi, catalogosApi, usuariosApi, vistasApi } from '@/services/api'
 import { acquireLock, releaseLock } from '@/services/concurrency'
 import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/composables/useToast'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
@@ -341,6 +341,7 @@ import Pagination from '@/components/ui/Pagination.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
 
 const authStore = useAuthStore()
+const { toast } = useToast()
 const currentUserId = computed(() => authStore.user?.id_acceso)
 
 const equipos = ref([])
@@ -363,136 +364,201 @@ const toDelete = ref(null)
 const editMode = ref(false)
 const saving = ref(false)
 const deleting = ref(false)
-const pendingDelete = ref(null) // Para manejar bloqueo de eliminación
+const pendingDelete = ref(null)
 
 const lockWarning = ref(null)
 const currentLock = ref(null)
-const conflictData = ref(null)
 
-const concurrencyAlert = reactive({
-  title: '',
-  message: '',
-  lockInfo: null,
-  showRetry: false,
-})
+// ── Errores de formulario ────────────────────────────────────────
+const formErrors = reactive({})
+const specErrors = reactive({})
+
+function clearErrors() {
+  Object.keys(formErrors).forEach(k => delete formErrors[k])
+  Object.keys(specErrors).forEach(k => delete specErrors[k])
+}
+
+/**
+ * Aplica errores de campo devueltos por el backend (campo: mensaje)
+ * o por la validación frontend.
+ */
+function applyFieldErrors(campos) {
+  if (!campos) return
+  Object.entries(campos).forEach(([campo, mensaje]) => {
+    if (campo.startsWith('especificaciones[')) {
+      // "especificaciones[0].nombre" → specErrors[0].nombre
+      const match = campo.match(/\[(\d+)\]\.(.+)/)
+      if (match) {
+        const idx = parseInt(match[1])
+        const sub = match[2]
+        if (!specErrors[idx]) specErrors[idx] = {}
+        specErrors[idx][sub] = mensaje
+      }
+    } else {
+      formErrors[campo] = mensaje
+    }
+  })
+}
+
+// ── Validación frontend ──────────────────────────────────────────
+function validateForm() {
+  clearErrors()
+  let valid = true
+
+  if (!form.tipo_activo_id) {
+    formErrors.tipo_activo_id = '"Tipo de activo" es obligatorio'
+    valid = false
+  }
+  if (!form.estado_id) {
+    formErrors.estado_id = '"Estado" es obligatorio'
+    valid = false
+  }
+  if (!form.nombre_activo?.trim()) {
+    formErrors.nombre_activo = '"Nombre del activo" es obligatorio'
+    valid = false
+  }
+  if (!form.marca?.trim()) {
+    formErrors.marca = '"Marca" es obligatoria'
+    valid = false
+  }
+  if (!form.modelo?.trim()) {
+    formErrors.modelo = '"Modelo" es obligatorio'
+    valid = false
+  }
+  if (!form.numero_serie?.trim()) {
+    formErrors.numero_serie = '"Número de serie" es obligatorio'
+    valid = false
+  }
+  if (!form.sucursal_nombre?.trim()) {
+    formErrors.sucursal_nombre = '"Sucursal" es obligatoria'
+    valid = false
+  }
+
+  // Especificaciones: si se añadieron, validar que tengan nombre y valor
+  form.especificaciones.forEach((spec, i) => {
+    if (!spec.nombre_especificacion?.trim()) {
+      if (!specErrors[i]) specErrors[i] = {}
+      specErrors[i].nombre = 'El nombre es obligatorio'
+      valid = false
+    }
+    if (!spec.valor_especificacion?.trim()) {
+      if (!specErrors[i]) specErrors[i] = {}
+      specErrors[i].valor = 'El valor es obligatorio'
+      valid = false
+    }
+  })
+
+  return valid
+}
+
+const concurrencyAlert = reactive({ title: '', message: '', lockInfo: null, showRetry: false })
 
 const form = reactive({
   tipo_activo_id: '', estado_id: '', nombre_activo: '',
   usuario_asignado_id: '', marca: '', modelo: '',
   numero_serie: '', sucursal_nombre: 'Tulancingo',
   observaciones: '', especificaciones: [],
-  version: null // NUEVO: Para control de versiones
+  version: null
 })
 
-// Mapa de especificaciones sugeridas por tipo de equipo
-// La clave es el nombre_tipo tal como viene del catálogo (lowercase para comparar)
+// ── Specs sugerencias (igual que antes) ─────────────────────────
 const SPECS_MAP = {
   'pc': [
-    { nombre: 'Procesador',       placeholder: 'Ej: Intel Core i7-12700, 3.6GHz' },
-    { nombre: 'Núcleos',          placeholder: 'Ej: 8' },
-    { nombre: 'Memoria RAM',      placeholder: 'Ej: 16 GB' },
+    { nombre: 'Procesador', placeholder: 'Ej: Intel Core i7-12700, 3.6GHz' },
+    { nombre: 'Núcleos', placeholder: 'Ej: 8' },
+    { nombre: 'Memoria RAM', placeholder: 'Ej: 16 GB' },
     { nombre: 'Disco Duro (HDD)', placeholder: 'Ej: 1 TB' },
-    { nombre: 'SSD',              placeholder: 'Ej: 500 GB' },
+    { nombre: 'SSD', placeholder: 'Ej: 500 GB' },
     { nombre: 'Tarjeta de Video', placeholder: 'Ej: NVIDIA Quadro P1000' },
-    { nombre: 'VRAM',             placeholder: 'Ej: 4 GB' },
-    { nombre: 'Sistema Operativo',placeholder: 'Ej: Windows 10 Pro 64 bits' },
+    { nombre: 'VRAM', placeholder: 'Ej: 4 GB' },
+    { nombre: 'Sistema Operativo', placeholder: 'Ej: Windows 10 Pro 64 bits' },
   ],
   'laptop': [
-    { nombre: 'Procesador',       placeholder: 'Ej: Intel Core i7-4810MQ, 2.7GHz' },
-    { nombre: 'Memoria RAM',      placeholder: 'Ej: 32 GB' },
-    { nombre: 'SSD',              placeholder: 'Ej: 446 GB' },
+    { nombre: 'Procesador', placeholder: 'Ej: Intel Core i7-4810MQ, 2.7GHz' },
+    { nombre: 'Memoria RAM', placeholder: 'Ej: 32 GB' },
+    { nombre: 'SSD', placeholder: 'Ej: 446 GB' },
     { nombre: 'Disco Duro (HDD)', placeholder: 'Ej: 500 GB' },
     { nombre: 'Tarjeta de Video', placeholder: 'Ej: NVIDIA Quadro K2100M' },
-    { nombre: 'Sistema Operativo',placeholder: 'Ej: Windows 10 Enterprise 64 bits' },
-    { nombre: 'Pantalla',         placeholder: 'Ej: 15.6" FHD' },
+    { nombre: 'Sistema Operativo', placeholder: 'Ej: Windows 10 Enterprise 64 bits' },
+    { nombre: 'Pantalla', placeholder: 'Ej: 15.6" FHD' },
   ],
   'monitor': [
-    { nombre: 'Tamaño',           placeholder: 'Ej: 24"' },
-    { nombre: 'Resolución',       placeholder: 'Ej: 1920x1080' },
-    { nombre: 'Panel',            placeholder: 'Ej: IPS, TN, VA' },
-    { nombre: 'Frecuencia',       placeholder: 'Ej: 144 Hz' },
+    { nombre: 'Tamaño', placeholder: 'Ej: 24"' },
+    { nombre: 'Resolución', placeholder: 'Ej: 1920x1080' },
+    { nombre: 'Panel', placeholder: 'Ej: IPS, TN, VA' },
+    { nombre: 'Frecuencia', placeholder: 'Ej: 144 Hz' },
     { nombre: 'Tipo de conexión', placeholder: 'Ej: HDMI, DisplayPort' },
   ],
   'impresora': [
-    { nombre: 'Tipo',             placeholder: 'Ej: Láser, Inyección de tinta' },
-    { nombre: 'Tecnología',       placeholder: 'Ej: Monocromática, Color' },
-    { nombre: 'Conectividad',     placeholder: 'Ej: USB, WiFi, Red' },
-    { nombre: 'Velocidad',        placeholder: 'Ej: 30 ppm' },
+    { nombre: 'Tipo', placeholder: 'Ej: Láser, Inyección de tinta' },
+    { nombre: 'Tecnología', placeholder: 'Ej: Monocromática, Color' },
+    { nombre: 'Conectividad', placeholder: 'Ej: USB, WiFi, Red' },
+    { nombre: 'Velocidad', placeholder: 'Ej: 30 ppm' },
   ],
   'teléfono': [
-    { nombre: 'Memoria RAM',      placeholder: 'Ej: 3 GB' },
-    { nombre: 'Almacenamiento',   placeholder: 'Ej: 64 GB' },
-    { nombre: 'Sistema Operativo',placeholder: 'Ej: Android 11' },
-    { nombre: 'IMEI',             placeholder: 'Ej: 867166067556000' },
+    { nombre: 'Memoria RAM', placeholder: 'Ej: 3 GB' },
+    { nombre: 'Almacenamiento', placeholder: 'Ej: 64 GB' },
+    { nombre: 'Sistema Operativo', placeholder: 'Ej: Android 11' },
+    { nombre: 'IMEI', placeholder: 'Ej: 867166067556000' },
   ],
   'default': [
-    { nombre: 'Procesador',       placeholder: 'Ej: Intel Core i7' },
-    { nombre: 'Memoria RAM',      placeholder: 'Ej: 16 GB' },
-    { nombre: 'Almacenamiento',   placeholder: 'Ej: 500 GB' },
-    { nombre: 'Sistema Operativo',placeholder: 'Ej: Windows 10' },
+    { nombre: 'Procesador', placeholder: 'Ej: Intel Core i7' },
+    { nombre: 'Memoria RAM', placeholder: 'Ej: 16 GB' },
+    { nombre: 'Almacenamiento', placeholder: 'Ej: 500 GB' },
+    { nombre: 'Sistema Operativo', placeholder: 'Ej: Windows 10' },
   ]
 }
 
-// Devuelve la lista de sugerencias según el tipo de activo seleccionado en el form
 const specSuggestions = computed(() => {
   const tipo = catalogos.tipos.find(t => t.id_tipo_activo === form.tipo_activo_id)
   if (!tipo) return SPECS_MAP['default']
   const key = tipo.nombre_tipo.toLowerCase()
-  // Buscar coincidencia parcial en las claves del mapa
   const match = Object.keys(SPECS_MAP).find(k => key.includes(k))
   return SPECS_MAP[match] || SPECS_MAP['default']
 })
 
-// Estado del dropdown de sugerencias
-const activeSuggestionIndex = ref(null) // índice de la fila de spec que tiene el dropdown abierto
-const suggestionFilter = ref('')        // texto del input para filtrar sugerencias
+const activeSuggestionIndex = ref(null)
 
-function openSuggestions(i) {
-  activeSuggestionIndex.value = i
-  suggestionFilter.value = form.especificaciones[i].nombre_especificacion
-}
-
-function closeSuggestions() {
-  // Pequeño delay para que el click en la sugerencia alcance a dispararse
-  setTimeout(() => { activeSuggestionIndex.value = null }, 150)
-}
+function openSuggestions(i) { activeSuggestionIndex.value = i }
+function closeSuggestions() { setTimeout(() => { activeSuggestionIndex.value = null }, 150) }
 
 function applySuggestion(i, sugerencia) {
   form.especificaciones[i].nombre_especificacion = sugerencia.nombre
   form.especificaciones[i]._placeholder = sugerencia.placeholder
   activeSuggestionIndex.value = null
-  // Enfocar el campo de valor para que el usuario pueda escribir de inmediato
   nextTick(() => {
     const inputs = document.querySelectorAll(`.spec-row-${i} .spec-value-input`)
     if (inputs[0]) inputs[0].focus()
   })
 }
 
-// Sugerencias filtradas por lo que el usuario ya escribió
 function filteredSuggestions(i) {
   const texto = (form.especificaciones[i].nombre_especificacion || '').toLowerCase()
-  return specSuggestions.value.filter(s =>
-    s.nombre.toLowerCase().includes(texto)
-  )
+  return specSuggestions.value.filter(s => s.nombre.toLowerCase().includes(texto))
 }
 
+// ── Carga de datos ───────────────────────────────────────────────
 let searchTimeout = null
 
 async function loadCatalogos() {
-  const [tipos, estados, usuarios] = await Promise.all([
-    catalogosApi.getTiposActivoCompleto(),
-    catalogosApi.getEstadosCompleto(),
-    usuariosApi.listResponsables()
-  ])
-  catalogos.tipos = tipos.data
-  catalogos.estados = estados.data
-  catalogos.usuarios = usuarios.data
+  try {
+    const [tipos, estados, usuarios] = await Promise.all([
+      catalogosApi.getTiposActivoCompleto(),
+      catalogosApi.getEstadosCompleto(),
+      usuariosApi.listResponsables()
+    ])
+    catalogos.tipos = tipos.data
+    catalogos.estados = estados.data
+    catalogos.usuarios = usuarios.data
+  } catch {
+    toast.error('No se pudieron cargar los catálogos')
+  }
 }
 
 async function loadData() {
   loading.value = true
   try {
-    const params = { page: page.value, per_page: 5 }
+    const params = { page: page.value, per_page: 20 }
     if (filters.search) params.search = filters.search
     if (filters.tipo_activo_id) params.tipo_activo_id = filters.tipo_activo_id
     if (filters.estado_id) params.estado_id = filters.estado_id
@@ -501,8 +567,11 @@ async function loadData() {
     equipos.value = res.data.equipos
     total.value = res.data.total
     totalPages.value = res.data.pages
-  } catch (e) { console.error(e) }
-  finally { loading.value = false }
+  } catch {
+    toast.error('Error al cargar los equipos')
+  } finally {
+    loading.value = false
+  }
 }
 
 function onSearch() {
@@ -512,21 +581,26 @@ function onSearch() {
 
 function onPageChange(p) { page.value = p; loadData() }
 
+// ── Modales ──────────────────────────────────────────────────────
 async function openDetail(eq) {
-  const res = await vistasApi.getEquipos(eq.id_activo)
-  selected.value = res.data
-  showDetail.value = true
+  try {
+    const res = await vistasApi.getEquipos(eq.id_activo)
+    selected.value = res.data
+    showDetail.value = true
+  } catch {
+    toast.error('No se pudo cargar el detalle del equipo')
+  }
 }
 
 function openCreate() {
   editMode.value = false
   lockWarning.value = null
+  clearErrors()
   Object.assign(form, {
     tipo_activo_id: '', estado_id: '', nombre_activo: '',
     usuario_asignado_id: '', marca: '', modelo: '',
     numero_serie: '', sucursal_nombre: 'Tulancingo',
-    observaciones: '', especificaciones: [],
-    version: null
+    observaciones: '', especificaciones: [], version: null
   })
   showForm.value = true
 }
@@ -534,12 +608,11 @@ function openCreate() {
 async function openEdit(eq) {
   editMode.value = true
   lockWarning.value = null
+  clearErrors()
 
-  // Intentar adquirir bloqueo de edición
   const lockResult = await acquireLock('equipos_computo', eq.id_activo, 10, 'edicion')
 
   if (!lockResult.success) {
-    // Mostrar alerta si está bloqueado
     if (lockResult.locked) {
       const tipoAccion = lockResult.lockInfo.tipo_bloqueo === 'edicion' ? 'editando' : 'eliminando'
       concurrencyAlert.title = 'Registro en Uso'
@@ -548,107 +621,114 @@ async function openEdit(eq) {
       concurrencyAlert.showRetry = true
       showConcurrencyAlert.value = true
     } else {
-      alert(lockResult.error || 'Error al adquirir bloqueo')
+      toast.error(lockResult.error || 'Error al adquirir bloqueo')
     }
     return
   }
 
-  // Bloqueo adquirido exitosamente
   currentLock.value = lockResult.bloqueo
 
-  // Cargar datos del equipo
-  const res = await equiposApi.get(eq.id_activo)
-  const d = res.data
+  try {
+    const res = await equiposApi.get(eq.id_activo)
+    const d = res.data
 
-  // Verificar si alguien más estaba editando antes
-  if (d.editado_por && d.editado_por !== currentUserId.value) {
-    lockWarning.value = `${d.nombre_editor} estaba editando este registro`
+    if (d.editado_por && d.editado_por !== currentUserId.value) {
+      lockWarning.value = `${d.nombre_editor} estaba editando este registro`
+    }
+
+    Object.assign(form, {
+      tipo_activo_id: d.tipo_activo_id,
+      estado_id: d.estado_id,
+      nombre_activo: d.nombre_activo,
+      usuario_asignado_id: d.usuario_asignado_id || '',
+      marca: d.marca || '',
+      modelo: d.modelo || '',
+      numero_serie: d.numero_serie || '',
+      sucursal_nombre: d.sucursal_nombre || 'Tulancingo',
+      observaciones: d.observaciones || '',
+      especificaciones: d.especificaciones || [],
+      version: d.version
+    })
+    form._id = d.id_activo
+    showForm.value = true
+  } catch {
+    toast.error('No se pudieron cargar los datos del equipo')
+    await releaseLock('equipos_computo', eq.id_activo)
+    currentLock.value = null
   }
-
-  // Llenar formulario
-  Object.assign(form, {
-    tipo_activo_id: d.tipo_activo_id,
-    estado_id: d.estado_id,
-    nombre_activo: d.nombre_activo,
-    usuario_asignado_id: d.usuario_asignado_id || '',
-    marca: d.marca || '',
-    modelo: d.modelo || '',
-    numero_serie: d.numero_serie || '',
-    sucursal_nombre: d.sucursal_nombre || 'Tulancingo',
-    observaciones: d.observaciones || '',
-    especificaciones: d.especificaciones || [],
-    version: d.version
-  })
-  form._id = d.id_activo
-  showForm.value = true
 }
 
 function addSpec() { form.especificaciones.push({ nombre_especificacion: '', valor_especificacion: '' }) }
-function removeSpec(i) { form.especificaciones.splice(i, 1) }
+function removeSpec(i) { form.especificaciones.splice(i, 1); delete specErrors[i] }
 
 async function saveEquipo() {
+  // Validación frontend primero
+  if (!validateForm()) {
+    toast.warning('Revisa los campos marcados en el formulario')
+    return
+  }
+
   saving.value = true
   try {
-    const payload = {
-      ...form,
-      version: form.version // Enviar versión para validación
-    }
+    const payload = { ...form, version: form.version }
 
     if (editMode.value) {
       await equiposApi.update(form._id, payload)
+      toast.success('Equipo actualizado correctamente', 'Actualización exitosa')
     } else {
       await equiposApi.create(payload)
+      toast.success('Equipo registrado correctamente', 'Registro exitoso')
     }
 
     await handleFormClose(true)
     loadData()
+
   } catch (e) {
     const errorData = e.response?.data
 
-    // Conflicto de versión
     if (errorData?.error === 'conflict') {
-      conflictData.value = errorData
       showConflictModal.value = true
       saving.value = false
       return
     }
 
-    alert(errorData?.error || 'Error al guardar')
+    // Si el backend devuelve errores de campo, mostrarlos inline
+    if (errorData?.campos) {
+      applyFieldErrors(errorData.campos)
+      toast.warning(errorData.error || 'Revisa los campos del formulario')
+    } else {
+      toast.fromError(errorData)
+    }
   } finally {
     saving.value = false
   }
 }
 
 async function handleFormClose(shouldClose = true) {
-  // Liberar bloqueo si existe
   if (currentLock.value && editMode.value) {
     await releaseLock('equipos_computo', form._id)
     currentLock.value = null
   }
-
   lockWarning.value = null
-
   if (shouldClose) {
     showForm.value = false
+    clearErrors()
   }
 }
 
 async function confirmDelete(eq) {
-  //
-  const lockResult = await acquireLock('equipos_computo', eq.id_activo, 0.5, 'eliminacion')
+  const lockResult = await acquireLock('equipos_computo', eq.id_activo, 2, 'eliminacion')
 
   if (!lockResult.success) {
     if (lockResult.locked) {
-
       const tipoAccion = lockResult.lockInfo.tipo_bloqueo === 'edicion' ? 'editando' : 'eliminando'
-
       concurrencyAlert.title = 'No se puede eliminar'
       concurrencyAlert.message = `${lockResult.lockInfo.nombre_usuario} está ${tipoAccion} este equipo`
       concurrencyAlert.lockInfo = lockResult.lockInfo
       concurrencyAlert.showRetry = true
       showConcurrencyAlert.value = true
     } else {
-      alert(lockResult.error || 'Error al adquirir bloqueo')
+      toast.error(lockResult.error || 'Error al adquirir bloqueo')
     }
     return
   }
@@ -661,80 +741,25 @@ async function confirmDelete(eq) {
 async function doDelete() {
   deleting.value = true
   try {
-    // El bloqueo ya fue adquirido en confirmDelete
     await equiposApi.delete(toDelete.value.id_activo)
-
-    // Liberar bloqueo después de eliminar
     if (pendingDelete.value) {
       await releaseLock('equipos_computo', toDelete.value.id_activo)
       pendingDelete.value = null
     }
-
+    toast.success(`"${toDelete.value.nombre_activo}" fue eliminado`, 'Eliminado')
     showConfirm.value = false
     toDelete.value = null
     loadData()
   } catch (e) {
-    // Liberar bloqueo en caso de error
     if (pendingDelete.value) {
       await releaseLock('equipos_computo', toDelete.value.id_activo)
       pendingDelete.value = null
     }
-    alert(e.response?.data?.error || 'Error al eliminar')
+    toast.fromError(e.response?.data)
   } finally {
     deleting.value = false
   }
 }
-
-// Handlers de concurrencia
-function handleConcurrencyCancel() {
-  showConcurrencyAlert.value = false
-}
-
-async function handleConcurrencyRetry() {
-  showConcurrencyAlert.value = false
-
-  // Esperar un momento y reintentar
-  setTimeout(() => {
-    const registroId = concurrencyAlert.lockInfo?.registro_id
-    const eq = equipos.value.find(e => e.id_activo === registroId)
-
-    if (eq) {
-      // Si el alerta venía de un intento de eliminación
-      if (concurrencyAlert.title === 'No se puede eliminar') {
-        confirmDelete(eq)
-      } else {
-        // Si venía de edición
-        openEdit(eq)
-      }
-    }
-  }, 1000)
-}
-
-// Handlers de conflicto
-async function handleConflictReload() {
-  // Recargar datos actuales
-  const res = await equiposApi.get(form._id)
-  const d = res.data
-
-  Object.assign(form, {
-    tipo_activo_id: d.tipo_activo_id, estado_id: d.estado_id,
-    nombre_activo: d.nombre_activo, usuario_asignado_id: d.usuario_asignado_id || '',
-    marca: d.marca || '', modelo: d.modelo || '', numero_serie: d.numero_serie || '',
-    sucursal_nombre: d.sucursal_nombre || 'Tulancingo', observaciones: d.observaciones || '',
-    especificaciones: d.especificaciones || [],
-    version: d.version // Actualizar versión
-  })
-
-  showConflictModal.value = false
-  alert('Datos recargados. Por favor verifica los cambios antes de guardar.')
-}
-
-// Limpiar bloqueos al salir
-onBeforeUnmount(async () => {
-  if (currentLock.value && form._id) {
-    await releaseLock('equipos_computo', form._id)
-  }
-})
 
 async function handleCancelDelete() {
   if (pendingDelete.value && toDelete.value) {
@@ -745,10 +770,70 @@ async function handleCancelDelete() {
   showConfirm.value = false
 }
 
+function handleConcurrencyCancel() { showConcurrencyAlert.value = false }
+
+async function handleConcurrencyRetry() {
+  showConcurrencyAlert.value = false
+  setTimeout(() => {
+    const registroId = concurrencyAlert.lockInfo?.registro_id
+    const eq = equipos.value.find(e => e.id_activo === registroId)
+    if (eq) {
+      if (concurrencyAlert.title === 'No se puede eliminar') confirmDelete(eq)
+      else openEdit(eq)
+    }
+  }, 1000)
+}
+
+async function handleConflictReload() {
+  try {
+    const res = await equiposApi.get(form._id)
+    const d = res.data
+    Object.assign(form, {
+      tipo_activo_id: d.tipo_activo_id, estado_id: d.estado_id,
+      nombre_activo: d.nombre_activo, usuario_asignado_id: d.usuario_asignado_id || '',
+      marca: d.marca || '', modelo: d.modelo || '', numero_serie: d.numero_serie || '',
+      sucursal_nombre: d.sucursal_nombre || 'Tulancingo', observaciones: d.observaciones || '',
+      especificaciones: d.especificaciones || [], version: d.version
+    })
+    showConflictModal.value = false
+    clearErrors()
+    toast.info('Datos recargados. Verifica los cambios antes de guardar.')
+  } catch {
+    toast.error('No se pudieron recargar los datos')
+  }
+}
+
+onBeforeUnmount(async () => {
+  if (currentLock.value && form._id) {
+    await releaseLock('equipos_computo', form._id)
+  }
+})
+
 onMounted(() => { loadCatalogos(); loadData() })
 </script>
 
 <style scoped>
+/* ── Errores de campo ── */
+.input-error {
+  border-color: var(--danger) !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+}
+
+.field-error {
+  display: block;
+  font-size: 11.5px;
+  color: var(--danger);
+  margin-top: 4px;
+  font-weight: 500;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Badge edición activa ── */
 .editing-badge {
   display: inline-flex;
   align-items: center;
@@ -762,6 +847,7 @@ onMounted(() => { loadCatalogos(); loadData() })
   50% { opacity: 0.5; }
 }
 
+/* ── Lock warning ── */
 .lock-warning {
   display: flex;
   align-items: flex-start;
@@ -773,22 +859,11 @@ onMounted(() => { loadCatalogos(); loadData() })
   margin-bottom: 20px;
   color: #92400e;
 }
+.lock-warning svg { flex-shrink: 0; margin-top: 2px; }
+.lock-warning strong { display: block; font-size: 13px; margin-bottom: 2px; }
+.lock-warning span { font-size: 12px; }
 
-.lock-warning svg {
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.lock-warning strong {
-  display: block;
-  font-size: 13px;
-  margin-bottom: 2px;
-}
-
-.lock-warning span {
-  font-size: 12px;
-}
-
+/* ── Conflict warning ── */
 .conflict-warning {
   display: flex;
   gap: 16px;
@@ -797,57 +872,15 @@ onMounted(() => { loadCatalogos(); loadData() })
   border-radius: 12px;
   margin-bottom: 20px;
 }
+.conflict-warning svg { color: #d97706; flex-shrink: 0; }
+.conflict-warning h4 { font-size: 16px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px; }
+.conflict-warning p { font-size: 13px; color: var(--gray-600); margin: 0; }
+.conflict-options { display: flex; flex-direction: column; gap: 12px; }
+.conflict-option { padding: 14px; background: var(--gray-50); border-radius: 8px; border: 1px solid var(--gray-200); }
+.conflict-option strong { display: block; font-size: 14px; color: var(--gray-900); margin-bottom: 4px; }
+.conflict-option p { font-size: 12px; color: var(--gray-600); margin: 0; }
 
-.conflict-warning svg {
-  color: #d97706;
-  flex-shrink: 0;
-}
-
-.conflict-warning h4 {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--gray-900);
-  margin-bottom: 6px;
-}
-
-.conflict-warning p {
-  font-size: 13px;
-  color: var(--gray-600);
-  margin: 0;
-}
-
-.conflict-options {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.conflict-option {
-  padding: 14px;
-  background: var(--gray-50);
-  border-radius: 8px;
-  border: 1px solid var(--gray-200);
-}
-
-.conflict-option strong {
-  display: block;
-  font-size: 14px;
-  color: var(--gray-900);
-  margin-bottom: 4px;
-}
-
-.conflict-option p {
-  font-size: 12px;
-  color: var(--gray-600);
-  margin: 0;
-}
-
-.action-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* Chips de acceso rápido */
+/* ── Spec chips ── */
 .spec-quick-chips {
   display: flex;
   flex-wrap: wrap;
@@ -859,7 +892,6 @@ onMounted(() => { loadCatalogos(); loadData() })
   border: 1px dashed var(--gray-300);
   border-radius: 8px;
 }
-
 .spec-chips-label {
   font-size: 11px;
   font-weight: 700;
@@ -869,7 +901,6 @@ onMounted(() => { loadCatalogos(); loadData() })
   margin-right: 4px;
   white-space: nowrap;
 }
-
 .spec-chip-btn {
   display: inline-flex;
   align-items: center;
@@ -884,14 +915,12 @@ onMounted(() => { loadCatalogos(); loadData() })
   cursor: pointer;
   transition: all 0.15s;
 }
-
 .spec-chip-btn:hover:not(.used) {
   border-color: var(--primary);
   color: var(--primary);
   background: var(--primary-light, #eef2ff);
   transform: translateY(-1px);
 }
-
 .spec-chip-btn.used {
   background: #f0fdf4;
   border-color: #86efac;
@@ -899,8 +928,6 @@ onMounted(() => { loadCatalogos(); loadData() })
   cursor: default;
   opacity: 0.75;
 }
-
-/* Hint sin tipo seleccionado */
 .spec-hint {
   display: flex;
   align-items: center;
@@ -910,14 +937,7 @@ onMounted(() => { loadCatalogos(); loadData() })
   margin-bottom: 10px;
   font-style: italic;
 }
-
-/* Wrapper con posición relativa para el dropdown */
-.spec-nombre-wrapper {
-  position: relative;
-  flex: 1;
-}
-
-/* Dropdown de sugerencias */
+.spec-nombre-wrapper { position: relative; flex: 1; }
 .spec-suggestions-dropdown {
   position: absolute;
   top: calc(100% + 4px);
@@ -932,7 +952,6 @@ onMounted(() => { loadCatalogos(); loadData() })
   max-height: 220px;
   overflow-y: auto;
 }
-
 .spec-suggestion-item {
   display: flex;
   flex-direction: column;
@@ -945,24 +964,10 @@ onMounted(() => { loadCatalogos(); loadData() })
   cursor: pointer;
   transition: background 0.1s;
 }
+.spec-suggestion-item:hover:not(.used) { background: var(--gray-50); }
+.spec-suggestion-item.used { opacity: 0.4; cursor: default; }
+.sug-nombre { font-size: 13px; font-weight: 600; color: var(--gray-800); }
+.sug-ejemplo { font-size: 11px; color: var(--gray-400); }
 
-.spec-suggestion-item:hover:not(.used) {
-  background: var(--gray-50);
-}
-
-.spec-suggestion-item.used {
-  opacity: 0.4;
-  cursor: default;
-}
-
-.sug-nombre {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--gray-800);
-}
-
-.sug-ejemplo {
-  font-size: 11px;
-  color: var(--gray-400);
-}
+.action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>
