@@ -116,17 +116,11 @@
           <thead><tr><th>Módulo</th><th>Leer</th><th>Crear</th><th>Editar</th><th>Eliminar</th></tr></thead>
           <tbody>
             <tr
-              v-for="p in [...selected.permisos].sort((a, b) =>
-              a.modulo.localeCompare(b.modulo))"
+              v-for="p in [...selected.permisos].sort((a, b) => a.modulo.localeCompare(b.modulo))"
               :key="p.modulo"
             >
               <td><span style="text-transform: capitalize;">{{ p.modulo }}</span></td>
-              <td>
-                <span class="perm-icon" :class="{ active: p.leer }">
-                  <svg v-if="p.leer" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                  <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </span>
-              </td>
+              <td><span class="perm-icon" :class="{ active: p.leer }"><svg v-if="p.leer" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
               <td><span v-if="p.modulo!=='historial'" class="perm-icon" :class="{ active: p.crear }"><svg v-if="p.crear" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
               <td><span v-if="p.modulo!=='historial'" class="perm-icon" :class="{ active: p.actualizar }"><svg v-if="p.actualizar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
               <td><span v-if="p.modulo!=='historial'" class="perm-icon" :class="{ active: p.eliminar }"><svg v-if="p.eliminar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
@@ -141,7 +135,7 @@
 
     <!-- Form Modal -->
     <BaseModal v-model="showForm" :title="editMode ? 'Editar acceso' : 'Registro de acceso'" subtitle="Sistema de inventario IUCA" size="lg" @update:model-value="handleFormClose">
-      <!-- Banner de advertencia si alguien más está editando -->
+      <!-- Banner lock warning -->
       <div v-if="editMode && lockWarning" class="lock-warning">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
@@ -153,45 +147,80 @@
         </div>
       </div>
 
-      <form id="accesosForm" @submit.prevent="saveItem">
-        <div class="section-title" style="margin-top:0;display:flex;align-items:center;gap:6px;">
-          Información personal
-        </div>
+      <form id="accesosForm" @submit.prevent="saveItem" novalidate>
+        <div class="section-title" style="margin-top:0;">Información personal</div>
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">Nombre completo <span class="required">*</span></label>
-            <input v-model="form.nombre_usuario" class="form-input" placeholder="Ej. Juan Pérez" required />
+            <input
+              v-model="form.nombre_usuario"
+              class="form-input"
+              :class="{ 'input-error': formErrors.nombre_usuario }"
+              placeholder="Ej. Juan Pérez"
+            />
+            <span v-if="formErrors.nombre_usuario" class="field-error">{{ formErrors.nombre_usuario }}</span>
           </div>
           <div class="form-group">
             <label class="form-label">Correo electrónico <span class="required">*</span></label>
-            <input v-model="form.correo_electronico" class="form-input" type="email" placeholder="usuario@iuca.edu.mx" required :disabled="editMode" />
+            <input
+              v-model="form.correo_electronico"
+              class="form-input"
+              :class="{ 'input-error': formErrors.correo_electronico }"
+              type="email"
+              placeholder="usuario@iuca.edu.mx"
+              :disabled="editMode"
+            />
+            <span v-if="formErrors.correo_electronico" class="field-error">{{ formErrors.correo_electronico }}</span>
           </div>
         </div>
-        <div class="section-title" style="display:flex;align-items:center;gap:6px;">
-          Información de acceso
-        </div>
+
+        <div class="section-title">Información de acceso</div>
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">Contraseña <span v-if="!editMode" class="required">*</span></label>
             <div style="position:relative;">
-              <input v-model="form.password" :type="showPass ? 'text' : 'password'" class="form-input" placeholder="••••••••" :required="!editMode" style="padding-right:38px;" maxlength="10" minlength="10"/>
+              <input
+                v-model="form.password"
+                :type="showPass ? 'text' : 'password'"
+                class="form-input"
+                :class="{ 'input-error': formErrors.password }"
+                placeholder="••••••••"
+                style="padding-right:38px;"
+                maxlength="10"
+              />
               <button type="button" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--gray-400);" @click="showPass=!showPass">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
               </button>
             </div>
+            <span v-if="formErrors.password" class="field-error">{{ formErrors.password }}</span>
           </div>
           <div class="form-group">
             <label class="form-label">Confirmar contraseña <span v-if="!editMode" class="required">*</span></label>
-            <input v-model="form.confirm_password" :type="showPass ? 'text' : 'password'" class="form-input" placeholder="••••••••" :required="!editMode" maxlength="10" minlength="10" />
+            <input
+              v-model="form.confirm_password"
+              :type="showPass ? 'text' : 'password'"
+              class="form-input"
+              :class="{ 'input-error': formErrors.confirm_password }"
+              placeholder="••••••••"
+              maxlength="10"
+            />
+            <span v-if="formErrors.confirm_password" class="field-error">{{ formErrors.confirm_password }}</span>
           </div>
           <div class="form-group">
             <label class="form-label">Área asignada <span class="required">*</span></label>
-            <select v-model="form.area_id" class="form-select" style="max-width:260px;" required>
+            <select
+              v-model="form.area_id"
+              class="form-select"
+              :class="{ 'input-error': formErrors.area_id }"
+              style="max-width:260px;"
+            >
               <option value="">Seleccionar área</option>
               <option v-for="a in catalogos.areas" :key="a.id_area" :value="a.id_area">{{ a.nombre_area }}</option>
             </select>
+            <span v-if="formErrors.area_id" class="field-error">{{ formErrors.area_id }}</span>
           </div>
         </div>
+
         <div style="margin-top:4px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;margin-bottom:12px;">
             <div class="section-title" style="margin:0;">Permisos del rol asignado</div>
@@ -211,34 +240,14 @@
             </thead>
             <tbody>
               <tr
-                v-for="p in [...permisosComoArray()].sort((a, b) =>
-                  a.modulo.localeCompare(b.modulo))"
-                :key="p.modulo">
+                v-for="p in [...permisosComoArray()].sort((a, b) => a.modulo.localeCompare(b.modulo))"
+                :key="p.modulo"
+              >
                 <td>{{ formatModuloNombre(p.modulo) }}</td>
-                <td>
-                  <span class="perm-icon" :class="{ active: p.puede_leer }" @click="togglePermiso(p, 'puede_leer')">
-                    <svg v-if="p.puede_leer" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  </span>
-                </td>
-                <td>
-                  <span  v-if="p.modulo!=='historial'" class="perm-icon" :class="{ active: p.puede_crear }" @click="togglePermiso(p, 'puede_crear')">
-                    <svg v-if="p.puede_crear" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  </span>
-                </td>
-                <td>
-                  <span  v-if="p.modulo!=='historial'" class="perm-icon" :class="{ active: p.puede_actualizar }" @click="togglePermiso(p, 'puede_actualizar')">
-                    <svg v-if="p.puede_actualizar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  </span>
-                </td>
-                <td>
-                  <span  v-if="p.modulo!=='historial'" class="perm-icon" :class="{ active: p.puede_eliminar }" @click="togglePermiso(p, 'puede_eliminar')">
-                    <svg v-if="p.puede_eliminar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  </span>
-                </td>
+                <td><span class="perm-icon" :class="{ active: p.puede_leer }" @click="togglePermiso(p, 'puede_leer')"><svg v-if="p.puede_leer" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
+                <td><span v-if="p.modulo!=='historial'" class="perm-icon" :class="{ active: p.puede_crear }" @click="togglePermiso(p, 'puede_crear')"><svg v-if="p.puede_crear" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
+                <td><span v-if="p.modulo!=='historial'" class="perm-icon" :class="{ active: p.puede_actualizar }" @click="togglePermiso(p, 'puede_actualizar')"><svg v-if="p.puede_actualizar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
+                <td><span v-if="p.modulo!=='historial'" class="perm-icon" :class="{ active: p.puede_eliminar }" @click="togglePermiso(p, 'puede_eliminar')"><svg v-if="p.puede_eliminar" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></td>
               </tr>
             </tbody>
           </table>
@@ -285,7 +294,7 @@
         </svg>
         <div>
           <h4>El registro fue modificado por otro usuario</h4>
-          <p>Mientras editabas, otro usuario guardó cambios en este acceso. Puedes:</p>
+          <p>Mientras editabas, otro usuario guardó cambios en este acceso.</p>
         </div>
       </div>
       <div class="conflict-options">
@@ -308,12 +317,14 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
 import { usuariosApi, catalogosApi, vistasApi } from '@/services/api'
 import { acquireLock, releaseLock } from '@/services/concurrency'
 import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/composables/useToast'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 
 const authStore = useAuthStore()
+const { toast } = useToast()
 const currentUserId = computed(() => authStore.user?.id_acceso)
 
 const items = ref([])
@@ -345,7 +356,84 @@ const showPass = ref(false)
 
 const lockWarning = ref(null)
 const currentLock = ref(null)
-const conflictData = ref(null)
+
+// ── Errores de formulario ────────────────────────────────────────
+const formErrors = reactive({})
+
+function clearErrors() {
+  Object.keys(formErrors).forEach(k => delete formErrors[k])
+}
+
+function applyFieldErrors(campos) {
+  if (!campos) return
+  Object.entries(campos).forEach(([campo, mensaje]) => {
+    formErrors[campo] = mensaje
+  })
+}
+
+// ── Validación frontend ──────────────────────────────────────────
+function validateForm() {
+  clearErrors()
+  let valid = true
+
+  if (!form.nombre_usuario?.trim()) {
+    formErrors.nombre_usuario = '"Nombre completo" es obligatorio'
+    valid = false
+  } else if (form.nombre_usuario.trim().length > 100) {
+    formErrors.nombre_usuario = 'El nombre no puede superar 100 caracteres'
+    valid = false
+  }
+
+  if (!editMode.value) {
+    if (!form.correo_electronico?.trim()) {
+      formErrors.correo_electronico = '"Correo electrónico" es obligatorio'
+      valid = false
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.correo_electronico)) {
+      formErrors.correo_electronico = 'El correo electrónico no tiene un formato válido'
+      valid = false
+    }
+  }
+
+  if (!form.area_id) {
+    formErrors.area_id = '"Área asignada" es obligatoria'
+    valid = false
+  }
+
+  if (!editMode.value) {
+    if (!form.password) {
+      formErrors.password = '"Contraseña" es obligatoria'
+      valid = false
+    } else if (form.password.length !== 10) {
+      formErrors.password = 'La contraseña debe tener exactamente 10 caracteres'
+      valid = false
+    }
+
+    if (!form.confirm_password) {
+      formErrors.confirm_password = 'Debes confirmar la contraseña'
+      valid = false
+    } else if (form.password && form.password !== form.confirm_password) {
+      formErrors.confirm_password = 'Las contraseñas no coinciden'
+      valid = false
+    }
+  } else {
+    // En edición, la contraseña es opcional pero si se llena se valida
+    if (form.password) {
+      if (form.password.length !== 10) {
+        formErrors.password = 'La contraseña debe tener exactamente 10 caracteres'
+        valid = false
+      }
+      if (!form.confirm_password) {
+        formErrors.confirm_password = 'Debes confirmar la nueva contraseña'
+        valid = false
+      } else if (form.password !== form.confirm_password) {
+        formErrors.confirm_password = 'Las contraseñas no coinciden'
+        valid = false
+      }
+    }
+  }
+
+  return valid
+}
 
 const concurrencyAlert = reactive({
   title: '',
@@ -397,19 +485,16 @@ function formatDate(d) {
   return dt.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + dt.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
 }
 
-// Campos que "dependen" de leer — si alguno está activo, leer se fuerza
 const DEPENDEN_DE_LEER = ['puede_crear', 'puede_actualizar', 'puede_eliminar']
 
 function togglePermiso(p, campo) {
   const nuevoValor = !p[campo]
   p[campo] = nuevoValor
 
-  // Si se activa crear/editar/eliminar y leer estaba apagado → encender leer
   if (nuevoValor && DEPENDEN_DE_LEER.includes(campo) && !p.puede_leer) {
     p.puede_leer = true
   }
 
-  // Si se desactiva leer → desactivar también los dependientes
   if (!nuevoValor && campo === 'puede_leer') {
     p.puede_crear = false
     p.puede_actualizar = false
@@ -417,7 +502,6 @@ function togglePermiso(p, campo) {
   }
 }
 
-// Normaliza permisos sin importar si llegan como array o como objeto
 function permisosComoArray() {
   if (Array.isArray(form.permisos)) return form.permisos
   return Object.values(form.permisos)
@@ -447,8 +531,12 @@ function toggleTodos() {
 }
 
 async function loadCatalogos() {
-  const areas = await catalogosApi.getAreasCompleto()
-  catalogos.areas = areas.data
+  try {
+    const areas = await catalogosApi.getAreasCompleto()
+    catalogos.areas = areas.data
+  } catch {
+    toast.error('No se pudieron cargar los catálogos')
+  }
 }
 
 async function loadData() {
@@ -465,8 +553,8 @@ async function loadData() {
     items.value = res.data.accesos
     total.value = res.data.total
     totalPages.value = res.data.pages
-  } catch (e) {
-    console.error(e)
+  } catch {
+    toast.error('Error al cargar los accesos')
   } finally {
     loading.value = false
   }
@@ -474,7 +562,7 @@ async function loadData() {
 
 function onSearch() {
   clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(loadData, 400)
+  searchTimeout = setTimeout(() => { page.value = 1; loadData() }, 400)
 }
 
 function onPageChange(p) {
@@ -500,6 +588,7 @@ async function openDetail(acc) {
 function openCreate() {
   editMode.value = false
   lockWarning.value = null
+  clearErrors()
   Object.assign(form, {
     nombre_usuario: '',
     correo_electronico: '',
@@ -515,6 +604,7 @@ function openCreate() {
 async function openEdit(acc) {
   editMode.value = true
   lockWarning.value = null
+  clearErrors()
 
   const lockResult = await acquireLock('acceso', acc.id_acceso, 10, 'edicion')
 
@@ -528,40 +618,46 @@ async function openEdit(acc) {
       concurrencyAlert.showRetry = true
       showConcurrencyAlert.value = true
     } else {
-      alert(lockResult.error || 'Error al adquirir bloqueo')
+      toast.error(lockResult.error || 'Error al adquirir bloqueo')
     }
     return
   }
 
   currentLock.value = lockResult.bloqueo
 
-  // usuariosApi.getAcceso en lugar de accesosApi.get
-  const res = await usuariosApi.getAcceso(acc.id_acceso)
-  const d = res.data
+  try {
+    const res = await usuariosApi.getAcceso(acc.id_acceso)
+    const d = res.data
 
-  if (d.editado_por && d.editado_por !== currentUserId.value) {
-    lockWarning.value = `${d.nombre_editor} estaba editando este registro`
+    if (d.editado_por && d.editado_por !== currentUserId.value) {
+      lockWarning.value = `${d.nombre_editor} estaba editando este registro`
+    }
+
+    Object.assign(form, {
+      nombre_usuario: d.nombre_usuario,
+      correo_electronico: d.correo_electronico,
+      area_id: d.area_id || '',
+      password: '',
+      confirm_password: '',
+      permisos: d.permisos ? JSON.parse(JSON.stringify(d.permisos)) : JSON.parse(JSON.stringify(defaultPermisos)),
+      version: d.version,
+      _id: d.id_acceso
+    })
+
+    showForm.value = true
+  } catch {
+    toast.error('No se pudieron cargar los datos del acceso')
+    await releaseLock('acceso', acc.id_acceso)
+    currentLock.value = null
   }
-
-  Object.assign(form, {
-    nombre_usuario: d.nombre_usuario,
-    correo_electronico: d.correo_electronico,
-    area_id: d.area_id || '',
-    password: '',
-    confirm_password: '',
-    permisos: d.permisos ? JSON.parse(JSON.stringify(d.permisos)) : JSON.parse(JSON.stringify(defaultPermisos)),
-    version: d.version,
-    _id: d.id_acceso
-  })
-
-  showForm.value = true
 }
 
 async function saveItem() {
-  if (form.password && form.password !== form.confirm_password) {
-    alert('Las contraseñas no coinciden')
+  if (!validateForm()) {
+    toast.warning('Revisa los campos marcados en el formulario')
     return
   }
+
   saving.value = true
   try {
     const payload = {
@@ -574,24 +670,30 @@ async function saveItem() {
     if (form.password) payload.password = form.password
 
     if (editMode.value) {
-      // usuariosApi.updateAcceso en lugar de accesosApi.update
       await usuariosApi.updateAcceso(form._id, payload)
+      toast.success('Acceso actualizado correctamente', 'Actualización exitosa')
     } else {
-      // usuariosApi.createAcceso en lugar de accesosApi.create
       await usuariosApi.createAcceso(payload)
+      toast.success('Acceso registrado correctamente', 'Registro exitoso')
     }
 
     await handleFormClose(true)
     loadData()
   } catch (e) {
     const errorData = e.response?.data
+
     if (errorData?.error === 'conflict') {
-      conflictData.value = errorData
       showConflictModal.value = true
       saving.value = false
       return
     }
-    alert(errorData?.error || 'Error al guardar')
+
+    if (errorData?.campos) {
+      applyFieldErrors(errorData.campos)
+      toast.warning(errorData.error || 'Revisa los campos del formulario')
+    } else {
+      toast.fromError(errorData)
+    }
   } finally {
     saving.value = false
   }
@@ -603,7 +705,10 @@ async function handleFormClose(shouldClose = true) {
     currentLock.value = null
   }
   lockWarning.value = null
-  if (shouldClose) showForm.value = false
+  if (shouldClose) {
+    showForm.value = false
+    clearErrors()
+  }
 }
 
 async function confirmDelete(acc) {
@@ -619,7 +724,7 @@ async function confirmDelete(acc) {
       concurrencyAlert.showRetry = true
       showConcurrencyAlert.value = true
     } else {
-      alert(lockResult.error || 'Error al adquirir bloqueo')
+      toast.error(lockResult.error || 'Error al adquirir bloqueo')
     }
     return
   }
@@ -632,12 +737,12 @@ async function confirmDelete(acc) {
 async function doDelete() {
   deleting.value = true
   try {
-    // usuariosApi.deleteAcceso en lugar de accesosApi.delete
     await usuariosApi.deleteAcceso(toDelete.value.id_acceso)
     if (pendingDelete.value) {
       await releaseLock('acceso', toDelete.value.id_acceso)
       pendingDelete.value = null
     }
+    toast.success(`El acceso de "${toDelete.value.nombre_usuario}" fue eliminado`, 'Eliminado')
     showConfirm.value = false
     toDelete.value = null
     loadData()
@@ -646,7 +751,7 @@ async function doDelete() {
       await releaseLock('acceso', toDelete.value.id_acceso)
       pendingDelete.value = null
     }
-    alert(e.response?.data?.error || 'Error al eliminar')
+    toast.fromError(e.response?.data)
   } finally {
     deleting.value = false
   }
@@ -678,22 +783,25 @@ async function handleConcurrencyRetry() {
 }
 
 async function handleConflictReload() {
-  // usuariosApi.getAcceso en lugar de accesosApi.get
-  const res = await usuariosApi.getAcceso(form._id)
-  const d = res.data
-  Object.assign(form, {
-    nombre_usuario: d.nombre_usuario,
-    correo_electronico: d.correo_electronico,
-    area_id: d.area_id || '',
-    password: '',
-    confirm_password: '',
-    permisos: d.permisos ? JSON.parse(JSON.stringify(d.permisos)) : JSON.parse(JSON.stringify(defaultPermisos)),
-    version: d.version
-  })
-  showConflictModal.value = false
-  alert('Datos recargados. Por favor verifica los cambios antes de guardar.')
+  try {
+    const res = await usuariosApi.getAcceso(form._id)
+    const d = res.data
+    Object.assign(form, {
+      nombre_usuario: d.nombre_usuario,
+      correo_electronico: d.correo_electronico,
+      area_id: d.area_id || '',
+      password: '',
+      confirm_password: '',
+      permisos: d.permisos ? JSON.parse(JSON.stringify(d.permisos)) : JSON.parse(JSON.stringify(defaultPermisos)),
+      version: d.version
+    })
+    showConflictModal.value = false
+    clearErrors()
+    toast.info('Datos recargados. Verifica los cambios antes de guardar.')
+  } catch {
+    toast.error('No se pudieron recargar los datos')
+  }
 }
-
 
 function formatModuloNombre(modulo) {
   const nombres = {
@@ -709,15 +817,67 @@ onBeforeUnmount(async () => {
   }
 })
 
-
 onMounted(() => {
   loadCatalogos()
   loadData()
 })
 </script>
 
-<style>
-/* ===== FILTROS UNIFICADOS - DISEÑO INTEGRADO ===== */
+<style scoped>
+/* ── Errores de campo ── */
+.input-error {
+  border-color: var(--danger) !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+}
+
+.field-error {
+  display: block;
+  font-size: 11.5px;
+  color: var(--danger);
+  margin-top: 4px;
+  font-weight: 500;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Lock warning ── */
+.lock-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  color: #92400e;
+}
+.lock-warning svg { flex-shrink: 0; margin-top: 2px; }
+.lock-warning strong { display: block; font-size: 13px; margin-bottom: 2px; }
+.lock-warning span { font-size: 12px; }
+
+/* ── Conflict warning ── */
+.conflict-warning {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  background: #fef3c7;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+.conflict-warning svg { color: #d97706; flex-shrink: 0; }
+.conflict-warning h4 { font-size: 16px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px; }
+.conflict-warning p { font-size: 13px; color: var(--gray-600); margin: 0; }
+.conflict-options { display: flex; flex-direction: column; gap: 12px; }
+.conflict-option { padding: 14px; background: var(--gray-50); border-radius: 8px; border: 1px solid var(--gray-200); }
+.conflict-option strong { display: block; font-size: 14px; color: var(--gray-900); margin-bottom: 4px; }
+.conflict-option p { font-size: 12px; color: var(--gray-600); margin: 0; }
+
+/* ── Filtros ── */
 .filters-card {
   background: white;
   border-radius: 12px;
@@ -732,22 +892,6 @@ onMounted(() => {
   gap: 16px;
   align-items: flex-end;
   flex-wrap: wrap;
-}
-
-.filter-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.filter-item.search-filter {
-  flex: 1;
-  min-width: 240px;
-}
-
-.filter-item.clear-action {
-  justify-content: flex-end;
-  padding-bottom: 2px;
 }
 
 .filter-label {
@@ -771,62 +915,6 @@ onMounted(() => {
   font-style: italic;
 }
 
-.form-input.compact,
-.form-select.compact {
-  padding: 8px 12px;
-  font-size: 13px;
-  border-radius: 8px;
-  border: 1.5px solid var(--gray-200);
-  transition: all 0.2s ease;
-}
-
-.form-input.compact:focus,
-.form-select.compact:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-}
-
-.input-with-icon {
-  position: relative;
-}
-
-.input-with-icon .input-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--gray-400);
-  pointer-events: none;
-}
-
-.input-with-icon .form-input {
-  padding-left: 36px;
-}
-
-.btn-clear-compact {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  background: white;
-  border: 1.5px solid var(--gray-300);
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--gray-600);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.btn-clear-compact:hover {
-  background: var(--gray-50);
-  border-color: var(--danger);
-  color: var(--danger);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.1);
-}
-
 .filters-divider {
   height: 1px;
   background: var(--gray-200);
@@ -840,21 +928,10 @@ onMounted(() => {
   margin-bottom: 16px;
   transition: opacity 0.2s ease;
 }
+.filter-chips-section:last-child { margin-bottom: 0; }
+.filter-chips-section.disabled { opacity: 0.5; pointer-events: none; }
 
-.filter-chips-section:last-child {
-  margin-bottom: 0;
-}
-
-.filter-chips-section.disabled {
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.chips-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+.chips-group { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .chip-checkbox {
   display: inline-flex;
@@ -863,13 +940,7 @@ onMounted(() => {
   user-select: none;
   position: relative;
 }
-
-.chip-checkbox input[type="checkbox"] {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
+.chip-checkbox input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; }
 
 .chip-text {
   display: inline-block;
@@ -883,196 +954,21 @@ onMounted(() => {
   transition: all 0.2s ease;
   white-space: nowrap;
 }
-
 .chip-checkbox:hover:not(.disabled) .chip-text {
   background: var(--gray-100);
   border-color: var(--primary);
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 }
-
 .chip-checkbox input[type="checkbox"]:checked + .chip-text {
   background: var(--primary);
   color: white;
   border-color: var(--primary);
-  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
 }
+.chip-checkbox.disabled { cursor: not-allowed; opacity: 0.5; }
 
-.chip-checkbox.disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.chip-checkbox.disabled .chip-text {
-  background: var(--gray-50);
-  color: var(--gray-400);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .filters-card {
-    padding: 16px;
-  }
-
-  .filters-row {
-    gap: 12px;
-  }
-
-  .filter-item.search-filter {
-    min-width: 100%;
-  }
-
-  .chip-text {
-    padding: 5px 12px;
-    font-size: 12px;
-  }
-
-  .filter-label {
-    font-size: 11px;
-  }
-}
-
-/* ===== PERMISOS GRID EN TABLA ===== */
-.permisos-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-width: 280px;
-}
-
-.permiso-modulo-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 0;
-}
-
-.modulo-nombre {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--gray-600);
-  min-width: 75px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.permisos-badges {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-
-.permiso-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  transition: all 0.15s ease;
-}
-
-.permiso-badge svg {
-  flex-shrink: 0;
-}
-
-.permiso-crear {
-  background: #dcfce7;
-  color: #16a34a;
-  border: 1px solid #bbf7d0;
-}
-
-.permiso-leer {
-  background: #dbeafe;
-  color: #2563eb;
-  border: 1px solid #bfdbfe;
-}
-
-.permiso-actualizar {
-  background: #fef3c7;
-  color: #d97706;
-  border: 1px solid #fde68a;
-}
-
-.permiso-eliminar {
-  background: #fee2e2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
-}
-
-.permiso-ninguno {
-  background: var(--gray-100);
-  color: var(--gray-400);
-  border: 1px solid var(--gray-200);
-  font-style: italic;
-  font-weight: 500;
-}
-
-/* Hover effects */
-.permiso-crear:hover {
-  background: #bbf7d0;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(22, 163, 74, 0.15);
-}
-
-.permiso-leer:hover {
-  background: #bfdbfe;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.15);
-}
-
-.permiso-actualizar:hover {
-  background: #fde68a;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(217, 119, 6, 0.15);
-}
-
-.permiso-eliminar:hover {
-  background: #fecaca;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.15);
-}
-
-/* Responsive - para pantallas pequeñas */
-@media (max-width: 1400px) {
-  .permisos-grid {
-    max-width: 240px;
-  }
-  .modulo-nombre {
-    min-width: 65px;
-    font-size: 10px;
-  }
-  .permiso-badge {
-    font-size: 9px;
-    padding: 2px 5px;
-  }
-  .permiso-badge svg {
-    width: 8px;
-    height: 8px;
-  }
-}
-
-@media (max-width: 768px) {
-  .advanced-filters {
-    padding: 16px;
-  }
-
-  .checkbox-group {
-    gap: 8px;
-  }
-
-  .checkbox-label {
-    padding: 6px 10px;
-    font-size: 12px;
-  }
-
-  .filter-section-header {
-    font-size: 12px;
-  }
-}
-
+/* ── Permisos select all ── */
 .select-all-label {
   display: inline-flex;
   align-items: center;
@@ -1089,7 +985,5 @@ onMounted(() => {
   cursor: pointer;
   accent-color: var(--primary);
 }
-.select-all-label:hover {
-  color: var(--primary);
-}
+.select-all-label:hover { color: var(--primary); }
 </style>

@@ -11,10 +11,8 @@
       </button>
     </div>
 
-    <!-- Tabs + búsqueda — un solo contenedor integrado -->
+    <!-- Tabs + búsqueda -->
     <div class="card" style="padding:0;margin-bottom:20px;overflow:hidden;">
-
-      <!-- Tabs -->
       <div class="tabs-bar" style="padding:0 16px;border-bottom:1px solid var(--border);">
         <button
           v-for="tab in tabs"
@@ -30,7 +28,6 @@
         </button>
       </div>
 
-      <!-- Búsqueda dentro del mismo card -->
       <div style="padding:16px 20px;">
         <div class="filter-group search">
           <label>Búsqueda general</label>
@@ -45,18 +42,14 @@
           </div>
         </div>
       </div>
-
     </div>
 
-    <!-- Tabla — contenedor independiente con bordes completos -->
+    <!-- Tabla -->
     <div class="table-wrapper">
-
-      <!-- Spinner -->
       <div v-if="loading" style="text-align:center;padding:48px;">
         <span class="spinner" style="width:24px;height:24px;"></span>
       </div>
 
-      <!-- Tabla -->
       <table v-else class="data-table">
         <thead>
           <tr>
@@ -79,22 +72,15 @@
             </td>
           </tr>
           <tr v-else v-for="item in itemsPaginados" :key="getItemId(item)">
-            <!-- ID -->
             <td>
               <span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">
                 {{ getItemId(item) }}
               </span>
             </td>
-
-            <!-- Nombre — igual que nombre en responsables/accesos -->
             <td style="font-weight:700;color:var(--gray-900)">{{ getItemNombre(item) }}</td>
-
-            <!-- Descripción -->
             <td style="color:var(--gray-500);font-size:13px;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
               {{ item.descripcion || '–' }}
             </td>
-
-            <!-- Color (solo estados) -->
             <td v-if="activeTab === 'estado'">
               <div style="display:flex;align-items:center;gap:8px;">
                 <span
@@ -106,15 +92,11 @@
                 </span>
               </div>
             </td>
-
-            <!-- Estado -->
             <td>
               <span class="badge" :class="item.activo ? 'badge-success' : 'badge-danger'">
                 {{ item.activo ? 'Activo' : 'Inactivo' }}
               </span>
             </td>
-
-            <!-- Fecha -->
             <td style="font-size:12px;color:var(--gray-400);font-family:var(--font-mono)">
               {{ formatDate(item.fecha_creacion) }}
             </td>
@@ -135,7 +117,6 @@
         </tbody>
       </table>
 
-      <!-- Paginación -->
       <Pagination
         v-if="!loading && itemsFiltrados.length > 0"
         :current="page"
@@ -153,7 +134,7 @@
       size="md"
       @update:model-value="handleFormClose"
     >
-      <form id="catalogoForm" @submit.prevent="saveItem" class="form-grid">
+      <form id="catalogoForm" @submit.prevent="saveItem" class="form-grid" novalidate>
 
         <!-- Selector de tipo solo al crear -->
         <div v-if="!editMode" class="form-group span-full">
@@ -165,7 +146,7 @@
               type="button"
               class="catalog-type-btn"
               :class="{ active: formTab === tab.key }"
-              @click="formTab = tab.key"
+              @click="formTab = tab.key; clearErrors()"
             >
               {{ tab.label }}
             </button>
@@ -174,8 +155,16 @@
 
         <div class="form-group">
           <label class="form-label">Nombre <span class="required">*</span></label>
-          <input v-model="form.nombre" class="form-input" :placeholder="tabActual.placeholder" required maxlength="50" />
+          <input
+            v-model="form.nombre"
+            class="form-input"
+            :class="{ 'input-error': formErrors.nombre }"
+            :placeholder="tipoActual.placeholder"
+            maxlength="50"
+          />
+          <span v-if="formErrors.nombre" class="field-error">{{ formErrors.nombre }}</span>
         </div>
+
         <div class="form-group">
           <label class="form-label">Estado <span class="required">*</span></label>
           <select v-model="form.estado_catalogo" class="form-select">
@@ -183,17 +172,33 @@
             <option value="inactivo">Inactivo</option>
           </select>
         </div>
+
         <div v-if="(editMode && activeTab === 'estado') || (!editMode && formTab === 'estado')" class="form-group span-full">
           <label class="form-label">Color <span class="required">*</span></label>
           <div style="display:flex;gap:10px;align-items:center;">
-            <input type="text" v-model="form.color_hex" class="form-input" placeholder="#000000" maxlength="7" style="max-width:120px;" />
+            <input
+              type="text"
+              v-model="form.color_hex"
+              class="form-input"
+              :class="{ 'input-error': formErrors.color_hex }"
+              placeholder="#000000"
+              maxlength="7"
+              style="max-width:120px;"
+            />
             <input type="color" v-model="form.color_hex" style="width:50px;height:40px;padding:0;border:none;background:none;cursor:pointer;" />
           </div>
+          <span v-if="formErrors.color_hex" class="field-error">{{ formErrors.color_hex }}</span>
           <small style="color:var(--gray-400);font-size:11px;">Puedes elegir el color o escribir el código HEX manualmente.</small>
         </div>
+
         <div class="form-group span-full">
           <label class="form-label">Descripción</label>
-          <textarea v-model="form.descripcion" class="form-textarea" placeholder="Descripción opcional..." maxlength="200"></textarea>
+          <textarea
+            v-model="form.descripcion"
+            class="form-textarea"
+            placeholder="Descripción opcional..."
+            maxlength="200"
+          ></textarea>
           <small style="color:var(--gray-400);font-size:11px;">{{ form.descripcion.length }} / 200</small>
         </div>
 
@@ -273,12 +278,14 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
 import { catalogosApi } from '@/services/api'
 import { acquireLock, releaseLock } from '@/services/concurrency'
 import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/composables/useToast'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 
 const authStore = useAuthStore()
+const { toast } = useToast()
 
 const tabs = [
   { key: 'area',            label: 'Áreas',               labelSingular: 'área',               placeholder: 'Ej: Dirección, Sistemas...'  },
@@ -294,7 +301,6 @@ const TABLA_MAP = {
   tipo_mobiliario: 'cat_tipos_mobiliario',
 }
 
-// Mapa: key del tab → key de la respuesta del backend
 const DATA_KEY = {
   area:            'areas',
   estado:          'estados',
@@ -310,12 +316,10 @@ const page       = ref(1)
 const total      = ref(0)
 const totalPages = ref(1)
 const perPage    = 10
-const formTab = ref('area')
+const formTab    = ref('area')
 
-// Items del tab activo (solo la página actual)
 const items = ref([])
 
-// Contadores por tab (se cargan una vez y se actualizan tras CRUD)
 const tabCounts = reactive({
   area: 0, tipo_activo: 0, estado: 0, tipo_mobiliario: 0,
 })
@@ -341,15 +345,59 @@ const form = reactive({
   nombre: '', descripcion: '', estado_catalogo: 'activo', color_hex: '', version: null, _id: null
 })
 
-// ── Computeds ───────────────────────────────────────────────────
-const tabActual = computed(() => tabs.find(t => t.key === activeTab.value))
+// ── Errores de formulario ────────────────────────────────────────
+const formErrors = reactive({})
 
-// itemsFiltrados y itemsPaginados ya no se necesitan —
-// el servidor devuelve directamente la página filtrada
+function clearErrors() {
+  Object.keys(formErrors).forEach(k => delete formErrors[k])
+}
+
+function applyFieldErrors(campos) {
+  if (!campos) return
+  Object.entries(campos).forEach(([campo, mensaje]) => {
+    formErrors[campo] = mensaje
+  })
+}
+
+// ── Validación frontend ──────────────────────────────────────────
+function validateForm() {
+  clearErrors()
+  let valid = true
+  const tipo = editMode.value ? activeTab.value : formTab.value
+
+  if (!form.nombre?.trim()) {
+    formErrors.nombre = '"Nombre" es obligatorio'
+    valid = false
+  } else {
+    // Límites según tipo: área/estado/tipos → 50 chars (nombre_area, nombre_estado); tipos → 30
+    const maxLen = (tipo === 'tipo_activo' || tipo === 'tipo_mobiliario') ? 30 : 50
+    if (form.nombre.trim().length > maxLen) {
+      formErrors.nombre = `"Nombre" no puede superar ${maxLen} caracteres`
+      valid = false
+    }
+  }
+
+  if (tipo === 'estado') {
+    if (!form.color_hex?.trim()) {
+      formErrors.color_hex = '"Color" es obligatorio para los estados'
+      valid = false
+    } else if (!/^#[0-9A-Fa-f]{6}$/.test(form.color_hex)) {
+      formErrors.color_hex = 'El color debe tener formato HEX válido (Ej: #FF5733)'
+      valid = false
+    }
+  }
+
+  return valid
+}
+
+// ── Computeds ────────────────────────────────────────────────────
+const tabActual   = computed(() => tabs.find(t => t.key === activeTab.value))
+const tipoActual  = computed(() => tabs.find(t => t.key === (editMode.value ? activeTab.value : formTab.value)))
+
 const itemsFiltrados = computed(() => items.value)
 const itemsPaginados = computed(() => items.value)
 
-// ── Helpers ─────────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────
 function getItemId(item) {
   return item?.id_area ?? item?.id_tipo_activo ?? item?.id_estado ?? item?.id_tipo_mobiliario
 }
@@ -363,7 +411,7 @@ function formatDate(d) {
   return new Date(d).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
-// ── Carga de datos ──────────────────────────────────────────────
+// ── Carga de datos ───────────────────────────────────────────────
 let searchTimeout = null
 
 async function loadTab(resetPage = false) {
@@ -385,20 +433,17 @@ async function loadTab(resetPage = false) {
     total.value      = res.data.total || 0
     totalPages.value = res.data.pages || 1
 
-    // Actualizar contador del tab activo con el total sin filtro
-    // Solo cuando no hay búsqueda activa para no distorsionar el badge
     if (!search.value) {
       tabCounts[activeTab.value] = res.data.total || 0
     }
-  } catch (e) {
-    console.error(e)
+  } catch {
+    toast.error('Error al cargar los datos')
     items.value = []
   } finally {
     loading.value = false
   }
 }
 
-// Carga inicial: todos los tabs para tener los contadores
 async function loadAllCounts() {
   try {
     const [a, t, e, m] = await Promise.all([
@@ -411,12 +456,12 @@ async function loadAllCounts() {
     tabCounts.tipo_activo     = t.data.total || 0
     tabCounts.estado          = e.data.total || 0
     tabCounts.tipo_mobiliario = m.data.total || 0
-  } catch (e) {
-    console.error(e)
+  } catch {
+    toast.error('No se pudieron cargar los contadores')
   }
 }
 
-// ── Navegación ──────────────────────────────────────────────────
+// ── Navegación ───────────────────────────────────────────────────
 function switchTab(key) {
   activeTab.value = key
   search.value    = ''
@@ -435,10 +480,11 @@ function onPageChange(p) {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-// ── CRUD ────────────────────────────────────────────────────────
+// ── CRUD ─────────────────────────────────────────────────────────
 function openCreate() {
   editMode.value = false
   formTab.value  = activeTab.value
+  clearErrors()
   Object.assign(form, { nombre: '', descripcion: '', estado_catalogo: 'activo', color_hex: '', version: null, _id: null })
   showForm.value = true
 }
@@ -458,32 +504,39 @@ async function openEdit(type, item) {
       concurrencyAlert.showRetry = true
       showConcurrencyAlert.value = true
     } else {
-      alert(lockResult.error || 'Error al adquirir bloqueo')
+      toast.error(lockResult.error || 'Error al adquirir bloqueo')
     }
     return
   }
 
   currentLock.value = { tabla, id }
   editMode.value    = true
+  clearErrors()
 
-  let res
-  switch (type) {
-    case 'area':            res = await catalogosApi.getArea(item.id_area); break
-    case 'tipo_activo':     res = await catalogosApi.getActivo(item.id_tipo_activo); break
-    case 'estado':          res = await catalogosApi.getEstado(item.id_estado); break
-    case 'tipo_mobiliario': res = await catalogosApi.getMobiliario(item.id_tipo_mobiliario); break
+  try {
+    let res
+    switch (type) {
+      case 'area':            res = await catalogosApi.getArea(item.id_area); break
+      case 'tipo_activo':     res = await catalogosApi.getActivo(item.id_tipo_activo); break
+      case 'estado':          res = await catalogosApi.getEstado(item.id_estado); break
+      case 'tipo_mobiliario': res = await catalogosApi.getMobiliario(item.id_tipo_mobiliario); break
+    }
+
+    const d = res.data
+    Object.assign(form, {
+      nombre:          d.nombre_area ?? d.nombre_tipo ?? d.nombre_estado ?? '',
+      descripcion:     d.descripcion || '',
+      estado_catalogo: d.activo ? 'activo' : 'inactivo',
+      color_hex:       d.color_hex || '',
+      version:         d.version ?? null,
+      _id:             id,
+    })
+    showForm.value = true
+  } catch {
+    toast.error('No se pudieron cargar los datos del registro')
+    await releaseLock(tabla, id)
+    currentLock.value = null
   }
-
-  const d = res.data
-  Object.assign(form, {
-    nombre:          d.nombre_area ?? d.nombre_tipo ?? d.nombre_estado ?? '',
-    descripcion:     d.descripcion || '',
-    estado_catalogo: d.activo ? 'activo' : 'inactivo',
-    color_hex:       d.color_hex || '',
-    version:         d.version ?? null,
-    _id:             id,
-  })
-  showForm.value = true
 }
 
 async function openDetail(type, item) {
@@ -507,26 +560,33 @@ async function handleFormClose(shouldClose = true) {
     await releaseLock(currentLock.value.tabla, currentLock.value.id)
     currentLock.value = null
   }
-  if (shouldClose) showForm.value = false
+  if (shouldClose) {
+    showForm.value = false
+    clearErrors()
+  }
 }
 
 async function saveItem() {
-  const tipo = editMode.value ? activeTab.value : formTab.value
+  if (!validateForm()) {
+    toast.warning('Revisa los campos marcados en el formulario')
+    return
+  }
 
+  const tipo   = editMode.value ? activeTab.value : formTab.value
   saving.value = true
-  const accion  = editMode.value ? 'update' : 'create'
+
+  const campoNombre = tipo === 'area'   ? 'nombre_area'
+    : tipo === 'estado'                 ? 'nombre_estado'
+    : 'nombre_tipo'
+
   const payload = {
-    descripcion: form.descripcion,
-    activo:      form.estado_catalogo === 'activo',
+    [campoNombre]: form.nombre.trim(),
+    descripcion:   form.descripcion,
+    activo:        form.estado_catalogo === 'activo',
     ...(form.version != null && { version: form.version }),
   }
 
   if (tipo === 'estado') payload.color_hex = form.color_hex
-
-  const campoNombre = tipo === 'area'  ? 'nombre_area'
-    : tipo === 'estado'                ? 'nombre_estado'
-    : 'nombre_tipo'
-  payload[campoNombre] = form.nombre
 
   const metodoMap = {
     area:            { create: 'createArea',           update: 'updateArea'           },
@@ -536,21 +596,30 @@ async function saveItem() {
   }
 
   try {
+    const accion = editMode.value ? 'update' : 'create'
     const metodo = metodoMap[tipo][accion]
+
     if (editMode.value) {
       await catalogosApi[metodo](form._id, payload)
+      toast.success(`${tabActual.value.labelSingular.charAt(0).toUpperCase() + tabActual.value.labelSingular.slice(1)} actualizado correctamente`, 'Actualización exitosa')
     } else {
       await catalogosApi[metodo](payload)
+      toast.success(`${tipoActual.value.labelSingular.charAt(0).toUpperCase() + tipoActual.value.labelSingular.slice(1)} creado correctamente`, 'Registro exitoso')
     }
+
     await handleFormClose(true)
     loadAllCounts()
     loadTab()
   } catch (e) {
     const errorData = e.response?.data
+
     if (errorData?.error === 'conflict') {
-      alert('El registro fue modificado por otro usuario. Recarga e intenta de nuevo.')
+      toast.warning('El registro fue modificado por otro usuario. Recarga e intenta de nuevo.')
+    } else if (errorData?.campos) {
+      applyFieldErrors(errorData.campos)
+      toast.warning(errorData.error || 'Revisa los campos del formulario')
     } else {
-      alert(errorData?.error || 'Error al guardar')
+      toast.fromError(errorData)
     }
   } finally {
     saving.value = false
@@ -572,7 +641,7 @@ async function confirmDelete(type, item) {
       concurrencyAlert.showRetry = true
       showConcurrencyAlert.value = true
     } else {
-      alert(lockResult.error || 'Error al adquirir bloqueo')
+      toast.error(lockResult.error || 'Error al adquirir bloqueo')
     }
     return
   }
@@ -596,6 +665,7 @@ async function doDelete() {
       await releaseLock(pendingDelete.value.tabla, pendingDelete.value.id)
       pendingDelete.value = null
     }
+    toast.success(`"${toDelete.value.nombre}" fue eliminado`, 'Eliminado')
     showConfirm.value = false
     toDelete.value    = null
     loadAllCounts()
@@ -605,7 +675,7 @@ async function doDelete() {
       await releaseLock(pendingDelete.value.tabla, pendingDelete.value.id)
       pendingDelete.value = null
     }
-    alert(e.response?.data?.error || 'Error al eliminar')
+    toast.fromError(e.response?.data)
   } finally {
     deleting.value = false
   }
@@ -621,7 +691,18 @@ async function handleCancelDelete() {
 }
 
 function handleConcurrencyCancel() { showConcurrencyAlert.value = false }
-function handleConcurrencyRetry()  { showConcurrencyAlert.value = false }
+
+async function handleConcurrencyRetry() {
+  showConcurrencyAlert.value = false
+  setTimeout(() => {
+    const registroId = concurrencyAlert.lockInfo?.registro_id
+    const item = items.value.find(i => getItemId(i) === registroId)
+    if (item) {
+      if (concurrencyAlert.title === 'No se puede eliminar') confirmDelete(activeTab.value, item)
+      else openEdit(activeTab.value, item)
+    }
+  }, 1000)
+}
 
 onBeforeUnmount(async () => {
   if (currentLock.value) {
@@ -636,6 +717,26 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* ── Errores de campo ── */
+.input-error {
+  border-color: var(--danger) !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+}
+
+.field-error {
+  display: block;
+  font-size: 11.5px;
+  color: var(--danger);
+  margin-top: 4px;
+  font-weight: 500;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* ── Tabs ── */
 .tabs-bar {
   display: flex;
@@ -681,6 +782,8 @@ onMounted(async () => {
   background: var(--primary-light);
   color: var(--primary);
 }
+
+/* ── Selector de tipo al crear ── */
 .catalog-type-selector {
   display: flex;
   gap: 8px;
@@ -698,16 +801,14 @@ onMounted(async () => {
   cursor: pointer;
   transition: all 0.2s;
 }
-
 .catalog-type-btn:hover {
   border-color: var(--primary);
   background: var(--gray-100);
 }
-
 .catalog-type-btn.active {
   background: var(--primary);
   color: white;
   border-color: var(--primary);
-  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
 }
 </style>

@@ -79,37 +79,65 @@
     </BaseModal>
 
     <!-- Form Modal -->
-    <BaseModal v-model="showForm" :title="editMode ? 'Actualizar responsable' : 'Nuevo responsable'" size="sm">
-      <form id="usuariosForm" @submit.prevent="saveItem">
+    <BaseModal v-model="showForm" :title="editMode ? 'Actualizar responsable' : 'Nuevo responsable'" size="sm" @update:model-value="handleFormClose">
+      <form id="usuariosForm" @submit.prevent="saveItem" novalidate>
         <div class="form-grid">
           <div class="form-group">
-            <label class="form-label">Número de nómina </label>
+            <label class="form-label">Número de nómina</label>
             <div style="position:relative;">
               <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gray-400);font-weight:700;">#</span>
-              <input v-model="form.numero_nomina" class="form-input" placeholder="Opcional - 4 dígitos" style="padding-left:26px;" maxlength="4" />
+              <input
+                v-model="form.numero_nomina"
+                class="form-input"
+                :class="{ 'input-error': formErrors.numero_nomina }"
+                placeholder="Opcional - 4 dígitos"
+                style="padding-left:26px;"
+                maxlength="4"
+              />
             </div>
-            <small style="color:var(--gray-400);font-size:11px;">{{ form.numero_nomina.length }} / 04 — Campo opcional</small>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px;">
+              <span v-if="formErrors.numero_nomina" class="field-error">{{ formErrors.numero_nomina }}</span>
+              <span v-else></span>
+              <small style="color:var(--gray-400);font-size:11px;">{{ form.numero_nomina.length }} / 04 — Campo opcional</small>
+            </div>
           </div>
           <div class="form-group">
             <label class="form-label">Área de adscripción <span class="required">*</span></label>
-            <select v-model="form.area_id" class="form-select" required="">
+            <select v-model="form.area_id" class="form-select" :class="{ 'input-error': formErrors.area_id }">
               <option value="">Seleccionar área</option>
               <option v-for="a in catalogos.areas" :key="a.id_area" :value="a.id_area">{{ a.nombre_area }}</option>
             </select>
+            <span v-if="formErrors.area_id" class="field-error">{{ formErrors.area_id }}</span>
           </div>
           <div class="form-group span-full">
             <label class="form-label">Nombre completo <span class="required">*</span></label>
             <div style="position:relative;">
               <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gray-400);" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-              <input v-model="form.nombre_usuario" class="form-input" placeholder="Nombre completo del responsable" required style="padding-left:30px;" />
+              <input
+                v-model="form.nombre_usuario"
+                class="form-input"
+                :class="{ 'input-error': formErrors.nombre_usuario }"
+                placeholder="Nombre completo del responsable"
+                style="padding-left:30px;"
+                maxlength="100"
+              />
             </div>
+            <span v-if="formErrors.nombre_usuario" class="field-error">{{ formErrors.nombre_usuario }}</span>
           </div>
           <div class="form-group span-full">
             <label class="form-label">Puesto <span class="required">*</span></label>
             <div style="position:relative;">
               <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gray-400);" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-              <input v-model="form.puesto" class="form-input" placeholder="Cargo que desempeña" style="padding-left:30px;" required />
+              <input
+                v-model="form.puesto"
+                class="form-input"
+                :class="{ 'input-error': formErrors.puesto }"
+                placeholder="Cargo que desempeña"
+                style="padding-left:30px;"
+                maxlength="80"
+              />
             </div>
+            <span v-if="formErrors.puesto" class="field-error">{{ formErrors.puesto }}</span>
           </div>
         </div>
       </form>
@@ -151,7 +179,7 @@
         </svg>
         <div>
           <h4>El registro fue modificado por otro usuario</h4>
-          <p>Mientras editabas, otro usuario guardó cambios en este responsable. Puedes:</p>
+          <p>Mientras editabas, otro usuario guardó cambios en este responsable.</p>
         </div>
       </div>
       <div class="conflict-options">
@@ -174,12 +202,14 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
 import { usuariosApi, catalogosApi, vistasApi } from '@/services/api'
 import { acquireLock, releaseLock } from '@/services/concurrency'
 import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/composables/useToast'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 
 const authStore = useAuthStore()
+const { toast } = useToast()
 const currentUserId = computed(() => authStore.user?.id_acceso)
 
 const items = ref([])
@@ -205,7 +235,45 @@ const pendingDelete = ref(null)
 
 const lockWarning = ref(null)
 const currentLock = ref(null)
-const conflictData = ref(null)
+
+// ── Errores de formulario ────────────────────────────────────────
+const formErrors = reactive({})
+
+function clearErrors() {
+  Object.keys(formErrors).forEach(k => delete formErrors[k])
+}
+
+function applyFieldErrors(campos) {
+  if (!campos) return
+  Object.entries(campos).forEach(([campo, mensaje]) => {
+    formErrors[campo] = mensaje
+  })
+}
+
+// ── Validación frontend ──────────────────────────────────────────
+function validateForm() {
+  clearErrors()
+  let valid = true
+
+  if (!form.nombre_usuario?.trim()) {
+    formErrors.nombre_usuario = '"Nombre completo" es obligatorio'
+    valid = false
+  }
+  if (!form.puesto?.trim()) {
+    formErrors.puesto = '"Puesto" es obligatorio'
+    valid = false
+  }
+  if (!form.area_id) {
+    formErrors.area_id = '"Área de adscripción" es obligatoria'
+    valid = false
+  }
+  if (form.numero_nomina && !/^\d+$/.test(form.numero_nomina)) {
+    formErrors.numero_nomina = 'Solo se permiten dígitos'
+    valid = false
+  }
+
+  return valid
+}
 
 const concurrencyAlert = reactive({
   title: '',
@@ -225,8 +293,12 @@ const form = reactive({
 let searchTimeout = null
 
 async function loadAreas() {
-  const areas = await catalogosApi.getAreasCompleto()
-  catalogos.areas = areas.data
+  try {
+    const areas = await catalogosApi.getAreasCompleto()
+    catalogos.areas = areas.data
+  } catch {
+    toast.error('No se pudieron cargar las áreas')
+  }
 }
 
 async function loadData() {
@@ -239,10 +311,18 @@ async function loadData() {
     items.value = res.data.responsables
     total.value = res.data.total
     totalPages.value = res.data.pages
-  } catch (e) { console.error(e) } finally { loading.value = false }
+  } catch {
+    toast.error('Error al cargar los responsables')
+  } finally {
+    loading.value = false
+  }
 }
 
-function onSearch() { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { page.value = 1; loadData() }, 400) }
+function onSearch() {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => { page.value = 1; loadData() }, 400)
+}
+
 function onPageChange(p) { page.value = p; loadData() }
 
 async function openDetail(u) {
@@ -258,6 +338,7 @@ async function openDetail(u) {
 function openCreate() {
   editMode.value = false
   lockWarning.value = null
+  clearErrors()
   Object.assign(form, { nombre_usuario: '', numero_nomina: '', puesto: '', area_id: '', version: null })
   showForm.value = true
 }
@@ -265,6 +346,7 @@ function openCreate() {
 async function openEdit(u) {
   editMode.value = true
   lockWarning.value = null
+  clearErrors()
 
   const lockResult = await acquireLock('usuario', u.id_usuario, 10, 'edicion')
 
@@ -278,33 +360,44 @@ async function openEdit(u) {
       concurrencyAlert.showRetry = true
       showConcurrencyAlert.value = true
     } else {
-      alert(lockResult.error || 'Error al adquirir bloqueo')
+      toast.error(lockResult.error || 'Error al adquirir bloqueo')
     }
     return
   }
 
   currentLock.value = lockResult.bloqueo
 
-  const res = await usuariosApi.getResponsable(u.id_usuario)
-  const d = res.data
+  try {
+    const res = await usuariosApi.getResponsable(u.id_usuario)
+    const d = res.data
 
-  if (d.editado_por && d.editado_por !== currentUserId.value) {
-    lockWarning.value = `${d.nombre_editor} estaba editando este registro`
+    if (d.editado_por && d.editado_por !== currentUserId.value) {
+      lockWarning.value = `${d.nombre_editor} estaba editando este registro`
+    }
+
+    Object.assign(form, {
+      nombre_usuario: d.nombre_usuario,
+      numero_nomina: d.numero_nomina || '',
+      puesto: d.puesto || '',
+      area_id: d.area_id || '',
+      version: d.version,
+      _id: d.id_usuario
+    })
+
+    showForm.value = true
+  } catch {
+    toast.error('No se pudieron cargar los datos del responsable')
+    await releaseLock('usuario', u.id_usuario)
+    currentLock.value = null
   }
-
-  Object.assign(form, {
-    nombre_usuario: d.nombre_usuario,
-    numero_nomina: d.numero_nomina || '',
-    puesto: d.puesto || '',
-    area_id: d.area_id || '',
-    version: d.version,
-    _id: d.id_usuario
-  })
-
-  showForm.value = true
 }
 
 async function saveItem() {
+  if (!validateForm()) {
+    toast.warning('Revisa los campos marcados en el formulario')
+    return
+  }
+
   saving.value = true
   try {
     const payload = {
@@ -317,21 +410,30 @@ async function saveItem() {
 
     if (editMode.value) {
       await usuariosApi.updateResponsable(form._id, payload)
+      toast.success('Responsable actualizado correctamente', 'Actualización exitosa')
     } else {
       await usuariosApi.createResponsable(payload)
+      toast.success('Responsable registrado correctamente', 'Registro exitoso')
     }
 
     await handleFormClose(true)
     loadData()
+
   } catch (e) {
     const errorData = e.response?.data
+
     if (errorData?.error === 'conflict') {
-      conflictData.value = errorData
       showConflictModal.value = true
       saving.value = false
       return
     }
-    alert(errorData?.error || 'Error al guardar')
+
+    if (errorData?.campos) {
+      applyFieldErrors(errorData.campos)
+      toast.warning(errorData.error || 'Revisa los campos del formulario')
+    } else {
+      toast.fromError(errorData)
+    }
   } finally {
     saving.value = false
   }
@@ -343,7 +445,10 @@ async function handleFormClose(shouldClose = true) {
     currentLock.value = null
   }
   lockWarning.value = null
-  if (shouldClose) showForm.value = false
+  if (shouldClose) {
+    showForm.value = false
+    clearErrors()
+  }
 }
 
 async function confirmDelete(u) {
@@ -359,7 +464,7 @@ async function confirmDelete(u) {
       concurrencyAlert.showRetry = true
       showConcurrencyAlert.value = true
     } else {
-      alert(lockResult.error || 'Error al adquirir bloqueo')
+      toast.error(lockResult.error || 'Error al adquirir bloqueo')
     }
     return
   }
@@ -377,6 +482,7 @@ async function doDelete() {
       await releaseLock('usuario', toDelete.value.id_usuario)
       pendingDelete.value = null
     }
+    toast.success(`"${toDelete.value.nombre_usuario}" fue eliminado`, 'Eliminado')
     showConfirm.value = false
     toDelete.value = null
     loadData()
@@ -385,7 +491,7 @@ async function doDelete() {
       await releaseLock('usuario', toDelete.value.id_usuario)
       pendingDelete.value = null
     }
-    alert(e.response?.data?.error || 'Error al eliminar')
+    toast.fromError(e.response?.data)
   } finally {
     deleting.value = false
   }
@@ -400,9 +506,7 @@ async function handleCancelDelete() {
   showConfirm.value = false
 }
 
-function handleConcurrencyCancel() {
-  showConcurrencyAlert.value = false
-}
+function handleConcurrencyCancel() { showConcurrencyAlert.value = false }
 
 async function handleConcurrencyRetry() {
   showConcurrencyAlert.value = false
@@ -417,17 +521,22 @@ async function handleConcurrencyRetry() {
 }
 
 async function handleConflictReload() {
-  const res = await usuariosApi.getResponsable(form._id)
-  const d = res.data
-  Object.assign(form, {
-    nombre_usuario: d.nombre_usuario,
-    numero_nomina: d.numero_nomina || '',
-    puesto: d.puesto || '',
-    area_id: d.area_id || '',
-    version: d.version
-  })
-  showConflictModal.value = false
-  alert('Datos recargados. Por favor verifica los cambios antes de guardar.')
+  try {
+    const res = await usuariosApi.getResponsable(form._id)
+    const d = res.data
+    Object.assign(form, {
+      nombre_usuario: d.nombre_usuario,
+      numero_nomina: d.numero_nomina || '',
+      puesto: d.puesto || '',
+      area_id: d.area_id || '',
+      version: d.version
+    })
+    showConflictModal.value = false
+    clearErrors()
+    toast.info('Datos recargados. Verifica los cambios antes de guardar.')
+  } catch {
+    toast.error('No se pudieron recargar los datos')
+  }
 }
 
 onBeforeUnmount(async () => {
@@ -441,3 +550,42 @@ onMounted(() => {
   loadData()
 })
 </script>
+
+<style scoped>
+/* ── Errores de campo ── */
+.input-error {
+  border-color: var(--danger) !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+}
+
+.field-error {
+  display: block;
+  font-size: 11.5px;
+  color: var(--danger);
+  margin-top: 4px;
+  font-weight: 500;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Conflict warning ── */
+.conflict-warning {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  background: #fef3c7;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+.conflict-warning svg { color: #d97706; flex-shrink: 0; }
+.conflict-warning h4 { font-size: 16px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px; }
+.conflict-warning p { font-size: 13px; color: var(--gray-600); margin: 0; }
+.conflict-options { display: flex; flex-direction: column; gap: 12px; }
+.conflict-option { padding: 14px; background: var(--gray-50); border-radius: 8px; border: 1px solid var(--gray-200); }
+.conflict-option strong { display: block; font-size: 14px; color: var(--gray-900); margin-bottom: 4px; }
+.conflict-option p { font-size: 12px; color: var(--gray-600); margin: 0; }
+</style>

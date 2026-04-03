@@ -76,7 +76,6 @@
             </td>
             <td style="font-weight:600;color:var(--gray-800)">
               {{ mueble.tipo_mobiliario }}
-              <!-- Indicador de edición activa -->
               <span v-if="mueble.editado_por && mueble.editado_por !== currentUserId" class="editing-badge" :title="`${mueble.nombre_editor} está editando`">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
                   <circle cx="12" cy="12" r="10"/>
@@ -95,7 +94,7 @@
                     <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
                   </svg>
                 </button>
-                <button 
+                <button
                   v-if="authStore.canDo('mobiliario', 'puede_actualizar')"
                   class="action-btn edit"
                   @click="openEdit(mueble)"
@@ -107,10 +106,10 @@
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                   </svg>
                 </button>
-                <button 
+                <button
                   v-if="authStore.canDo('mobiliario', 'puede_eliminar')"
-                  class="action-btn delete" 
-                  @click="confirmDelete(mueble)" 
+                  class="action-btn delete"
+                  @click="confirmDelete(mueble)"
                   title="Eliminar"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -166,36 +165,40 @@
         </div>
       </div>
 
-      <form id="mobiliarioForm" @submit.prevent="saveMobiliario">
+      <form id="mobiliarioForm" @submit.prevent="saveMobiliario" novalidate>
         <div class="section-title" style="display:flex;align-items:center;gap:6px;">
           Información general
         </div>
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">Tipo de mobiliario <span class="required">*</span></label>
-            <select v-model="form.tipo_mobiliario_id" class="form-select" required>
+            <select v-model="form.tipo_mobiliario_id" class="form-select" :class="{ 'input-error': formErrors.tipo_mobiliario_id }">
               <option value="">Seleccionar...</option>
               <option v-for="t in catalogos.tipos" :key="t.id_tipo_mobiliario" :value="t.id_tipo_mobiliario">
                 {{ t.nombre_tipo }}
               </option>
             </select>
+            <span v-if="formErrors.tipo_mobiliario_id" class="field-error">{{ formErrors.tipo_mobiliario_id }}</span>
           </div>
           <div class="form-group">
             <label class="form-label">Estado <span class="required">*</span></label>
-            <select v-model="form.estado_id" class="form-select" required>
+            <select v-model="form.estado_id" class="form-select" :class="{ 'input-error': formErrors.estado_id }">
               <option value="">Seleccionar...</option>
               <option v-for="e in catalogos.estados" :key="e.id_estado" :value="e.id_estado">
                 {{ e.nombre_estado }}
               </option>
             </select>
+            <span v-if="formErrors.estado_id" class="field-error">{{ formErrors.estado_id }}</span>
           </div>
           <div class="form-group">
             <label class="form-label">Marca</label>
-            <input v-model="form.marca" class="form-input" placeholder="Ej: IKEA" />
+            <input v-model="form.marca" class="form-input" :class="{ 'input-error': formErrors.marca }" placeholder="Ej: IKEA" maxlength="50" />
+            <span v-if="formErrors.marca" class="field-error">{{ formErrors.marca }}</span>
           </div>
           <div class="form-group">
             <label class="form-label">Modelo</label>
-            <input v-model="form.modelo" class="form-input" placeholder="Ej: KALLAX" />
+            <input v-model="form.modelo" class="form-input" :class="{ 'input-error': formErrors.modelo }" placeholder="Ej: KALLAX" maxlength="50" />
+            <span v-if="formErrors.modelo" class="field-error">{{ formErrors.modelo }}</span>
           </div>
         </div>
 
@@ -205,7 +208,8 @@
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">Color</label>
-            <input v-model="form.color" class="form-input" placeholder="Ej: Negro" />
+            <input v-model="form.color" class="form-input" :class="{ 'input-error': formErrors.color }" placeholder="Ej: Negro" maxlength="20" />
+            <span v-if="formErrors.color" class="field-error">{{ formErrors.color }}</span>
           </div>
           <div class="form-group">
             <label class="form-label">Responsable</label>
@@ -218,30 +222,42 @@
           </div>
           <div class="form-group">
             <label class="form-label">Sucursal <span class="required">*</span></label>
-            <input v-model="form.sucursal_nombre" class="form-input" required />
+            <input v-model="form.sucursal_nombre" class="form-input" :class="{ 'input-error': formErrors.sucursal_nombre }" maxlength="50" />
+            <span v-if="formErrors.sucursal_nombre" class="field-error">{{ formErrors.sucursal_nombre }}</span>
           </div>
           <div class="form-group span-full">
             <label class="form-label">Características</label>
-            <textarea 
-              v-model="form.caracteristicas" 
-              class="form-textarea" 
-              placeholder="Descripción de características del mobiliario..." 
+            <textarea
+              v-model="form.caracteristicas"
+              class="form-textarea"
+              :class="{ 'input-error': formErrors.caracteristicas }"
+              placeholder="Descripción de características del mobiliario..."
               maxlength="500"
             ></textarea>
-            <small style="color:var(--gray-400);font-size:11px;">{{ form.caracteristicas.length }} / 500</small>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px;">
+              <span v-if="formErrors.caracteristicas" class="field-error">{{ formErrors.caracteristicas }}</span>
+              <span v-else></span>
+              <small style="color:var(--gray-400);font-size:11px;">{{ form.caracteristicas.length }} / 500</small>
+            </div>
           </div>
           <div class="form-group span-full">
             <label class="form-label">Observaciones</label>
-            <textarea 
-              v-model="form.observaciones" 
-              class="form-textarea" 
-              placeholder="Observaciones adicionales..." 
-              maxlength="200"
+            <textarea
+              v-model="form.observaciones"
+              class="form-textarea"
+              :class="{ 'input-error': formErrors.observaciones }"
+              placeholder="Observaciones adicionales..."
+              maxlength="500"
             ></textarea>
-            <small style="color:var(--gray-400);font-size:11px;">{{ form.observaciones.length }} / 200</small>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px;">
+              <span v-if="formErrors.observaciones" class="field-error">{{ formErrors.observaciones }}</span>
+              <span v-else></span>
+              <small style="color:var(--gray-400);font-size:11px;">{{ form.observaciones.length }} / 500</small>
+            </div>
           </div>
         </div>
       </form>
+
       <template #footer>
         <button class="btn btn-secondary" @click="handleFormClose">Cancelar</button>
         <button class="btn btn-primary" form="mobiliarioForm" type="submit" :disabled="saving">
@@ -254,7 +270,7 @@
     <!-- Confirm Delete -->
     <ConfirmDialog
       v-model="showConfirm"
-      :title="`Eliminar Mobiliario`"
+      title="Eliminar Mobiliario"
       :message="`¿Estás seguro de eliminar '${toDelete?.tipo_mobiliario}'? Esta acción no se puede deshacer.`"
       :loading="deleting"
       @confirm="doDelete"
@@ -281,17 +297,15 @@
         </svg>
         <div>
           <h4>El registro fue modificado por otro usuario</h4>
-          <p>Mientras editabas, otro usuario guardó cambios en este mobiliario. Puedes:</p>
+          <p>Mientras editabas, otro usuario guardó cambios en este mobiliario.</p>
         </div>
       </div>
-
       <div class="conflict-options">
         <div class="conflict-option">
           <strong>Recargar datos actuales</strong>
           <p>Descartar tus cambios y ver la versión más reciente del registro</p>
         </div>
       </div>
-
       <template #footer>
         <button class="btn btn-secondary" @click="handleConflictReload">
           Recargar datos actuales
@@ -306,6 +320,7 @@ import { ref, reactive, onMounted, computed, onBeforeUnmount } from 'vue'
 import { mobiliarioApi, catalogosApi, usuariosApi, vistasApi } from '@/services/api'
 import { acquireLock, releaseLock } from '@/services/concurrency'
 import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/composables/useToast'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
@@ -313,6 +328,7 @@ import Pagination from '@/components/ui/Pagination.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
 
 const authStore = useAuthStore()
+const { toast } = useToast()
 const currentUserId = computed(() => authStore.user?.id_acceso)
 
 const mobiliario = ref([])
@@ -339,7 +355,41 @@ const pendingDelete = ref(null)
 
 const lockWarning = ref(null)
 const currentLock = ref(null)
-const conflictData = ref(null)
+
+// ── Errores de formulario ────────────────────────────────────────
+const formErrors = reactive({})
+
+function clearErrors() {
+  Object.keys(formErrors).forEach(k => delete formErrors[k])
+}
+
+function applyFieldErrors(campos) {
+  if (!campos) return
+  Object.entries(campos).forEach(([campo, mensaje]) => {
+    formErrors[campo] = mensaje
+  })
+}
+
+// ── Validación frontend ──────────────────────────────────────────
+function validateForm() {
+  clearErrors()
+  let valid = true
+
+  if (!form.tipo_mobiliario_id) {
+    formErrors.tipo_mobiliario_id = '"Tipo de mobiliario" es obligatorio'
+    valid = false
+  }
+  if (!form.estado_id) {
+    formErrors.estado_id = '"Estado" es obligatorio'
+    valid = false
+  }
+  if (!form.sucursal_nombre?.trim()) {
+    formErrors.sucursal_nombre = '"Sucursal" es obligatoria'
+    valid = false
+  }
+
+  return valid
+}
 
 const concurrencyAlert = reactive({
   title: '',
@@ -364,14 +414,18 @@ const form = reactive({
 let searchTimeout = null
 
 async function loadCatalogos() {
-  const [tipos, estados, usuarios] = await Promise.all([
-    catalogosApi.getMobiliarioCompleto(),
-    catalogosApi.getEstadosCompleto(),
-    usuariosApi.listResponsables()
-  ])
-  catalogos.tipos = tipos.data
-  catalogos.estados = estados.data
-  catalogos.usuarios = usuarios.data
+  try {
+    const [tipos, estados, usuarios] = await Promise.all([
+      catalogosApi.getMobiliarioCompleto(),
+      catalogosApi.getEstadosCompleto(),
+      usuariosApi.listResponsables()
+    ])
+    catalogos.tipos = tipos.data
+    catalogos.estados = estados.data
+    catalogos.usuarios = usuarios.data
+  } catch {
+    toast.error('No se pudieron cargar los catálogos')
+  }
 }
 
 async function loadData() {
@@ -386,10 +440,10 @@ async function loadData() {
     mobiliario.value = res.data.mobiliario
     total.value = res.data.total
     totalPages.value = res.data.pages
-  } catch (e) { 
-    console.error(e) 
-  } finally { 
-    loading.value = false 
+  } catch {
+    toast.error('Error al cargar el mobiliario')
+  } finally {
+    loading.value = false
   }
 }
 
@@ -398,20 +452,25 @@ function onSearch() {
   searchTimeout = setTimeout(() => { page.value = 1; loadData() }, 400)
 }
 
-function onPageChange(p) { 
+function onPageChange(p) {
   page.value = p
-  loadData() 
+  loadData()
 }
 
 async function openDetail(mueble) {
-  const res = await vistasApi.getMobiliario(mueble.id_mueble)
-  selected.value = res.data
-  showDetail.value = true
+  try {
+    const res = await vistasApi.getMobiliario(mueble.id_mueble)
+    selected.value = res.data
+    showDetail.value = true
+  } catch {
+    toast.error('No se pudo cargar el detalle del mobiliario')
+  }
 }
 
 function openCreate() {
   editMode.value = false
   lockWarning.value = null
+  clearErrors()
   Object.assign(form, {
     tipo_mobiliario_id: '',
     marca: '',
@@ -430,80 +489,94 @@ function openCreate() {
 async function openEdit(mueble) {
   editMode.value = true
   lockWarning.value = null
+  clearErrors()
 
   const lockResult = await acquireLock('mobiliario', mueble.id_mueble, 10, 'edicion')
 
   if (!lockResult.success) {
     if (lockResult.locked) {
       concurrencyAlert.title = 'Registro en Uso'
-      
-      if (lockResult.lockInfo.tipo_bloqueo === 'edicion') {
-        concurrencyAlert.message = `${lockResult.lockInfo.nombre_usuario} está editando este mobiliario`
-      } else {
-        concurrencyAlert.message = `No puedes editar este mobiliario porque ${lockResult.lockInfo.nombre_usuario} lo está eliminando`
-      }
-      
+      concurrencyAlert.message = lockResult.lockInfo.tipo_bloqueo === 'edicion'
+        ? `${lockResult.lockInfo.nombre_usuario} está editando este mobiliario`
+        : `No puedes editar este mobiliario porque ${lockResult.lockInfo.nombre_usuario} lo está eliminando`
       concurrencyAlert.lockInfo = lockResult.lockInfo
       concurrencyAlert.showRetry = true
       showConcurrencyAlert.value = true
     } else {
-      alert(lockResult.error || 'Error al adquirir bloqueo')
+      toast.error(lockResult.error || 'Error al adquirir bloqueo')
     }
     return
   }
 
   currentLock.value = lockResult.bloqueo
 
-  const res = await mobiliarioApi.get(mueble.id_mueble)
-  const d = res.data
+  try {
+    const res = await mobiliarioApi.get(mueble.id_mueble)
+    const d = res.data
 
-  if (d.editado_por && d.editado_por !== currentUserId.value) {
-    lockWarning.value = `${d.nombre_editor} estaba editando este registro`
+    if (d.editado_por && d.editado_por !== currentUserId.value) {
+      lockWarning.value = `${d.nombre_editor} estaba editando este registro`
+    }
+
+    Object.assign(form, {
+      tipo_mobiliario_id: d.tipo_mobiliario_id,
+      marca: d.marca || '',
+      modelo: d.modelo || '',
+      color: d.color || '',
+      caracteristicas: d.caracteristicas || '',
+      observaciones: d.observaciones || '',
+      estado_id: d.estado_id,
+      usuario_asignado_id: d.usuario_asignado_id || '',
+      sucursal_nombre: d.sucursal_nombre || 'Tulancingo',
+      version: d.version
+    })
+    form._id = d.id_mueble
+    showForm.value = true
+  } catch {
+    toast.error('No se pudieron cargar los datos del mobiliario')
+    await releaseLock('mobiliario', mueble.id_mueble)
+    currentLock.value = null
   }
-
-  Object.assign(form, {
-    tipo_mobiliario_id: d.tipo_mobiliario_id,
-    marca: d.marca || '',
-    modelo: d.modelo || '',
-    color: d.color || '',
-    caracteristicas: d.caracteristicas || '',
-    observaciones: d.observaciones || '',
-    estado_id: d.estado_id,
-    usuario_asignado_id: d.usuario_asignado_id || '',
-    sucursal_nombre: d.sucursal_nombre || 'Tulancingo',
-    version: d.version
-  })
-  form._id = d.id_mueble
-  showForm.value = true
 }
 
 async function saveMobiliario() {
+  // Validación frontend primero
+  if (!validateForm()) {
+    toast.warning('Revisa los campos marcados en el formulario')
+    return
+  }
+
   saving.value = true
   try {
-    const payload = { 
-      ...form, 
-      version: form.version 
-    }
+    const payload = { ...form, version: form.version }
 
     if (editMode.value) {
       await mobiliarioApi.update(form._id, payload)
+      toast.success('Mobiliario actualizado correctamente', 'Actualización exitosa')
     } else {
       await mobiliarioApi.create(payload)
+      toast.success('Mobiliario registrado correctamente', 'Registro exitoso')
     }
 
     await handleFormClose(true)
     loadData()
+
   } catch (e) {
     const errorData = e.response?.data
 
     if (errorData?.error === 'conflict') {
-      conflictData.value = errorData
       showConflictModal.value = true
       saving.value = false
       return
     }
 
-    alert(errorData?.error || 'Error al guardar')
+    // Si el backend devuelve errores de campo, mostrarlos inline
+    if (errorData?.campos) {
+      applyFieldErrors(errorData.campos)
+      toast.warning(errorData.error || 'Revisa los campos del formulario')
+    } else {
+      toast.fromError(errorData)
+    }
   } finally {
     saving.value = false
   }
@@ -514,11 +587,10 @@ async function handleFormClose(shouldClose = true) {
     await releaseLock('mobiliario', form._id)
     currentLock.value = null
   }
-
   lockWarning.value = null
-
   if (shouldClose) {
     showForm.value = false
+    clearErrors()
   }
 }
 
@@ -528,18 +600,14 @@ async function confirmDelete(mueble) {
   if (!lockResult.success) {
     if (lockResult.locked) {
       concurrencyAlert.title = 'No se puede eliminar'
-      
-      if (lockResult.lockInfo.tipo_bloqueo === 'edicion') {
-        concurrencyAlert.message = `No puedes eliminar este mobiliario porque ${lockResult.lockInfo.nombre_usuario} lo está editando`
-      } else {
-        concurrencyAlert.message = `${lockResult.lockInfo.nombre_usuario} ya está eliminando este mobiliario`
-      }
-      
+      concurrencyAlert.message = lockResult.lockInfo.tipo_bloqueo === 'edicion'
+        ? `No puedes eliminar este mobiliario porque ${lockResult.lockInfo.nombre_usuario} lo está editando`
+        : `${lockResult.lockInfo.nombre_usuario} ya está eliminando este mobiliario`
       concurrencyAlert.lockInfo = lockResult.lockInfo
       concurrencyAlert.showRetry = true
       showConcurrencyAlert.value = true
     } else {
-      alert(lockResult.error || 'Error al adquirir bloqueo')
+      toast.error(lockResult.error || 'Error al adquirir bloqueo')
     }
     return
   }
@@ -553,12 +621,11 @@ async function doDelete() {
   deleting.value = true
   try {
     await mobiliarioApi.delete(toDelete.value.id_mueble)
-    
     if (pendingDelete.value) {
       await releaseLock('mobiliario', toDelete.value.id_mueble)
       pendingDelete.value = null
     }
-    
+    toast.success(`"${toDelete.value.tipo_mobiliario}" fue eliminado`, 'Eliminado')
     showConfirm.value = false
     toDelete.value = null
     loadData()
@@ -567,7 +634,7 @@ async function doDelete() {
       await releaseLock('mobiliario', toDelete.value.id_mueble)
       pendingDelete.value = null
     }
-    alert(e.response?.data?.error || 'Error al eliminar')
+    toast.fromError(e.response?.data)
   } finally {
     deleting.value = false
   }
@@ -588,50 +655,38 @@ function handleConcurrencyCancel() {
 
 async function handleConcurrencyRetry() {
   showConcurrencyAlert.value = false
-
   setTimeout(() => {
     const registroId = concurrencyAlert.lockInfo?.registro_id
     const mueble = mobiliario.value.find(m => m.id_mueble === registroId)
-
     if (mueble) {
-      if (concurrencyAlert.title === 'No se puede eliminar') {
-        confirmDelete(mueble)
-      } else {
-        openEdit(mueble)
-      }
+      if (concurrencyAlert.title === 'No se puede eliminar') confirmDelete(mueble)
+      else openEdit(mueble)
     }
   }, 1000)
 }
 
 async function handleConflictReload() {
-  const res = await mobiliarioApi.get(form._id)
-  const d = res.data
-
-  Object.assign(form, {
-    tipo_mobiliario_id: d.tipo_mobiliario_id,
-    marca: d.marca || '',
-    modelo: d.modelo || '',
-    color: d.color || '',
-    caracteristicas: d.caracteristicas || '',
-    observaciones: d.observaciones || '',
-    estado_id: d.estado_id,
-    usuario_asignado_id: d.usuario_asignado_id || '',
-    sucursal_nombre: d.sucursal_nombre || 'Tulancingo',
-    version: d.version
-  })
-
-  showConflictModal.value = false
-  alert('Datos recargados. Por favor verifica los cambios antes de guardar.')
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return '–'
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('es-MX', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  })
+  try {
+    const res = await mobiliarioApi.get(form._id)
+    const d = res.data
+    Object.assign(form, {
+      tipo_mobiliario_id: d.tipo_mobiliario_id,
+      marca: d.marca || '',
+      modelo: d.modelo || '',
+      color: d.color || '',
+      caracteristicas: d.caracteristicas || '',
+      observaciones: d.observaciones || '',
+      estado_id: d.estado_id,
+      usuario_asignado_id: d.usuario_asignado_id || '',
+      sucursal_nombre: d.sucursal_nombre || 'Tulancingo',
+      version: d.version
+    })
+    showConflictModal.value = false
+    clearErrors()
+    toast.info('Datos recargados. Verifica los cambios antes de guardar.')
+  } catch {
+    toast.error('No se pudieron recargar los datos')
+  }
 }
 
 onBeforeUnmount(async () => {
@@ -640,13 +695,34 @@ onBeforeUnmount(async () => {
   }
 })
 
-onMounted(() => { 
+onMounted(() => {
   loadCatalogos()
-  loadData() 
+  loadData()
 })
 </script>
 
 <style scoped>
+/* ── Errores de campo ── */
+.input-error {
+  border-color: var(--danger) !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+}
+
+.field-error {
+  display: block;
+  font-size: 11.5px;
+  color: var(--danger);
+  margin-top: 4px;
+  font-weight: 500;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Badge edición activa ── */
 .editing-badge {
   display: inline-flex;
   align-items: center;
@@ -660,6 +736,7 @@ onMounted(() => {
   50% { opacity: 0.5; }
 }
 
+/* ── Lock warning ── */
 .lock-warning {
   display: flex;
   align-items: flex-start;
@@ -671,22 +748,11 @@ onMounted(() => {
   margin-bottom: 20px;
   color: #92400e;
 }
+.lock-warning svg { flex-shrink: 0; margin-top: 2px; }
+.lock-warning strong { display: block; font-size: 13px; margin-bottom: 2px; }
+.lock-warning span { font-size: 12px; }
 
-.lock-warning svg {
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.lock-warning strong {
-  display: block;
-  font-size: 13px;
-  margin-bottom: 2px;
-}
-
-.lock-warning span {
-  font-size: 12px;
-}
-
+/* ── Conflict warning ── */
 .conflict-warning {
   display: flex;
   gap: 16px;
@@ -695,53 +761,13 @@ onMounted(() => {
   border-radius: 12px;
   margin-bottom: 20px;
 }
+.conflict-warning svg { color: #d97706; flex-shrink: 0; }
+.conflict-warning h4 { font-size: 16px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px; }
+.conflict-warning p { font-size: 13px; color: var(--gray-600); margin: 0; }
+.conflict-options { display: flex; flex-direction: column; gap: 12px; }
+.conflict-option { padding: 14px; background: var(--gray-50); border-radius: 8px; border: 1px solid var(--gray-200); }
+.conflict-option strong { display: block; font-size: 14px; color: var(--gray-900); margin-bottom: 4px; }
+.conflict-option p { font-size: 12px; color: var(--gray-600); margin: 0; }
 
-.conflict-warning svg {
-  color: #d97706;
-  flex-shrink: 0;
-}
-
-.conflict-warning h4 {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--gray-900);
-  margin-bottom: 6px;
-}
-
-.conflict-warning p {
-  font-size: 13px;
-  color: var(--gray-600);
-  margin: 0;
-}
-
-.conflict-options {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.conflict-option {
-  padding: 14px;
-  background: var(--gray-50);
-  border-radius: 8px;
-  border: 1px solid var(--gray-200);
-}
-
-.conflict-option strong {
-  display: block;
-  font-size: 14px;
-  color: var(--gray-900);
-  margin-bottom: 4px;
-}
-
-.conflict-option p {
-  font-size: 12px;
-  color: var(--gray-600);
-  margin: 0;
-}
-
-.action-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+.action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>
