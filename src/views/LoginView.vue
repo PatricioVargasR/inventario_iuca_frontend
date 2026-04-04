@@ -9,14 +9,32 @@
       <p class="login-org">IUCA – Tulancingo</p>
 
       <!-- Alerta de sesión invalidada: alguien inició sesión con esta cuenta desde otra IP -->
+      <!-- Banner: sesión cerrada por otro dispositivo -->
       <Transition name="alert-slide">
         <div v-if="sessionInvalidated" class="session-alert warning">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
           <div>
             <strong>Sesión finalizada</strong>
             <p>Tu cuenta fue iniciada en otra instancia y tu sesión se cerró automáticamente</p>
+          </div>
+        </div>
+      </Transition>
+
+      <!-- Banner: sesión cerrada inesperadamente -->
+      <Transition name="alert-slide">
+        <div v-if="sessionExpired" class="session-alert expired">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <div>
+            <strong>Sesión cerrada</strong>
+            <p>Tu sesión se cerró inesperadamente, por favor inicia sesión de nuevo</p>
           </div>
         </div>
       </Transition>
@@ -179,6 +197,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import logo from '@/assets/logo-iuca-exp.png'
+import { primeraRutaPermitida } from '@/router'
 
 const router = useRouter()
 const route = useRoute()
@@ -196,13 +215,14 @@ const activeSessionInfo = ref(null)
 
 // Banner de sesión cerrada remotamente
 const sessionInvalidated = ref(false)
+const sessionExpired = ref(false)
 
 async function handleLogin() {
   formError.value = ''
   const result = await authStore.login(form.value.correo, form.value.password)
 
   if (result.success) {
-    router.push('/')
+    router.push(primeraRutaPermitida(authStore))
     return
   }
 
@@ -230,7 +250,7 @@ async function handleForceLogin() {
 
   if (result.success) {
     showSameIpModal.value = false
-    router.push('/')
+    router.push(primeraRutaPermitida(authStore))
     return
   }
 
@@ -250,8 +270,9 @@ function formatSessionDate(dateStr) {
 onMounted(() => {
   // Mostrar banner si la sesión fue invalidada porque alguien inició sesión con esta cuenta
   sessionInvalidated.value = route.query.session_invalidated === 'true'
+  sessionExpired.value = route.query.session_expired === 'true'
 
-  if (sessionInvalidated.value) {
+  if (sessionInvalidated.value || sessionExpired.value) {
     // Limpiar el query param de inmediato para que una recarga no muestre el banner de nuevo,
     // pero el banner se queda visible hasta que el usuario inicie sesión
     router.replace({ query: {} })
@@ -466,5 +487,12 @@ onMounted(() => {
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+.session-alert.expired {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #991b1b;
+  text-align: left;
 }
 </style>

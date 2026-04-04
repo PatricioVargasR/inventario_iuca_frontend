@@ -621,8 +621,18 @@ onMounted(async () => {
   gap: 12px;
   align-items: end;
 }
-@media (max-width: 1100px) { .filter-grid { grid-template-columns: 1fr 1fr 1fr; } }
 
+@media (max-width: 1100px) {
+  .filter-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+}
 /* ── Separador de fecha ── */
 .date-separator-row td { padding: 0; }
 .date-separator-row:hover td { background: transparent !important; cursor: default; }

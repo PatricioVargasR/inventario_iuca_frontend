@@ -742,6 +742,13 @@ onMounted(async () => {
   display: flex;
   padding: 0 16px;
   gap: 2px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+}
+
+.tabs-bar::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 .tab-btn {
@@ -759,7 +766,8 @@ onMounted(async () => {
   cursor: pointer;
   transition: all 0.15s;
   margin-bottom: -1px;
-  white-space: nowrap;
+  white-space: nowrap; /* evita que el texto se parta */
+  flex-shrink: 0;      /* evita que los tabs se encojan */
 }
 .tab-btn:hover  { color: var(--gray-800); }
 .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
