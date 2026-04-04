@@ -11,7 +11,6 @@ const routes = [
   {
     path: '/',
     component: () => import('@/views/AppLayout.vue'),
-    redirect: '/equipos',
     children: [
       { path: 'equipos',    name: 'Equipos',    component: () => import('@/views/EquiposView.vue'),    meta: { modulo: 'computo'     } },
       { path: 'mobiliario', name: 'Mobiliario', component: () => import('@/views/MobiliarioView.vue'), meta: { modulo: 'mobiliario'  } },
@@ -21,27 +20,27 @@ const routes = [
       { path: 'usuarios',   name: 'Usuarios',   component: () => import('@/views/UsuariosView.vue'),   meta: { modulo: 'responsable' } },
     ]
   },
-  { path: '/:pathMatch(.*)*', redirect: '/' }
+  { path: '/:pathMatch(.*)*', redirect: '/login' }
 ]
+
+const MODULOS_PRIORITY = [
+  { path: '/accesos',    modulo: 'acceso'      },
+  { path: '/catalogos',  modulo: 'catalogos'   },
+  { path: '/equipos',    modulo: 'computo'     },
+  { path: '/historial',  modulo: 'historial'   },
+  { path: '/mobiliario', modulo: 'mobiliario'  },
+  { path: '/usuarios',   modulo: 'responsable' },
+]
+
+export function primeraRutaPermitida(auth) {
+  const encontrada = MODULOS_PRIORITY.find(r => auth.canDo(r.modulo, 'puede_leer'))
+  return encontrada?.path ?? '/login'
+}
 
 const router = createRouter({
   history: createWebHistory(),
   routes
 })
-
-const MODULOS_PRIORITY = [
-  { path: '/equipos',    modulo: 'computo'     },
-  { path: '/mobiliario', modulo: 'mobiliario'  },
-  { path: '/usuarios',   modulo: 'responsable' },
-  { path: '/catalogos',  modulo: 'catalogos'   },
-  { path: '/historial',  modulo: 'historial'   },
-  { path: '/accesos',    modulo: 'acceso'       },
-]
-
-function primeraRutaPermitida(auth) {
-  const encontrada = MODULOS_PRIORITY.find(r => auth.canDo(r.modulo, 'puede_leer'))
-  return encontrada?.path ?? '/login'
-}
 
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
@@ -54,11 +53,15 @@ router.beforeEach(async (to) => {
     await auth.me()
   } catch {
     localStorage.clear()
-    return '/login?session_invalidated=true'
+    return '/login?session_expired=true'
   }
 
-  if (to.path === '/login') return primeraRutaPermitida(auth)
+  // Redirigir raíz y login a la primera ruta permitida
+  if (to.path === '/' || to.path === '/login') {
+    return primeraRutaPermitida(auth)
+  }
 
+  // Verificar permiso del módulo actual
   const modulo = to.meta.modulo
   if (modulo && !auth.canDo(modulo, 'puede_leer')) {
     return primeraRutaPermitida(auth)

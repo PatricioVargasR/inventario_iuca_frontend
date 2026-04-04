@@ -23,12 +23,14 @@ api.interceptors.response.use(
     if (errorData?.error === 'session_invalidated') {
       localStorage.clear()
       window.location.href = '/login?session_invalidated=true'
+      return Promise.reject(err)
     }
 
-    // 401 genérico
+    // 401 genérico (token expirado, error de backend, etc.)
     if (err.response?.status === 401 && !errorData?.error) {
       localStorage.clear()
-      window.location.href = '/login'
+      window.location.href = '/login?session_expired=true'  // <-- param diferente
+      return Promise.reject(err)
     }
 
     return Promise.reject(err)
