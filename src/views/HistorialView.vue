@@ -154,7 +154,7 @@
           <div class="detail-grid" style="grid-template-columns:1fr 1fr 1fr;">
             <div class="detail-item"><label>Fecha y hora</label><strong>{{ formatFull(selected.fecha) }}</strong></div>
             <div class="detail-item"><label>Realizado por</label><strong>{{ selected.realizado_por || 'Sistema' }}</strong></div>
-            <div class="detail-item"><label>ID movimiento</label><strong style="font-family:var(--font-mono)">MOV-{{ String(selected.id_historial).padStart(4,'0') }}</strong></div>
+            <div class="detail-item"><label>ID movimiento</label><strong style="font-family:var(--font-mono)">{{ selected.id_historial}}</strong></div>
             <div class="detail-item"><label>Tipo de registro</label><strong>{{ formatTableName(selected.tabla) }}</strong></div>
             <div class="detail-item"><label>ID de registro</label><strong style="font-family:var(--font-mono)">#{{ selected.registro_id }}</strong></div>
             <div class="detail-item"><label>Tipo de movimiento</label><span class="op-badge" :class="opClass(selected.operacion)" style="font-size:12px;">{{ formatOperation(selected.operacion) }}</span></div>
