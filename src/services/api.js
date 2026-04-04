@@ -21,10 +21,7 @@ api.interceptors.response.use(
 
     // Sesión invalidada desde otro dispositivo
     if (errorData?.error === 'session_invalidated') {
-      // Limpiar TODO el localStorage
       localStorage.clear()
-
-      // Redirigir a login con mensaje
       window.location.href = '/login?session_invalidated=true'
     }
 
@@ -41,6 +38,7 @@ api.interceptors.response.use(
 // ===== AUTH =====
 export const authApi = {
   login: (data) => api.post('/auth/login', data),
+  forceLogin: (data) => api.post('/auth/force-login', data),
   me: () => api.get('/auth/me'),
   logout: () => api.post('/auth/logout')
 }
@@ -75,13 +73,13 @@ export const catalogosApi = {
   getTiposMobiliario:(params) => api.get('/catalogos/tipos-mobiliario',{ params }),
   getMobiliarioCompleto:   () => api.get('/catalogos/tipo-completo'  ),
 
-  // ── GET individual (sin cambios) ──
+  // ── GET individual ──
   getArea:    (id) => api.get(`/catalogos/areas/${id}`),
   getActivo:  (id) => api.get(`/catalogos/activo/${id}`),
   getEstado:  (id) => api.get(`/catalogos/estados/${id}`),
   getMobiliario: (id) => api.get(`/catalogos/mobiliario/${id}`),
 
-  // ── CRUD (sin cambios) ──
+  // ── CRUD ──
   createArea:           (data)     => api.post('/catalogos/areas', data),
   updateArea:           (id, data) => api.put(`/catalogos/areas/${id}`, data),
   deleteArea:           (id)       => api.delete(`/catalogos/areas/${id}`),
@@ -98,25 +96,23 @@ export const catalogosApi = {
 
 // ===== USUARIOS / RESPONSABLES =====
 export const usuariosApi = {
-  // Responsables
   listResponsables: (params) => api.get('/usuarios/responsables', { params }),
-  getResponsable: (id) => api.get(`/usuarios/responsable/${id}`),       // FALTANTE
+  getResponsable: (id) => api.get(`/usuarios/responsable/${id}`),
   createResponsable: (data) => api.post('/usuarios/responsables', data),
-  updateResponsable: (id, data) => api.put(`/usuarios/responsables/${id}`, data),  // FALTANTE
-  deleteResponsable: (id) => api.delete(`/usuarios/responsables/${id}`), // FALTANTE
+  updateResponsable: (id, data) => api.put(`/usuarios/responsables/${id}`, data),
+  deleteResponsable: (id) => api.delete(`/usuarios/responsables/${id}`),
 
-  // Accesos
   listAccesos: (params) => api.get('/usuarios/accesos', { params }),
-  getAcceso: (id) => api.get(`/usuarios/accesos/${id}`),                 // FALTANTE
+  getAcceso: (id) => api.get(`/usuarios/accesos/${id}`),
   createAcceso: (data) => api.post('/usuarios/accesos', data),
-  updateAcceso: (id, data) => api.put(`/usuarios/accesos/${id}`, data),  // FALTANTE
-  deleteAcceso: (id) => api.delete(`/usuarios/accesos/${id}`),           // FALTANTE
+  updateAcceso: (id, data) => api.put(`/usuarios/accesos/${id}`, data),
+  deleteAcceso: (id) => api.delete(`/usuarios/accesos/${id}`),
 }
 
-// ===== HISTORIAL (todos los endpoints son FALTANTES) =====
+// ===== HISTORIAL =====
 export const historialApi = {
-  list: (params) => api.get('/historial/', { params }),  // FALTANTE
-  get: (id) => api.get(`/historial/${id}`)               // FALTANTE
+  list: (params) => api.get('/historial/', { params }),
+  get: (id) => api.get(`/historial/${id}`)
 }
 
 export default api
@@ -135,26 +131,11 @@ export const vistasApi = {
   listAccesos: (params) => api.get('/vistas/accesos-completo/', { params }),
   getAcceso: (id) => api.get(`/vistas/acceso-completo/${id}`),
 
-  listHistoriales: (params = {}) => {
-    return api.get('/historial/', { params })
-  },
-
-  getHistorial: (id) => {
-    return api.get(`/historial/${id}`)
-  },
-
-  getHistorialPorTabla: (tabla, params = {}) => {
-    return api.get(`/historial/tabla/${tabla}`, { params })
-  },
-
-  getHistorialPorRegistro: (tabla, registroId) => {
-    return api.get(`/historial/registro/${tabla}/${registroId}`)
-  },
-
-  getEstadisticasHistorial: () => {
-    return api.get('/historial/estadisticas')
-  }
-
+  listHistoriales: (params = {}) => api.get('/historial/', { params }),
+  getHistorial: (id) => api.get(`/historial/${id}`),
+  getHistorialPorTabla: (tabla, params = {}) => api.get(`/historial/tabla/${tabla}`, { params }),
+  getHistorialPorRegistro: (tabla, registroId) => api.get(`/historial/registro/${tabla}/${registroId}`),
+  getEstadisticasHistorial: () => api.get('/historial/estadisticas')
 }
 
 export const concurrencyApi = {

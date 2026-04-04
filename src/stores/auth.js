@@ -13,6 +13,18 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => !!token.value)
 
+  function _guardarSesion(data) {
+    token.value = data.token
+    user.value = data.usuario
+    permisos.value = data.permisos || {}
+    sessionInfo.value = data.sesion_info
+
+    localStorage.setItem('token', token.value)
+    localStorage.setItem('user', JSON.stringify(user.value))
+    localStorage.setItem('permisos', JSON.stringify(permisos.value))
+    localStorage.setItem('sessionInfo', JSON.stringify(sessionInfo.value))
+  }
+
   async function login(correo, password) {
     loading.value = true
     error.value = null
@@ -23,21 +35,21 @@ export const useAuthStore = defineStore('auth', () => {
         password
       })
 
-      token.value = res.data.token
-      user.value = res.data.usuario
-      permisos.value = res.data.permisos || {}
-      sessionInfo.value = res.data.sesion_info
-
-      localStorage.setItem('token', token.value)
-      localStorage.setItem('user', JSON.stringify(user.value))
-      localStorage.setItem('permisos', JSON.stringify(permisos.value))
-      localStorage.setItem('sessionInfo', JSON.stringify(sessionInfo.value))
-
+      _guardarSesion(res.data)
       return { success: true }
+
     } catch (e) {
       const errorData = e.response?.data
 
-      // Sesión activa desde otra IP (no permitir login)
+      if (errorData?.error === 'session_active_same_ip') {
+        error.value = null
+        return {
+          success: false,
+          sessionActiveSameIp: true,
+          sessionInfo: errorData.sesion_info
+        }
+      }
+
       if (errorData?.error === 'session_active_different_ip') {
         error.value = null
         return {
@@ -49,39 +61,53 @@ export const useAuthStore = defineStore('auth', () => {
       }
 
       error.value = errorData?.error || 'Error al iniciar sesión'
-      return { success: false, sessionActive: false }
+      return { success: false }
+
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function forceLogin(correo, password) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const res = await authApi.forceLogin({
+        correo_electronico: correo,
+        password
+      })
+
+      _guardarSesion(res.data)
+      return { success: true }
+
+    } catch (e) {
+      const errorData = e.response?.data
+      error.value = errorData?.error || 'Error al iniciar sesión'
+      return { success: false }
+
     } finally {
       loading.value = false
     }
   }
 
   async function logout() {
-    // Liberar todos los bloqueos antes de cerrar sesión
     try {
       await releaseAllLocks()
     } catch (e) {
       console.error('Error liberando bloqueos:', e)
     }
 
-    // Cerrar sesión en backend
     try {
       await authApi.logout()
     } catch (e) {
       console.error('Error en logout backend:', e)
     }
 
-    // Limpiar estado local COMPLETAMENTE
     token.value = null
     user.value = null
     permisos.value = {}
     sessionInfo.value = null
-
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    localStorage.removeItem('permisos')
-    localStorage.removeItem('sessionInfo')
-
-    // Asegurar limpieza completa
     localStorage.clear()
   }
 
@@ -94,17 +120,14 @@ export const useAuthStore = defineStore('auth', () => {
   async function me() {
     try {
       const res = await authApi.me()
-      // Actualizar datos del usuario
       user.value = res.data
       permisos.value = res.data.permisos || {}
       return res.data
     } catch (e) {
-      // Si falla, limpiar sesión
       logout()
       throw e
     }
   }
-
 
   return {
     user,
@@ -115,6 +138,7 @@ export const useAuthStore = defineStore('auth', () => {
     error,
     isAuthenticated,
     login,
+    forceLogin,
     logout,
     me,
     canDo
