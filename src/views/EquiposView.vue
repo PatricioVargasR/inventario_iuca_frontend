@@ -339,7 +339,9 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
+import { useFormErrors } from '@/composables/useFormErrors'
 
+const { formErrors, clearErrors, setError } = useFormErrors()
 const authStore = useAuthStore()
 const { toast } = useToast()
 const currentUserId = computed(() => authStore.user?.id_acceso)
@@ -370,13 +372,7 @@ const lockWarning = ref(null)
 const currentLock = ref(null)
 
 // ── Errores de formulario ────────────────────────────────────────
-const formErrors = reactive({})
 const specErrors = reactive({})
-
-function clearErrors() {
-  Object.keys(formErrors).forEach(k => delete formErrors[k])
-  Object.keys(specErrors).forEach(k => delete specErrors[k])
-}
 
 /**
  * Aplica errores de campo devueltos por el backend (campo: mensaje)

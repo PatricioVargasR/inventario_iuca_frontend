@@ -283,7 +283,9 @@ import BaseModal from '@/components/ui/BaseModal.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
 import Pagination from '@/components/ui/Pagination.vue'
+import { useFormErrors } from '@/composables/useFormErrors'
 
+const { formErrors, clearErrors, applyFieldErrors, setError } = useFormErrors()
 const authStore = useAuthStore()
 const { toast } = useToast()
 
@@ -344,20 +346,6 @@ const concurrencyAlert = reactive({
 const form = reactive({
   nombre: '', descripcion: '', estado_catalogo: 'activo', color_hex: '', version: null, _id: null
 })
-
-// ── Errores de formulario ────────────────────────────────────────
-const formErrors = reactive({})
-
-function clearErrors() {
-  Object.keys(formErrors).forEach(k => delete formErrors[k])
-}
-
-function applyFieldErrors(campos) {
-  if (!campos) return
-  Object.entries(campos).forEach(([campo, mensaje]) => {
-    formErrors[campo] = mensaje
-  })
-}
 
 // ── Validación frontend ──────────────────────────────────────────
 function validateForm() {
