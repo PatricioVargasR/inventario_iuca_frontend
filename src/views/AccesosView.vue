@@ -323,6 +323,9 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import { useFormErrors } from '@/composables/useFormErrors'
+import { usePagination } from '@/composables/usePagination'
+
+const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
 
 const { formErrors, clearErrors, applyFieldErrors, setError } = useFormErrors()
 const currentUserId = computed(() => authStore.user?.id_acceso)
@@ -331,9 +334,6 @@ const { toast } = useToast()
 
 const items = ref([])
 const loading = ref(false)
-const page = ref(1)
-const total = ref(0)
-const totalPages = ref(1)
 const filters = reactive({
   search: '',
   modulos: [],
@@ -465,8 +465,6 @@ const form = reactive({
   version: null
 })
 
-let searchTimeout = null
-
 function formatDate(d) {
   if (!d) return '–'
   const dt = new Date(d)
@@ -530,7 +528,7 @@ async function loadCatalogos() {
 async function loadData() {
   loading.value = true
   try {
-    const params = { page: page.value, per_page: 20 }
+    const params = { page: page.value, per_page: perPage }
     if (filters.search) params.search = filters.search
     if (filters.area_id) params.area_id = filters.area_id
     const permisosObj = Object.fromEntries(
@@ -539,23 +537,12 @@ async function loadData() {
     params.permisos = JSON.stringify(permisosObj)
     const res = await vistasApi.listAccesos(params)
     items.value = res.data.accesos
-    total.value = res.data.total
-    totalPages.value = res.data.pages
+    setMeta(res.data)
   } catch {
     toast.error('Error al cargar los accesos')
   } finally {
     loading.value = false
   }
-}
-
-function onSearch() {
-  clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => { page.value = 1; loadData() }, 400)
-}
-
-function onPageChange(p) {
-  page.value = p
-  loadData()
 }
 
 function onModuloChange() {
@@ -805,6 +792,7 @@ onBeforeUnmount(async () => {
   }
 })
 
+setLoadFn(loadData)
 onMounted(() => {
   loadCatalogos()
   loadData()

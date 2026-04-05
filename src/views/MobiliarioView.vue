@@ -327,7 +327,9 @@ import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
 import { useFormErrors } from '@/composables/useFormErrors'
+import { usePagination } from '@/composables/usePagination'
 
+const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
 const { formErrors, clearErrors, applyFieldErrors, setError } = useFormErrors()
 const authStore = useAuthStore()
 const { toast } = useToast()
@@ -335,9 +337,6 @@ const currentUserId = computed(() => authStore.user?.id_acceso)
 
 const mobiliario = ref([])
 const loading = ref(false)
-const page = ref(1)
-const total = ref(0)
-const totalPages = ref(1)
 
 const filters = reactive({ search: '', tipo_mobiliario_id: '', estado_id: '', usuario_id: '' })
 const catalogos = reactive({ tipos: [], estados: [], usuarios: [] })
@@ -399,8 +398,6 @@ const form = reactive({
   version: null
 })
 
-let searchTimeout = null
-
 async function loadCatalogos() {
   try {
     const [tipos, estados, usuarios] = await Promise.all([
@@ -419,30 +416,19 @@ async function loadCatalogos() {
 async function loadData() {
   loading.value = true
   try {
-    const params = { page: page.value, per_page: 20 }
+    const params = { page: page.value, per_page: perPage }
     if (filters.search) params.search = filters.search
     if (filters.tipo_mobiliario_id) params.tipo_mobiliario_id = filters.tipo_mobiliario_id
     if (filters.estado_id) params.estado_id = filters.estado_id
     if (filters.usuario_id) params.usuario_id = filters.usuario_id
     const res = await vistasApi.listMobiliario(params)
     mobiliario.value = res.data.mobiliario
-    total.value = res.data.total
-    totalPages.value = res.data.pages
+    setMeta(res.data)
   } catch {
     toast.error('Error al cargar el mobiliario')
   } finally {
     loading.value = false
   }
-}
-
-function onSearch() {
-  clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => { page.value = 1; loadData() }, 400)
-}
-
-function onPageChange(p) {
-  page.value = p
-  loadData()
 }
 
 async function openDetail(mueble) {
@@ -683,6 +669,7 @@ onBeforeUnmount(async () => {
   }
 })
 
+setLoadFn(loadData)
 onMounted(() => {
   loadCatalogos()
   loadData()

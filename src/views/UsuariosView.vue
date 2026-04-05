@@ -208,7 +208,9 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import { useFormErrors } from '@/composables/useFormErrors'
+import { usePagination } from '@/composables/usePagination'
 
+const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
 const { formErrors, clearErrors, applyFieldErrors, setError } = useFormErrors()
 const authStore = useAuthStore()
 const { toast } = useToast()
@@ -217,9 +219,6 @@ const currentUserId = computed(() => authStore.user?.id_acceso)
 const items = ref([])
 const catalogos = reactive({ areas: [] })
 const loading = ref(false)
-const page = ref(1)
-const total = ref(0)
-const totalPages = ref(1)
 const filters = reactive({ search: '', area_id: '' })
 
 const showDetail = ref(false)
@@ -292,13 +291,12 @@ async function loadAreas() {
 async function loadData() {
   loading.value = true
   try {
-    const params = { page: page.value, per_page: 20 }
+    const params = { page: page.value, per_page: perPage }
     if (filters.search) params.search = filters.search
     if (filters.area_id) params.area_id = filters.area_id
     const res = await vistasApi.listResponsables(params)
     items.value = res.data.responsables
-    total.value = res.data.total
-    totalPages.value = res.data.pages
+    setMeta(res.data)
   } catch {
     toast.error('Error al cargar los responsables')
   } finally {
@@ -306,12 +304,6 @@ async function loadData() {
   }
 }
 
-function onSearch() {
-  clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => { page.value = 1; loadData() }, 400)
-}
-
-function onPageChange(p) { page.value = p; loadData() }
 
 async function openDetail(u) {
   try {
@@ -533,6 +525,7 @@ onBeforeUnmount(async () => {
   }
 })
 
+setLoadFn(loadData)
 onMounted(() => {
   loadAreas()
   loadData()

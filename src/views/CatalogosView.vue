@@ -284,7 +284,9 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import { useFormErrors } from '@/composables/useFormErrors'
+import { usePagination } from '@/composables/usePagination'
 
+const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
 const { formErrors, clearErrors, applyFieldErrors, setError } = useFormErrors()
 const authStore = useAuthStore()
 const { toast } = useToast()
@@ -314,10 +316,6 @@ const DATA_KEY = {
 const activeTab  = ref('area')
 const loading    = ref(false)
 const search     = ref('')
-const page       = ref(1)
-const total      = ref(0)
-const totalPages = ref(1)
-const perPage    = 10
 const formTab    = ref('area')
 
 const items = ref([])
@@ -400,8 +398,6 @@ function formatDate(d) {
 }
 
 // ── Carga de datos ───────────────────────────────────────────────
-let searchTimeout = null
-
 async function loadTab(resetPage = false) {
   if (resetPage) page.value = 1
   loading.value = true
@@ -457,16 +453,6 @@ function switchTab(key) {
   loadTab()
 }
 
-function onSearch() {
-  clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => loadTab(true), 400)
-}
-
-function onPageChange(p) {
-  page.value = p
-  loadTab()
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
 
 // ── CRUD ─────────────────────────────────────────────────────────
 function openCreate() {
@@ -698,6 +684,7 @@ onBeforeUnmount(async () => {
   }
 })
 
+setLoadFn(loadTab)
 onMounted(async () => {
   await loadAllCounts()
   loadTab()
