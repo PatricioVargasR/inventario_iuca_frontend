@@ -5,7 +5,7 @@
         <h1 class="page-title">Equipos de Cómputo</h1>
         <p class="page-subtitle">Gestión del inventario de equipos</p>
       </div>
-      <button v-if="authStore.canDo('computo', 'puede_crear')" class="btn btn-primary" @click="openCreate">
+      <button v-if="authStore.canDo('computo', 'puede_crear')" class="btn btn-primary" @click="handleOpenCreate">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Nuevo Equipo
       </button>
@@ -74,19 +74,19 @@
             <td>{{ eq.responsable || '–' }}</td>
             <td>
               <div class="actions-cell">
-                <button class="action-btn view" @click="openDetail(eq)" title="Ver detalle">
+                <button class="action-btn view" @click="handleOpenDetail(eq)" title="Ver detalle">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
                 <button
                   v-if="authStore.canDo('computo', 'puede_actualizar')"
                   class="action-btn edit"
-                  @click="openEdit(eq)"
+                  @click="handleOpenEdit(eq)"
                   title="Editar"
                   :disabled="eq.editado_por && eq.editado_por !== currentUserId"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
-                <button v-if="authStore.canDo('computo', 'puede_eliminar')" class="action-btn delete" @click="confirmDelete(eq)" title="Eliminar">
+                <button v-if="authStore.canDo('computo', 'puede_eliminar')" class="action-btn delete" @click="confirmDelete(eq.id_activo, eq)" title="Eliminar">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                 </button>
               </div>
@@ -136,7 +136,7 @@
         <div><strong>Advertencia:</strong><span>{{ lockWarning }}</span></div>
       </div>
 
-      <form id="equipoForm" @submit.prevent="saveEquipo" novalidate>
+      <form id="equipoForm" @submit.prevent="handleSave" novalidate>
         <div class="section-title" style="display:flex;align-items:center;gap:6px;">Información General</div>
         <div class="form-grid">
           <div class="form-group">
@@ -288,8 +288,8 @@
       title="Eliminar Equipo"
       :message="`¿Estás seguro de eliminar '${toDelete?.nombre_activo}'? Esta acción no se puede deshacer.`"
       :loading="deleting"
-      @confirm="doDelete"
-      @cancel="handleCancelDelete"
+      @confirm="handleDoDelete"
+      @cancel="handleCancelDelete_"
     />
 
     <!-- Concurrency Alert -->
@@ -331,57 +331,143 @@
 <script setup>
 import { ref, reactive, onMounted, computed, onBeforeUnmount, nextTick } from 'vue'
 import { equiposApi, catalogosApi, usuariosApi, vistasApi } from '@/services/api'
-import { acquireLock, releaseLock } from '@/services/concurrency'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
+import { useFormErrors } from '@/composables/useFormErrors'
+import { usePagination } from '@/composables/usePagination'
+import { useCrud } from '@/composables/useCrud'
+import { useConcurrencyHandlers } from '@/composables/useConcurrencyHandlers'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
-import { useFormErrors } from '@/composables/useFormErrors'
-import { usePagination } from '@/composables/usePagination'
 
+// ── Composables base ─────────────────────────────────────────────
 const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
-const { formErrors, clearErrors, setError } = useFormErrors()
+const { formErrors, clearErrors } = useFormErrors()
 const authStore = useAuthStore()
 const { toast } = useToast()
 const currentUserId = computed(() => authStore.user?.id_acceso)
 
+// ── Estado local ─────────────────────────────────────────────────
 const equipos = ref([])
 const loading = ref(false)
-
 const filters = reactive({ search: '', tipo_activo_id: '', estado_id: '', usuario_id: '' })
 const catalogos = reactive({ tipos: [], estados: [], usuarios: [] })
-
-const showDetail = ref(false)
-const showForm = ref(false)
-const showConfirm = ref(false)
-const showConcurrencyAlert = ref(false)
-const showConflictModal = ref(false)
-
-const selected = ref(null)
-const toDelete = ref(null)
-const editMode = ref(false)
-const saving = ref(false)
-const deleting = ref(false)
-const pendingDelete = ref(null)
-
-const lockWarning = ref(null)
-const currentLock = ref(null)
-
-// ── Errores de formulario ────────────────────────────────────────
 const specErrors = reactive({})
 
-/**
- * Aplica errores de campo devueltos por el backend (campo: mensaje)
- * o por la validación frontend.
- */
+const form = reactive({
+  _id: null,
+  tipo_activo_id: '', estado_id: '', nombre_activo: '',
+  usuario_asignado_id: '', marca: '', modelo: '',
+  numero_serie: '', sucursal_nombre: 'Tulancingo',
+  observaciones: '', especificaciones: [],
+  version: null
+})
+
+// ── useCrud ──────────────────────────────────────────────────────
+const {
+  showForm, showConfirm, showConcurrencyAlert, showConflictModal,
+  showDetail, selected,
+  editMode, saving, deleting, toDelete, lockWarning,
+  concurrencyAlert,
+  openCreate, openEdit, openDetail,
+  handleFormClose, save,
+  confirmDelete, doDelete, handleCancelDelete, setOnSuccess, releaseOnUnmount
+} = useCrud({
+  tabla:        'equipos_computo',
+  apiGet:       (id) => equiposApi.get(id),
+  apiGetDetail: (id) => vistasApi.getEquipos(id),
+  apiCreate:    (data) => equiposApi.create(data),
+  apiUpdate:    (id, data) => equiposApi.update(id, data),
+  apiDelete:    (id) => equiposApi.delete(id),
+  clearErrors,
+  applyFieldErrors
+})
+
+// ── populate reutilizable ────────────────────────────────────────
+function populateForm(d) {
+  Object.assign(form, {
+    _id:                 d.id_activo,
+    tipo_activo_id:      d.tipo_activo_id,
+    estado_id:           d.estado_id,
+    nombre_activo:       d.nombre_activo,
+    usuario_asignado_id: d.usuario_asignado_id || '',
+    marca:               d.marca || '',
+    modelo:              d.modelo || '',
+    numero_serie:        d.numero_serie || '',
+    sucursal_nombre:     d.sucursal_nombre || 'Tulancingo',
+    observaciones:       d.observaciones || '',
+    especificaciones:    d.especificaciones || [],
+    version:             d.version
+  })
+}
+
+// ── useConcurrencyHandlers ───────────────────────────────────────
+const {
+  handleConcurrencyCancel,
+  handleConcurrencyRetry,
+  handleConflictReload: reloadConflict
+} = useConcurrencyHandlers({
+  showConcurrencyAlert,
+  showConflictModal,
+  concurrencyAlert,
+  items: equipos,
+  idKey: 'id_activo',
+  openEdit:      (eq) => handleOpenEdit(eq),
+  confirmDelete: (eq) => confirmDelete(eq.id_activo, eq),
+  apiGet:        (id) => equiposApi.get(id),
+  clearErrors,
+  toast
+})
+
+// ── Wrappers específicos del módulo ──────────────────────────────
+function handleOpenCreate() {
+  openCreate(() => {
+    Object.assign(form, {
+      _id: null,
+      tipo_activo_id: '', estado_id: '', nombre_activo: '',
+      usuario_asignado_id: '', marca: '', modelo: '',
+      numero_serie: '', sucursal_nombre: 'Tulancingo',
+      observaciones: '', especificaciones: [], version: null
+    })
+  })
+}
+
+async function handleOpenEdit(eq) {
+  await openEdit(eq.id_activo, populateForm)
+}
+
+async function handleOpenDetail(eq) {
+  await openDetail(eq.id_activo)
+}
+
+async function handleSave() {
+  if (!validateForm()) {
+    toast.warning('Revisa los campos marcados en el formulario')
+    return
+  }
+  await save(form._id, { ...form })
+}
+
+async function handleDoDelete() {
+  await doDelete(toDelete.value.id_activo)
+}
+
+async function handleCancelDelete_() {
+  await handleCancelDelete()
+}
+
+async function handleConflictReload() {
+  await reloadConflict(form._id, populateForm)
+}
+
+// ── Validación ───────────────────────────────────────────────────
 function applyFieldErrors(campos) {
   if (!campos) return
   Object.entries(campos).forEach(([campo, mensaje]) => {
     if (campo.startsWith('especificaciones[')) {
-      // "especificaciones[0].nombre" → specErrors[0].nombre
       const match = campo.match(/\[(\d+)\]\.(.+)/)
       if (match) {
         const idx = parseInt(match[1])
@@ -395,9 +481,9 @@ function applyFieldErrors(campos) {
   })
 }
 
-// ── Validación frontend ──────────────────────────────────────────
 function validateForm() {
   clearErrors()
+  Object.keys(specErrors).forEach(k => delete specErrors[k])
   let valid = true
 
   if (!form.tipo_activo_id) {
@@ -428,8 +514,6 @@ function validateForm() {
     formErrors.sucursal_nombre = '"Sucursal" es obligatoria'
     valid = false
   }
-
-  // Especificaciones: si se añadieron, validar que tengan nombre y valor
   form.especificaciones.forEach((spec, i) => {
     if (!spec.nombre_especificacion?.trim()) {
       if (!specErrors[i]) specErrors[i] = {}
@@ -442,21 +526,10 @@ function validateForm() {
       valid = false
     }
   })
-
   return valid
 }
 
-const concurrencyAlert = reactive({ title: '', message: '', lockInfo: null, showRetry: false })
-
-const form = reactive({
-  tipo_activo_id: '', estado_id: '', nombre_activo: '',
-  usuario_asignado_id: '', marca: '', modelo: '',
-  numero_serie: '', sucursal_nombre: 'Tulancingo',
-  observaciones: '', especificaciones: [],
-  version: null
-})
-
-// ── Specs sugerencias (igual que antes) ─────────────────────────
+// ── Specs ────────────────────────────────────────────────────────
 const SPECS_MAP = {
   'pc': [
     { nombre: 'Procesador', placeholder: 'Ej: Intel Core i7-12700, 3.6GHz' },
@@ -513,10 +586,8 @@ const specSuggestions = computed(() => {
 })
 
 const activeSuggestionIndex = ref(null)
-
 function openSuggestions(i) { activeSuggestionIndex.value = i }
 function closeSuggestions() { setTimeout(() => { activeSuggestionIndex.value = null }, 150) }
-
 function applySuggestion(i, sugerencia) {
   form.especificaciones[i].nombre_especificacion = sugerencia.nombre
   form.especificaciones[i]._placeholder = sugerencia.placeholder
@@ -526,15 +597,14 @@ function applySuggestion(i, sugerencia) {
     if (inputs[0]) inputs[0].focus()
   })
 }
-
 function filteredSuggestions(i) {
   const texto = (form.especificaciones[i].nombre_especificacion || '').toLowerCase()
   return specSuggestions.value.filter(s => s.nombre.toLowerCase().includes(texto))
 }
+function addSpec() { form.especificaciones.push({ nombre_especificacion: '', valor_especificacion: '' }) }
+function removeSpec(i) { form.especificaciones.splice(i, 1); delete specErrors[i] }
 
-// ── Carga de datos ───────────────────────────────────────────────
-
-
+// ── Datos ────────────────────────────────────────────────────────
 async function loadCatalogos() {
   try {
     const [tipos, estados, usuarios] = await Promise.all([
@@ -568,234 +638,11 @@ async function loadData() {
   }
 }
 
-// ── Modales ──────────────────────────────────────────────────────
-async function openDetail(eq) {
-  try {
-    const res = await vistasApi.getEquipos(eq.id_activo)
-    selected.value = res.data
-    showDetail.value = true
-  } catch {
-    toast.error('No se pudo cargar el detalle del equipo')
-  }
-}
-
-function openCreate() {
-  editMode.value = false
-  lockWarning.value = null
-  clearErrors()
-  Object.assign(form, {
-    tipo_activo_id: '', estado_id: '', nombre_activo: '',
-    usuario_asignado_id: '', marca: '', modelo: '',
-    numero_serie: '', sucursal_nombre: 'Tulancingo',
-    observaciones: '', especificaciones: [], version: null
-  })
-  showForm.value = true
-}
-
-async function openEdit(eq) {
-  editMode.value = true
-  lockWarning.value = null
-  clearErrors()
-
-  const lockResult = await acquireLock('equipos_computo', eq.id_activo, 10, 'edicion')
-
-  if (!lockResult.success) {
-    if (lockResult.locked) {
-      const tipoAccion = lockResult.lockInfo.tipo_bloqueo === 'edicion' ? 'editando' : 'eliminando'
-      concurrencyAlert.title = 'Registro en Uso'
-      concurrencyAlert.message = `${lockResult.lockInfo.nombre_usuario} está ${tipoAccion} este equipo`
-      concurrencyAlert.lockInfo = lockResult.lockInfo
-      concurrencyAlert.showRetry = true
-      showConcurrencyAlert.value = true
-    } else {
-      toast.error(lockResult.error || 'Error al adquirir bloqueo')
-    }
-    return
-  }
-
-  currentLock.value = lockResult.bloqueo
-
-  try {
-    const res = await equiposApi.get(eq.id_activo)
-    const d = res.data
-
-    if (d.editado_por && d.editado_por !== currentUserId.value) {
-      lockWarning.value = `${d.nombre_editor} estaba editando este registro`
-    }
-
-    Object.assign(form, {
-      tipo_activo_id: d.tipo_activo_id,
-      estado_id: d.estado_id,
-      nombre_activo: d.nombre_activo,
-      usuario_asignado_id: d.usuario_asignado_id || '',
-      marca: d.marca || '',
-      modelo: d.modelo || '',
-      numero_serie: d.numero_serie || '',
-      sucursal_nombre: d.sucursal_nombre || 'Tulancingo',
-      observaciones: d.observaciones || '',
-      especificaciones: d.especificaciones || [],
-      version: d.version
-    })
-    form._id = d.id_activo
-    showForm.value = true
-  } catch {
-    toast.error('No se pudieron cargar los datos del equipo')
-    await releaseLock('equipos_computo', eq.id_activo)
-    currentLock.value = null
-  }
-}
-
-function addSpec() { form.especificaciones.push({ nombre_especificacion: '', valor_especificacion: '' }) }
-function removeSpec(i) { form.especificaciones.splice(i, 1); delete specErrors[i] }
-
-async function saveEquipo() {
-  // Validación frontend primero
-  if (!validateForm()) {
-    toast.warning('Revisa los campos marcados en el formulario')
-    return
-  }
-
-  saving.value = true
-  try {
-    const payload = { ...form, version: form.version }
-
-    if (editMode.value) {
-      await equiposApi.update(form._id, payload)
-      toast.success('Equipo actualizado correctamente', 'Actualización exitosa')
-    } else {
-      await equiposApi.create(payload)
-      toast.success('Equipo registrado correctamente', 'Registro exitoso')
-    }
-
-    await handleFormClose(true)
-    loadData()
-
-  } catch (e) {
-    const errorData = e.response?.data
-
-    if (errorData?.error === 'conflict') {
-      showConflictModal.value = true
-      saving.value = false
-      return
-    }
-
-    // Si el backend devuelve errores de campo, mostrarlos inline
-    if (errorData?.campos) {
-      applyFieldErrors(errorData.campos)
-      toast.warning(errorData.error || 'Revisa los campos del formulario')
-    } else {
-      toast.fromError(errorData)
-    }
-  } finally {
-    saving.value = false
-  }
-}
-
-async function handleFormClose(shouldClose = true) {
-  if (currentLock.value && editMode.value) {
-    await releaseLock('equipos_computo', form._id)
-    currentLock.value = null
-  }
-  lockWarning.value = null
-  if (shouldClose) {
-    showForm.value = false
-    clearErrors()
-  }
-}
-
-async function confirmDelete(eq) {
-  const lockResult = await acquireLock('equipos_computo', eq.id_activo, 2, 'eliminacion')
-
-  if (!lockResult.success) {
-    if (lockResult.locked) {
-      const tipoAccion = lockResult.lockInfo.tipo_bloqueo === 'edicion' ? 'editando' : 'eliminando'
-      concurrencyAlert.title = 'No se puede eliminar'
-      concurrencyAlert.message = `${lockResult.lockInfo.nombre_usuario} está ${tipoAccion} este equipo`
-      concurrencyAlert.lockInfo = lockResult.lockInfo
-      concurrencyAlert.showRetry = true
-      showConcurrencyAlert.value = true
-    } else {
-      toast.error(lockResult.error || 'Error al adquirir bloqueo')
-    }
-    return
-  }
-
-  pendingDelete.value = lockResult.bloqueo
-  toDelete.value = eq
-  showConfirm.value = true
-}
-
-async function doDelete() {
-  deleting.value = true
-  try {
-    await equiposApi.delete(toDelete.value.id_activo)
-    if (pendingDelete.value) {
-      await releaseLock('equipos_computo', toDelete.value.id_activo)
-      pendingDelete.value = null
-    }
-    toast.success(`"${toDelete.value.nombre_activo}" fue eliminado`, 'Eliminado')
-    showConfirm.value = false
-    toDelete.value = null
-    loadData()
-  } catch (e) {
-    if (pendingDelete.value) {
-      await releaseLock('equipos_computo', toDelete.value.id_activo)
-      pendingDelete.value = null
-    }
-    toast.fromError(e.response?.data)
-  } finally {
-    deleting.value = false
-  }
-}
-
-async function handleCancelDelete() {
-  if (pendingDelete.value && toDelete.value) {
-    await releaseLock('equipos_computo', toDelete.value.id_activo)
-    pendingDelete.value = null
-  }
-  toDelete.value = null
-  showConfirm.value = false
-}
-
-function handleConcurrencyCancel() { showConcurrencyAlert.value = false }
-
-async function handleConcurrencyRetry() {
-  showConcurrencyAlert.value = false
-  setTimeout(() => {
-    const registroId = concurrencyAlert.lockInfo?.registro_id
-    const eq = equipos.value.find(e => e.id_activo === registroId)
-    if (eq) {
-      if (concurrencyAlert.title === 'No se puede eliminar') confirmDelete(eq)
-      else openEdit(eq)
-    }
-  }, 1000)
-}
-
-async function handleConflictReload() {
-  try {
-    const res = await equiposApi.get(form._id)
-    const d = res.data
-    Object.assign(form, {
-      tipo_activo_id: d.tipo_activo_id, estado_id: d.estado_id,
-      nombre_activo: d.nombre_activo, usuario_asignado_id: d.usuario_asignado_id || '',
-      marca: d.marca || '', modelo: d.modelo || '', numero_serie: d.numero_serie || '',
-      sucursal_nombre: d.sucursal_nombre || 'Tulancingo', observaciones: d.observaciones || '',
-      especificaciones: d.especificaciones || [], version: d.version
-    })
-    showConflictModal.value = false
-    clearErrors()
-    toast.info('Datos recargados. Verifica los cambios antes de guardar.')
-  } catch {
-    toast.error('No se pudieron recargar los datos')
-  }
-}
-
+// ── Lifecycle ────────────────────────────────────────────────────
 onBeforeUnmount(async () => {
-  if (currentLock.value && form._id) {
-    await releaseLock('equipos_computo', form._id)
-  }
+  await releaseOnUnmount()
 })
-
+setOnSuccess(loadData)
 setLoadFn(loadData)
 onMounted(() => { loadCatalogos(); loadData() })
 </script>

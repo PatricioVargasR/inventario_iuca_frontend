@@ -109,7 +109,7 @@
                 <button
                   v-if="authStore.canDo('mobiliario', 'puede_eliminar')"
                   class="action-btn delete"
-                  @click="confirmDelete(mueble)"
+                  @click="confirmDelete(mueble.id_mueble, mueble)"
                   title="Eliminar"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -273,7 +273,7 @@
       title="Eliminar Mobiliario"
       :message="`¿Estás seguro de eliminar '${toDelete?.tipo_mobiliario}'? Esta acción no se puede deshacer.`"
       :loading="deleting"
-      @confirm="doDelete"
+      @confirm="handleDoDelete"
       @cancel="handleCancelDelete"
     />
 
@@ -318,7 +318,6 @@
 <script setup>
 import { ref, reactive, onMounted, computed, onBeforeUnmount } from 'vue'
 import { mobiliarioApi, catalogosApi, usuariosApi, vistasApi } from '@/services/api'
-import { acquireLock, releaseLock } from '@/services/concurrency'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import BaseModal from '@/components/ui/BaseModal.vue'
@@ -328,9 +327,13 @@ import Pagination from '@/components/ui/Pagination.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
 import { useFormErrors } from '@/composables/useFormErrors'
 import { usePagination } from '@/composables/usePagination'
+import { useCrud } from '@/composables/useCrud'
+import { useConcurrencyHandlers } from '@/composables/useConcurrencyHandlers'
 
 const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
 const { formErrors, clearErrors, applyFieldErrors, setError } = useFormErrors()
+
+
 const authStore = useAuthStore()
 const { toast } = useToast()
 const currentUserId = computed(() => authStore.user?.id_acceso)
@@ -341,21 +344,60 @@ const loading = ref(false)
 const filters = reactive({ search: '', tipo_mobiliario_id: '', estado_id: '', usuario_id: '' })
 const catalogos = reactive({ tipos: [], estados: [], usuarios: [] })
 
-const showDetail = ref(false)
-const showForm = ref(false)
-const showConfirm = ref(false)
-const showConcurrencyAlert = ref(false)
-const showConflictModal = ref(false)
+const {
+  showForm, showConfirm, showConcurrencyAlert, showConflictModal,
+  showDetail, selected,
+  editMode, saving, deleting, toDelete, lockWarning,
+  concurrencyAlert,
+  openCreate: crudOpenCreate, openDetail: crudOpenDetail,
+  openEdit: crudOpenEdit,
+  handleFormClose, save,
+  confirmDelete, doDelete,
+  handleCancelDelete,
+  releaseOnUnmount, setOnSuccess
+} = useCrud({
+  tabla:        'mobiliario',
+  apiGet:       (id) => mobiliarioApi.get(id),
+  apiGetDetail: (id) => vistasApi.getMobiliario(id),
+  apiCreate:    (data) => mobiliarioApi.create(data),
+  apiUpdate:    (id, data) => mobiliarioApi.update(id, data),
+  apiDelete:    (id) => mobiliarioApi.delete(id),
+  clearErrors,
+  applyFieldErrors
+})
 
-const selected = ref(null)
-const toDelete = ref(null)
-const editMode = ref(false)
-const saving = ref(false)
-const deleting = ref(false)
-const pendingDelete = ref(null)
+function populateForm(d) {
+  Object.assign(form, {
+    _id:                 d.id_mueble,
+    tipo_mobiliario_id:  d.tipo_mobiliario_id,
+    marca:               d.marca || '',
+    modelo:              d.modelo || '',
+    color:               d.color || '',
+    caracteristicas:     d.caracteristicas || '',
+    observaciones:       d.observaciones || '',
+    estado_id:           d.estado_id,
+    usuario_asignado_id: d.usuario_asignado_id || '',
+    sucursal_nombre:     d.sucursal_nombre || 'Tulancingo',
+    version:             d.version
+  })
+}
 
-const lockWarning = ref(null)
-const currentLock = ref(null)
+const {
+  handleConcurrencyCancel,
+  handleConcurrencyRetry,
+  handleConflictReload: reloadConflict
+} = useConcurrencyHandlers({
+  showConcurrencyAlert,
+  showConflictModal,
+  concurrencyAlert,
+  items: mobiliario,
+  idKey: 'id_mueble',
+  openEdit:      (mueble) => openEdit(mueble),
+  confirmDelete: (mueble) => confirmDelete(mueble),
+  apiGet:        (id) => mobiliarioApi.get(id),
+  clearErrors,
+  toast
+})
 
 // ── Validación frontend ──────────────────────────────────────────
 function validateForm() {
@@ -377,13 +419,6 @@ function validateForm() {
 
   return valid
 }
-
-const concurrencyAlert = reactive({
-  title: '',
-  message: '',
-  lockInfo: null,
-  showRetry: false,
-})
 
 const form = reactive({
   tipo_mobiliario_id: '',
@@ -431,244 +466,46 @@ async function loadData() {
   }
 }
 
-async function openDetail(mueble) {
-  try {
-    const res = await vistasApi.getMobiliario(mueble.id_mueble)
-    selected.value = res.data
-    showDetail.value = true
-  } catch {
-    toast.error('No se pudo cargar el detalle del mobiliario')
-  }
-}
-
 function openCreate() {
-  editMode.value = false
-  lockWarning.value = null
-  clearErrors()
-  Object.assign(form, {
-    tipo_mobiliario_id: '',
-    marca: '',
-    modelo: '',
-    color: '',
-    caracteristicas: '',
-    observaciones: '',
-    estado_id: '',
-    usuario_asignado_id: '',
-    sucursal_nombre: 'Tulancingo',
-    version: null
+  crudOpenCreate(() => {
+    Object.assign(form, {
+      _id: null,
+      tipo_mobiliario_id: '', marca: '', modelo: '', color: '',
+      caracteristicas: '', observaciones: '', estado_id: '',
+      usuario_asignado_id: '', sucursal_nombre: 'Tulancingo', version: null
+    })
   })
-  showForm.value = true
 }
 
 async function openEdit(mueble) {
-  editMode.value = true
-  lockWarning.value = null
-  clearErrors()
+  await crudOpenEdit(mueble.id_mueble, populateForm)
+}
 
-  const lockResult = await acquireLock('mobiliario', mueble.id_mueble, 10, 'edicion')
+async function openDetail(mueble) {
+  await crudOpenDetail(mueble.id_mueble)
+}
 
-  if (!lockResult.success) {
-    if (lockResult.locked) {
-      concurrencyAlert.title = 'Registro en Uso'
-      concurrencyAlert.message = lockResult.lockInfo.tipo_bloqueo === 'edicion'
-        ? `${lockResult.lockInfo.nombre_usuario} está editando este mobiliario`
-        : `No puedes editar este mobiliario porque ${lockResult.lockInfo.nombre_usuario} lo está eliminando`
-      concurrencyAlert.lockInfo = lockResult.lockInfo
-      concurrencyAlert.showRetry = true
-      showConcurrencyAlert.value = true
-    } else {
-      toast.error(lockResult.error || 'Error al adquirir bloqueo')
-    }
-    return
-  }
-
-  currentLock.value = lockResult.bloqueo
-
-  try {
-    const res = await mobiliarioApi.get(mueble.id_mueble)
-    const d = res.data
-
-    if (d.editado_por && d.editado_por !== currentUserId.value) {
-      lockWarning.value = `${d.nombre_editor} estaba editando este registro`
-    }
-
-    Object.assign(form, {
-      tipo_mobiliario_id: d.tipo_mobiliario_id,
-      marca: d.marca || '',
-      modelo: d.modelo || '',
-      color: d.color || '',
-      caracteristicas: d.caracteristicas || '',
-      observaciones: d.observaciones || '',
-      estado_id: d.estado_id,
-      usuario_asignado_id: d.usuario_asignado_id || '',
-      sucursal_nombre: d.sucursal_nombre || 'Tulancingo',
-      version: d.version
-    })
-    form._id = d.id_mueble
-    showForm.value = true
-  } catch {
-    toast.error('No se pudieron cargar los datos del mobiliario')
-    await releaseLock('mobiliario', mueble.id_mueble)
-    currentLock.value = null
-  }
+async function handleDoDelete() {
+  await doDelete(toDelete.value.id_mueble)
 }
 
 async function saveMobiliario() {
-  // Validación frontend primero
   if (!validateForm()) {
     toast.warning('Revisa los campos marcados en el formulario')
     return
   }
-
-  saving.value = true
-  try {
-    const payload = { ...form, version: form.version }
-
-    if (editMode.value) {
-      await mobiliarioApi.update(form._id, payload)
-      toast.success('Mobiliario actualizado correctamente', 'Actualización exitosa')
-    } else {
-      await mobiliarioApi.create(payload)
-      toast.success('Mobiliario registrado correctamente', 'Registro exitoso')
-    }
-
-    await handleFormClose(true)
-    loadData()
-
-  } catch (e) {
-    const errorData = e.response?.data
-
-    if (errorData?.error === 'conflict') {
-      showConflictModal.value = true
-      saving.value = false
-      return
-    }
-
-    // Si el backend devuelve errores de campo, mostrarlos inline
-    if (errorData?.campos) {
-      applyFieldErrors(errorData.campos)
-      toast.warning(errorData.error || 'Revisa los campos del formulario')
-    } else {
-      toast.fromError(errorData)
-    }
-  } finally {
-    saving.value = false
-  }
-}
-
-async function handleFormClose(shouldClose = true) {
-  if (currentLock.value && editMode.value) {
-    await releaseLock('mobiliario', form._id)
-    currentLock.value = null
-  }
-  lockWarning.value = null
-  if (shouldClose) {
-    showForm.value = false
-    clearErrors()
-  }
-}
-
-async function confirmDelete(mueble) {
-  const lockResult = await acquireLock('mobiliario', mueble.id_mueble, 2, 'eliminacion')
-
-  if (!lockResult.success) {
-    if (lockResult.locked) {
-      concurrencyAlert.title = 'No se puede eliminar'
-      concurrencyAlert.message = lockResult.lockInfo.tipo_bloqueo === 'edicion'
-        ? `No puedes eliminar este mobiliario porque ${lockResult.lockInfo.nombre_usuario} lo está editando`
-        : `${lockResult.lockInfo.nombre_usuario} ya está eliminando este mobiliario`
-      concurrencyAlert.lockInfo = lockResult.lockInfo
-      concurrencyAlert.showRetry = true
-      showConcurrencyAlert.value = true
-    } else {
-      toast.error(lockResult.error || 'Error al adquirir bloqueo')
-    }
-    return
-  }
-
-  pendingDelete.value = lockResult.bloqueo
-  toDelete.value = mueble
-  showConfirm.value = true
-}
-
-async function doDelete() {
-  deleting.value = true
-  try {
-    await mobiliarioApi.delete(toDelete.value.id_mueble)
-    if (pendingDelete.value) {
-      await releaseLock('mobiliario', toDelete.value.id_mueble)
-      pendingDelete.value = null
-    }
-    toast.success(`"${toDelete.value.tipo_mobiliario}" fue eliminado`, 'Eliminado')
-    showConfirm.value = false
-    toDelete.value = null
-    loadData()
-  } catch (e) {
-    if (pendingDelete.value) {
-      await releaseLock('mobiliario', toDelete.value.id_mueble)
-      pendingDelete.value = null
-    }
-    toast.fromError(e.response?.data)
-  } finally {
-    deleting.value = false
-  }
-}
-
-async function handleCancelDelete() {
-  if (pendingDelete.value && toDelete.value) {
-    await releaseLock('mobiliario', toDelete.value.id_mueble)
-    pendingDelete.value = null
-  }
-  toDelete.value = null
-  showConfirm.value = false
-}
-
-function handleConcurrencyCancel() {
-  showConcurrencyAlert.value = false
-}
-
-async function handleConcurrencyRetry() {
-  showConcurrencyAlert.value = false
-  setTimeout(() => {
-    const registroId = concurrencyAlert.lockInfo?.registro_id
-    const mueble = mobiliario.value.find(m => m.id_mueble === registroId)
-    if (mueble) {
-      if (concurrencyAlert.title === 'No se puede eliminar') confirmDelete(mueble)
-      else openEdit(mueble)
-    }
-  }, 1000)
+  await save(form._id, { ...form })
 }
 
 async function handleConflictReload() {
-  try {
-    const res = await mobiliarioApi.get(form._id)
-    const d = res.data
-    Object.assign(form, {
-      tipo_mobiliario_id: d.tipo_mobiliario_id,
-      marca: d.marca || '',
-      modelo: d.modelo || '',
-      color: d.color || '',
-      caracteristicas: d.caracteristicas || '',
-      observaciones: d.observaciones || '',
-      estado_id: d.estado_id,
-      usuario_asignado_id: d.usuario_asignado_id || '',
-      sucursal_nombre: d.sucursal_nombre || 'Tulancingo',
-      version: d.version
-    })
-    showConflictModal.value = false
-    clearErrors()
-    toast.info('Datos recargados. Verifica los cambios antes de guardar.')
-  } catch {
-    toast.error('No se pudieron recargar los datos')
-  }
+  await reloadConflict(form._id, populateForm)
 }
 
 onBeforeUnmount(async () => {
-  if (currentLock.value && form._id) {
-    await releaseLock('mobiliario', form._id)
-  }
+  await releaseOnUnmount()
 })
 
+setOnSuccess(loadData)
 setLoadFn(loadData)
 onMounted(() => {
   loadCatalogos()

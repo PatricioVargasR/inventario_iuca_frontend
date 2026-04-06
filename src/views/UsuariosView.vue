@@ -50,7 +50,7 @@
                 <button v-if="authStore.canDo('responsable', 'puede_actualizar')" class="action-btn edit" @click="openEdit(u)" title="Editar">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
-                <button v-if="authStore.canDo('responsable', 'puede_eliminar')" class="action-btn delete" @click="confirmDelete(u)" title="Eliminar">
+                <button v-if="authStore.canDo('responsable', 'puede_eliminar')" class="action-btn delete" @click="confirmDelete(u.id_usuario, u)" title="Eliminar">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                 </button>
               </div>
@@ -155,7 +155,7 @@
       title="Eliminar responsable"
       :message="`¿Estás seguro de eliminar el responsable '${toDelete?.nombre_usuario}'? Esta acción no se puede deshacer.`"
       :loading="deleting"
-      @confirm="doDelete"
+      @confirm="handleDoDelete"
       @cancel="handleCancelDelete"
     />
 
@@ -200,7 +200,6 @@
 <script setup>
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
 import { usuariosApi, catalogosApi, vistasApi } from '@/services/api'
-import { acquireLock, releaseLock } from '@/services/concurrency'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import BaseModal from '@/components/ui/BaseModal.vue'
@@ -209,33 +208,81 @@ import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import { useFormErrors } from '@/composables/useFormErrors'
 import { usePagination } from '@/composables/usePagination'
+import { useCrud } from '@/composables/useCrud'
+import { useConcurrencyHandlers } from '@/composables/useConcurrencyHandlers'
 
 const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
 const { formErrors, clearErrors, applyFieldErrors, setError } = useFormErrors()
 const authStore = useAuthStore()
 const { toast } = useToast()
-const currentUserId = computed(() => authStore.user?.id_acceso)
 
 const items = ref([])
 const catalogos = reactive({ areas: [] })
 const loading = ref(false)
 const filters = reactive({ search: '', area_id: '' })
 
-const showDetail = ref(false)
-const showForm = ref(false)
-const showConfirm = ref(false)
-const showConcurrencyAlert = ref(false)
-const showConflictModal = ref(false)
+const {
+  showForm, showConfirm, showConcurrencyAlert, showConflictModal,
+  showDetail, selected,
+  editMode, saving, deleting, toDelete, lockWarning,
+  concurrencyAlert,
+  openCreate: crudOpenCreate, openDetail: crudOpenDetail,
+  openEdit: crudOpenEdit,
+  handleFormClose, save,
+  confirmDelete, doDelete,
+  handleCancelDelete,
+  releaseOnUnmount, setOnSuccess
+} = useCrud({
+  tabla:        'usuario',
+  apiGet:       (id) => usuariosApi.getResponsable(id),
+  apiGetDetail: (id) => vistasApi.getResponsable(id),
+  apiCreate:    (data) => usuariosApi.createResponsable(data),
+  apiUpdate:    (id, data) => usuariosApi.updateResponsable(id, data),
+  apiDelete:    (id) => usuariosApi.deleteResponsable(id),
+  clearErrors,
+  applyFieldErrors
+})
 
-const selected = ref(null)
-const toDelete = ref(null)
-const editMode = ref(false)
-const saving = ref(false)
-const deleting = ref(false)
-const pendingDelete = ref(null)
 
-const lockWarning = ref(null)
-const currentLock = ref(null)
+const form = reactive({
+  _id: null,
+  nombre_usuario: '',
+  numero_nomina: '',
+  puesto: '',
+  area_id: '',
+  version: null
+})
+
+
+// populate reutilizable
+function populateForm(d) {
+  Object.assign(form, {
+    _id:            d.id_usuario,
+    nombre_usuario: d.nombre_usuario,
+    numero_nomina:  d.numero_nomina || '',
+    puesto:         d.puesto || '',
+    area_id:        d.area_id || '',
+    version:        d.version
+  })
+}
+
+const {
+  handleConcurrencyCancel,
+  handleConcurrencyRetry,
+  handleConflictReload: reloadConflict
+} = useConcurrencyHandlers({
+  showConcurrencyAlert,
+  showConflictModal,
+  concurrencyAlert,
+  items,
+  idKey: 'id_usuario',
+  openEdit:      (u) => openEdit(u),
+  confirmDelete: (u) => confirmDelete(u),
+  apiGet:        (id) => usuariosApi.getResponsable(id),
+  clearErrors,
+  toast
+})
+
 
 // ── Validación frontend ──────────────────────────────────────────
 function validateForm() {
@@ -262,23 +309,6 @@ function validateForm() {
   return valid
 }
 
-const concurrencyAlert = reactive({
-  title: '',
-  message: '',
-  lockInfo: null,
-  showRetry: false,
-})
-
-const form = reactive({
-  nombre_usuario: '',
-  numero_nomina: '',
-  puesto: '',
-  area_id: '',
-  version: null
-})
-
-let searchTimeout = null
-
 async function loadAreas() {
   try {
     const areas = await catalogosApi.getAreasCompleto()
@@ -304,72 +334,22 @@ async function loadData() {
   }
 }
 
-
-async function openDetail(u) {
-  try {
-    const res = await vistasApi.getResponsable(u.id_usuario)
-    selected.value = res.data
-  } catch {
-    selected.value = u
-  }
-  showDetail.value = true
-}
-
 function openCreate() {
-  editMode.value = false
-  lockWarning.value = null
-  clearErrors()
-  Object.assign(form, { nombre_usuario: '', numero_nomina: '', puesto: '', area_id: '', version: null })
-  showForm.value = true
+  crudOpenCreate(() => {
+    Object.assign(form, {
+      _id: null,
+      nombre_usuario: '', numero_nomina: '',
+      puesto: '', area_id: '', version: null
+    })
+  })
 }
 
 async function openEdit(u) {
-  editMode.value = true
-  lockWarning.value = null
-  clearErrors()
+  await crudOpenEdit(u.id_usuario, populateForm)
+}
 
-  const lockResult = await acquireLock('usuario', u.id_usuario, 10, 'edicion')
-
-  if (!lockResult.success) {
-    if (lockResult.locked) {
-      concurrencyAlert.title = 'Registro en Uso'
-      concurrencyAlert.message = lockResult.lockInfo.tipo_bloqueo === 'edicion'
-        ? `${lockResult.lockInfo.nombre_usuario} está editando este responsable`
-        : `No puedes editar este responsable porque ${lockResult.lockInfo.nombre_usuario} lo está eliminando`
-      concurrencyAlert.lockInfo = lockResult.lockInfo
-      concurrencyAlert.showRetry = true
-      showConcurrencyAlert.value = true
-    } else {
-      toast.error(lockResult.error || 'Error al adquirir bloqueo')
-    }
-    return
-  }
-
-  currentLock.value = lockResult.bloqueo
-
-  try {
-    const res = await usuariosApi.getResponsable(u.id_usuario)
-    const d = res.data
-
-    if (d.editado_por && d.editado_por !== currentUserId.value) {
-      lockWarning.value = `${d.nombre_editor} estaba editando este registro`
-    }
-
-    Object.assign(form, {
-      nombre_usuario: d.nombre_usuario,
-      numero_nomina: d.numero_nomina || '',
-      puesto: d.puesto || '',
-      area_id: d.area_id || '',
-      version: d.version,
-      _id: d.id_usuario
-    })
-
-    showForm.value = true
-  } catch {
-    toast.error('No se pudieron cargar los datos del responsable')
-    await releaseLock('usuario', u.id_usuario)
-    currentLock.value = null
-  }
+async function openDetail(u) {
+  await crudOpenDetail(u.id_usuario)
 }
 
 async function saveItem() {
@@ -377,154 +357,30 @@ async function saveItem() {
     toast.warning('Revisa los campos marcados en el formulario')
     return
   }
-
-  saving.value = true
-  try {
-    const payload = {
-      nombre_usuario: form.nombre_usuario,
-      numero_nomina: form.numero_nomina || null,
-      puesto: form.puesto || null,
-      area_id: form.area_id || null,
-      version: form.version
-    }
-
-    if (editMode.value) {
-      await usuariosApi.updateResponsable(form._id, payload)
-      toast.success('Responsable actualizado correctamente', 'Actualización exitosa')
-    } else {
-      await usuariosApi.createResponsable(payload)
-      toast.success('Responsable registrado correctamente', 'Registro exitoso')
-    }
-
-    await handleFormClose(true)
-    loadData()
-
-  } catch (e) {
-    const errorData = e.response?.data
-
-    if (errorData?.error === 'conflict') {
-      showConflictModal.value = true
-      saving.value = false
-      return
-    }
-
-    if (errorData?.campos) {
-      applyFieldErrors(errorData.campos)
-      toast.warning(errorData.error || 'Revisa los campos del formulario')
-    } else {
-      toast.fromError(errorData)
-    }
-  } finally {
-    saving.value = false
+  const payload = {
+    nombre_usuario: form.nombre_usuario,
+    numero_nomina:  form.numero_nomina || null,
+    puesto:         form.puesto || null,
+    area_id:        form.area_id || null,
+    version:        form.version
   }
+  await save(form._id, payload)
 }
 
-async function handleFormClose(shouldClose = true) {
-  if (currentLock.value && editMode.value) {
-    await releaseLock('usuario', form._id)
-    currentLock.value = null
-  }
-  lockWarning.value = null
-  if (shouldClose) {
-    showForm.value = false
-    clearErrors()
-  }
-}
-
-async function confirmDelete(u) {
-  const lockResult = await acquireLock('usuario', u.id_usuario, 2, 'eliminacion')
-
-  if (!lockResult.success) {
-    if (lockResult.locked) {
-      concurrencyAlert.title = 'No se puede eliminar'
-      concurrencyAlert.message = lockResult.lockInfo.tipo_bloqueo === 'edicion'
-        ? `No puedes eliminar este responsable porque ${lockResult.lockInfo.nombre_usuario} lo está editando`
-        : `${lockResult.lockInfo.nombre_usuario} ya está eliminando este responsable`
-      concurrencyAlert.lockInfo = lockResult.lockInfo
-      concurrencyAlert.showRetry = true
-      showConcurrencyAlert.value = true
-    } else {
-      toast.error(lockResult.error || 'Error al adquirir bloqueo')
-    }
-    return
-  }
-
-  pendingDelete.value = lockResult.bloqueo
-  toDelete.value = u
-  showConfirm.value = true
-}
-
-async function doDelete() {
-  deleting.value = true
-  try {
-    await usuariosApi.deleteResponsable(toDelete.value.id_usuario)
-    if (pendingDelete.value) {
-      await releaseLock('usuario', toDelete.value.id_usuario)
-      pendingDelete.value = null
-    }
-    toast.success(`"${toDelete.value.nombre_usuario}" fue eliminado`, 'Eliminado')
-    showConfirm.value = false
-    toDelete.value = null
-    loadData()
-  } catch (e) {
-    if (pendingDelete.value) {
-      await releaseLock('usuario', toDelete.value.id_usuario)
-      pendingDelete.value = null
-    }
-    toast.fromError(e.response?.data)
-  } finally {
-    deleting.value = false
-  }
-}
-
-async function handleCancelDelete() {
-  if (pendingDelete.value && toDelete.value) {
-    await releaseLock('usuario', toDelete.value.id_usuario)
-    pendingDelete.value = null
-  }
-  toDelete.value = null
-  showConfirm.value = false
-}
-
-function handleConcurrencyCancel() { showConcurrencyAlert.value = false }
-
-async function handleConcurrencyRetry() {
-  showConcurrencyAlert.value = false
-  setTimeout(() => {
-    const registroId = concurrencyAlert.lockInfo?.registro_id
-    const u = items.value.find(i => i.id_usuario === registroId)
-    if (u) {
-      if (concurrencyAlert.title === 'No se puede eliminar') confirmDelete(u)
-      else openEdit(u)
-    }
-  }, 1000)
+async function handleDoDelete() {
+  await doDelete(toDelete.value.id_usuario)
 }
 
 async function handleConflictReload() {
-  try {
-    const res = await usuariosApi.getResponsable(form._id)
-    const d = res.data
-    Object.assign(form, {
-      nombre_usuario: d.nombre_usuario,
-      numero_nomina: d.numero_nomina || '',
-      puesto: d.puesto || '',
-      area_id: d.area_id || '',
-      version: d.version
-    })
-    showConflictModal.value = false
-    clearErrors()
-    toast.info('Datos recargados. Verifica los cambios antes de guardar.')
-  } catch {
-    toast.error('No se pudieron recargar los datos')
-  }
+  await reloadConflict(form._id, populateForm)
 }
 
+// Lifecycle
 onBeforeUnmount(async () => {
-  if (currentLock.value && form._id) {
-    await releaseLock('usuario', form._id)
-  }
+  await releaseOnUnmount()
 })
 
+setOnSuccess(loadData)
 setLoadFn(loadData)
 onMounted(() => {
   loadAreas()
