@@ -317,7 +317,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, computed, onBeforeUnmount } from 'vue'
-import { mobiliarioApi, catalogosApi, usuariosApi, vistasApi } from '@/services/api'
+import { mobiliarioApi, usuariosApi, vistasApi } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import BaseModal from '@/components/ui/BaseModal.vue'
@@ -329,11 +329,12 @@ import { useFormErrors } from '@/composables/useFormErrors'
 import { usePagination } from '@/composables/usePagination'
 import { useCrud } from '@/composables/useCrud'
 import { useConcurrencyHandlers } from '@/composables/useConcurrencyHandlers'
+import { useCatalogos } from '@/composables/useCatalogos'
 
 const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
 const { formErrors, clearErrors, applyFieldErrors, setError } = useFormErrors()
 
-
+const { catalogos, loadCatalogos } = useCatalogos()
 const authStore = useAuthStore()
 const { toast } = useToast()
 const currentUserId = computed(() => authStore.user?.id_acceso)
@@ -342,7 +343,6 @@ const mobiliario = ref([])
 const loading = ref(false)
 
 const filters = reactive({ search: '', tipo_mobiliario_id: '', estado_id: '', usuario_id: '' })
-const catalogos = reactive({ tipos: [], estados: [], usuarios: [] })
 
 const {
   showForm, showConfirm, showConcurrencyAlert, showConflictModal,
@@ -433,20 +433,6 @@ const form = reactive({
   version: null
 })
 
-async function loadCatalogos() {
-  try {
-    const [tipos, estados, usuarios] = await Promise.all([
-      catalogosApi.getMobiliarioCompleto(),
-      catalogosApi.getEstadosCompleto(),
-      usuariosApi.listResponsables()
-    ])
-    catalogos.tipos = tipos.data
-    catalogos.estados = estados.data
-    catalogos.usuarios = usuarios.data
-  } catch {
-    toast.error('No se pudieron cargar los catálogos')
-  }
-}
 
 async function loadData() {
   loading.value = true
@@ -508,7 +494,7 @@ onBeforeUnmount(async () => {
 setOnSuccess(loadData)
 setLoadFn(loadData)
 onMounted(() => {
-  loadCatalogos()
+  loadCatalogos(['tiposMobiliario', 'estados', 'usuarios'])
   loadData()
 })
 </script>

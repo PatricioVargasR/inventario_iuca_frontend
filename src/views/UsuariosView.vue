@@ -198,8 +198,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
-import { usuariosApi, catalogosApi, vistasApi } from '@/services/api'
+import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
+import { usuariosApi, vistasApi } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import BaseModal from '@/components/ui/BaseModal.vue'
@@ -210,14 +210,15 @@ import { useFormErrors } from '@/composables/useFormErrors'
 import { usePagination } from '@/composables/usePagination'
 import { useCrud } from '@/composables/useCrud'
 import { useConcurrencyHandlers } from '@/composables/useConcurrencyHandlers'
+import { useCatalogos } from '@/composables/useCatalogos'
 
+const { catalogos, loadCatalogos } = useCatalogos()
 const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
 const { formErrors, clearErrors, applyFieldErrors, setError } = useFormErrors()
 const authStore = useAuthStore()
 const { toast } = useToast()
 
 const items = ref([])
-const catalogos = reactive({ areas: [] })
 const loading = ref(false)
 const filters = reactive({ search: '', area_id: '' })
 
@@ -309,15 +310,6 @@ function validateForm() {
   return valid
 }
 
-async function loadAreas() {
-  try {
-    const areas = await catalogosApi.getAreasCompleto()
-    catalogos.areas = areas.data
-  } catch {
-    toast.error('No se pudieron cargar las áreas')
-  }
-}
-
 async function loadData() {
   loading.value = true
   try {
@@ -383,7 +375,7 @@ onBeforeUnmount(async () => {
 setOnSuccess(loadData)
 setLoadFn(loadData)
 onMounted(() => {
-  loadAreas()
+  loadCatalogos(['areas'])
   loadData()
 })
 </script>

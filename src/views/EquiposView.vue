@@ -342,8 +342,11 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
+import { useCatalogos } from '@/composables/useCatalogos'
+
 
 // ── Composables base ─────────────────────────────────────────────
+const { catalogos, loadCatalogos } = useCatalogos()
 const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
 const { formErrors, clearErrors } = useFormErrors()
 const authStore = useAuthStore()
@@ -354,7 +357,6 @@ const currentUserId = computed(() => authStore.user?.id_acceso)
 const equipos = ref([])
 const loading = ref(false)
 const filters = reactive({ search: '', tipo_activo_id: '', estado_id: '', usuario_id: '' })
-const catalogos = reactive({ tipos: [], estados: [], usuarios: [] })
 const specErrors = reactive({})
 
 const form = reactive({
@@ -605,21 +607,6 @@ function addSpec() { form.especificaciones.push({ nombre_especificacion: '', val
 function removeSpec(i) { form.especificaciones.splice(i, 1); delete specErrors[i] }
 
 // ── Datos ────────────────────────────────────────────────────────
-async function loadCatalogos() {
-  try {
-    const [tipos, estados, usuarios] = await Promise.all([
-      catalogosApi.getTiposActivoCompleto(),
-      catalogosApi.getEstadosCompleto(),
-      usuariosApi.listResponsables()
-    ])
-    catalogos.tipos = tipos.data
-    catalogos.estados = estados.data
-    catalogos.usuarios = usuarios.data
-  } catch {
-    toast.error('No se pudieron cargar los catálogos')
-  }
-}
-
 async function loadData() {
   loading.value = true
   try {
@@ -644,7 +631,7 @@ onBeforeUnmount(async () => {
 })
 setOnSuccess(loadData)
 setLoadFn(loadData)
-onMounted(() => { loadCatalogos(); loadData() })
+onMounted(() => { loadCatalogos(['tiposActivo', 'estados', 'usuarios']); loadData() })
 </script>
 
 <style scoped>

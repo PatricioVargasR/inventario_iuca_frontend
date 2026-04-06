@@ -313,7 +313,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
-import { usuariosApi, catalogosApi, vistasApi } from '@/services/api'
+import { usuariosApi, vistasApi } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import BaseModal from '@/components/ui/BaseModal.vue'
@@ -324,11 +324,12 @@ import { useFormErrors } from '@/composables/useFormErrors'
 import { usePagination } from '@/composables/usePagination'
 import { useCrud } from '@/composables/useCrud'
 import { useConcurrencyHandlers } from '@/composables/useConcurrencyHandlers'
+import { useCatalogos } from '@/composables/useCatalogos'
 
 const authStore = useAuthStore()
 const { toast } = useToast()
 const currentUserId = computed(() => authStore.user?.id_acceso)
-
+const { catalogos, loadCatalogos } = useCatalogos()
 const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
 const { formErrors, clearErrors, applyFieldErrors, setError } = useFormErrors()
 
@@ -340,10 +341,8 @@ const filters = reactive({
   permisos: [],
   area_id: ''
 })
-const catalogos = reactive({ areas: [] })
 
 const showPass = ref(false)
-
 
 const {
   showForm, showConfirm, showConcurrencyAlert, showConflictModal,
@@ -579,15 +578,6 @@ function toggleTodos() {
   })
 }
 
-async function loadCatalogos() {
-  try {
-    const areas = await catalogosApi.getAreasCompleto()
-    catalogos.areas = areas.data
-  } catch {
-    toast.error('No se pudieron cargar los catálogos')
-  }
-}
-
 async function loadData() {
   loading.value = true
   try {
@@ -629,7 +619,6 @@ async function saveItem() {
   await save(form._id, payload)
 }
 
-
 function formatModuloNombre(modulo) {
   const nombres = {
     'computo': 'Cómputo', 'mobiliario': 'Mobiliario', 'responsable': 'Responsables',
@@ -650,7 +639,7 @@ onBeforeUnmount(async () => {
 setOnSuccess(loadData)
 setLoadFn(loadData)
 onMounted(() => {
-  loadCatalogos()
+  loadCatalogos(['areas'])
   loadData()
 })
 </script>
