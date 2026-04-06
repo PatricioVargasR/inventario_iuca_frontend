@@ -277,7 +277,7 @@
         <button class="btn btn-secondary" @click="handleFormClose">Cancelar</button>
         <button class="btn btn-primary" form="equipoForm" type="submit" :disabled="saving">
           <span v-if="saving" class="spinner" style="width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:white;"></span>
-          <span v-else>{{ editMode ? 'Actualizar Equipo' : 'Crear Equipo' }}</span>
+          <span v-else>{{ editMode ? 'Actualizar' : 'Guardar' }}</span>
         </button>
       </template>
     </BaseModal>
@@ -330,7 +330,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, computed, onBeforeUnmount, nextTick } from 'vue'
-import { equiposApi, catalogosApi, usuariosApi, vistasApi } from '@/services/api'
+import { equiposApi, vistasApi } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import { useFormErrors } from '@/composables/useFormErrors'
@@ -343,7 +343,6 @@ import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
 import { useCatalogos } from '@/composables/useCatalogos'
-
 
 // ── Composables base ─────────────────────────────────────────────
 const { catalogos, loadCatalogos } = useCatalogos()

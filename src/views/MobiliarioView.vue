@@ -262,7 +262,7 @@
         <button class="btn btn-secondary" @click="handleFormClose">Cancelar</button>
         <button class="btn btn-primary" form="mobiliarioForm" type="submit" :disabled="saving">
           <span v-if="saving" class="spinner" style="width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:white;"></span>
-          <span v-else>{{ editMode ? 'Actualizar' : 'Crear' }}</span>
+          <span v-else>{{ editMode ? 'Actualizar' : 'Guardar' }}</span>
         </button>
       </template>
     </BaseModal>
