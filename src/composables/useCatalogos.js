@@ -2,7 +2,7 @@ import { reactive } from 'vue'
 import { catalogosApi, usuariosApi } from '@/services/api'
 import { useToast } from '@/composables/useToast'
 
-export function useCatalogos(opciones = {}) {
+export function useCatalogos() {
   const { toast } = useToast()
 
   const catalogos = reactive({
@@ -10,6 +10,7 @@ export function useCatalogos(opciones = {}) {
     estados:    [],
     tipos:      [],    // tipos de activo o mobiliario según contexto
     usuarios:   [],
+    accesos:    [],
   })
 
   async function loadAreas() {
@@ -57,6 +58,15 @@ export function useCatalogos(opciones = {}) {
     }
   }
 
+  async function loadAccesos() {
+    try {
+      const res = await usuariosApi.listAccesosFiltro()
+      catalogos.accesos = res.data
+    } catch {
+      toast.error('No se puedieron cargar los accesos')
+    }
+  }
+
   // Carga múltiple en paralelo según lo que el módulo necesite
   async function loadCatalogos(needed = []) {
     const loaders = {
@@ -65,6 +75,7 @@ export function useCatalogos(opciones = {}) {
       tiposActivo:     loadTiposActivo,
       tiposMobiliario: loadTiposMobiliario,
       usuarios:        loadUsuarios,
+      accesos:         loadAccesos,
     }
 
     const promises = needed
@@ -82,5 +93,6 @@ export function useCatalogos(opciones = {}) {
     loadTiposActivo,
     loadTiposMobiliario,
     loadUsuarios,
+    loadAccesos
   }
 }
