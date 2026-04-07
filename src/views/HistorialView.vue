@@ -21,9 +21,9 @@
           <label>Tipo de registro</label>
           <select v-model="filters.tipo_registro" class="form-select" @change="loadData">
             <option value="">Todos</option>
+            <option value="acceso">Acceso</option>
             <option value="computo">Equipo</option>
             <option value="mobiliario">Mobiliario</option>
-            <option value="acceso">Acceso</option>
             <option value="usuario">Usuario</option>
           </select>
         </div>
@@ -48,7 +48,7 @@
           <label>Usuario</label>
           <select v-model="filters.usuario_id" class="form-select" @change="loadData">
             <option value="">Todos los usuarios</option>
-            <option v-for="u in usuarios" :key="u.id_acceso" :value="u.id_acceso">{{ u.nombre_usuario }}</option>
+            <option v-for="u in catalogos.accesos" :key="u.id_acceso" :value="u.id_acceso">{{ u.nombre_usuario }}</option>
           </select>
         </div>
       </div>
@@ -141,7 +141,7 @@
         :current="page"
         :total-pages="totalPages"
         :total="total"
-        :per-page="20"
+        :per-page="perPage"
         @change="onPageChange"
       />
     </div>
@@ -218,18 +218,21 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { vistasApi } from '@/services/api'
-import { usuariosApi } from '@/services/api'
 import Pagination from '@/components/ui/Pagination.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
+import { usePagination } from '@/composables/usePagination'
+import { useToast } from '@/composables/useToast'
+import { useCatalogos } from '@/composables/useCatalogos'
+
+const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
+const { toast } = useToast()
+
+const { catalogos, loadCatalogos } = useCatalogos()
 
 const items    = ref([])
 const loading  = ref(false)
-const page     = ref(1)
-const total     = ref(0)
-const totalPages = ref(1)
 const showDetail = ref(false)
 const selected   = ref(null)
-const usuarios   = ref([])
 
 const filters = reactive({
   search: '',
@@ -332,7 +335,7 @@ const CAMPOS_LEGIBLES = {
   'id_usuario':                 'ID del elemento',
   'id usuario':                 'ID del elemento',
   'nombre_usuario':             'Nombre del usuario',
-  'nombre usuario':             'Nombre del usuario',
+  'nombre usuario':             'Nombre del usuaopciones = {}rio',
   'correo_electronico':         'Correo electrónico',
   'correo electronico':         'Correo electrónico',
   'puesto':                     'Puesto',
@@ -559,36 +562,15 @@ function buildDescWithColor(item) {
 }
 
 // ── Datos ───────────────────────────────────────────────────────
-let searchTimeout = null
-function onSearch() {
-  clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    page.value = 1
-    loadData()
-  }, 400)
-}
-
-function onPageChange(p) {
-  page.value = p
-  loadData()
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
 async function loadData() {
   loading.value = true
   try {
-    const res = await vistasApi.listHistoriales({
-      ...filters,
-      page: page.value,
-      per_page: 20
-    })
+    const params = { page: page.value, per_page: perPage }
+    const res = await vistasApi.listHistoriales(params)
     items.value    = res.data.movimientos || []
-    total.value    = res.data.total       || 0
-    totalPages.value = res.data.pages     || 1
+    setMeta(res.data)
   } catch {
-    items.value    = []
-    total.value    = 0
-    totalPages.value = 1
+    toast.error('Error al cargar el historial')
   } finally {
     loading.value = false
   }
@@ -604,11 +586,9 @@ async function openDetail(item) {
   showDetail.value = true
 }
 
+setLoadFn(loadData)
 onMounted(async () => {
-  try {
-    const res = await usuariosApi.listAccesos()
-    usuarios.value = res.data
-  } catch { console.error('Error cargando usuarios') }
+  loadCatalogos(['accesos'])
   loadData()
 })
 </script>
