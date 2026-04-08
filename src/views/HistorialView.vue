@@ -68,8 +68,8 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Movimiento</th>
+            <th @click="toggleSort('id_historial')" class="sorted">ID {{ getSortIcon('id_historial') }}</th>
+            <th @click="toggleSort('operacion')" class="sorted">Movimiento {{ getSortIcon('operacoin') }}</th>
             <th>Descripción</th>
             <th>Registro</th>
             <th>Usuario</th>
@@ -82,9 +82,9 @@
             <!-- Separador de fecha -->
             <tr class="date-separator-row">
               <td colspan="7">
-                <div class="date-separator">
+                <div class="date-separator sorted" @click="toggleSort('fecha')">
                   <span class="date-label">{{ group.dateLabel }}</span>
-                  <span class="date-count">{{ group.items.length }} movimiento{{ group.items.length !== 1 ? 's' : '' }}</span>
+                  <span class="date-count">{{ group.items.length }} movimiento{{ group.items.length !== 1 ? 's' : '' }} {{ getSortIcon('fecha') }}</span>
                   <div class="date-line"></div>
                 </div>
               </td>
@@ -223,7 +223,11 @@ import BaseModal from '@/components/ui/BaseModal.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'
 import { useCatalogos } from '@/composables/useCatalogos'
+import { useSort } from '@/composables/useSort'
 
+const { getSortIcon, toggleSort, applySortToParams } = useSort({
+  onChange: loadData
+})
 const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
 const { toast } = useToast()
 
@@ -565,7 +569,8 @@ function buildDescWithColor(item) {
 async function loadData() {
   loading.value = true
   try {
-    const params = { page: page.value, per_page: perPage }
+    let params = { page: page.value, per_page: perPage }
+    params = applySortToParams(params)
     const res = await vistasApi.listHistoriales(params)
     items.value    = res.data.movimientos || []
     setMeta(res.data)
@@ -742,5 +747,14 @@ onMounted(async () => {
   border-radius: 4px;
   font-size: 12px;
   font-weight: 600;
+}
+
+.sorted {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sorted:hover {
+  color: var(--primary);
 }
 </style>

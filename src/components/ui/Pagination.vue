@@ -1,7 +1,7 @@
 <template>
   <div class="pagination">
     <span class="pagination-info">
-      Mostrando <strong>{{ from }}–{{ to }}</strong> de <strong>{{ total }}</strong> registros
+      Mostrando <strong>{{ current }}</strong> de <strong>{{ total }}</strong> registros
     </span>
     <div class="pagination-controls">
       <button class="page-btn" @click="$emit('change', 1)" :disabled="current === 1">«</button>
@@ -42,10 +42,6 @@ defineEmits(['change'])
 const from = computed(() => {
   if (props.total === 0) return 0
   return (props.current - 1) * props.perPage + 1
-})
-
-const to = computed(() => {
-  return Math.min(props.current * props.perPage, props.total)
 })
 
 // Genera la lista de botones de página con puntos suspensivos correctos

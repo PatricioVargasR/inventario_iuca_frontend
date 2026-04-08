@@ -31,7 +31,18 @@
     <div class="table-wrapper">
       <table class="data-table">
         <thead>
-          <tr><th>ID</th><th>Nombre</th><th>Nómina</th><th>Puesto</th><th>Área</th><th>Acciones</th></tr>
+          <tr>
+            <th @click="toggleSort('id_usuario')" class="sorted">
+              ID <span>{{ getSortIcon('id_usuario') }}</span>
+            </th>
+            <th @click="toggleSort('nombre_usuario')" class="sorted">
+              Nombre <span>{{ getSortIcon('nombre_usuario') }}</span>
+            </th>
+            <th>Nómina</th>
+            <th>Puesto</th>
+            <th>Área</th>
+            <th>Acciones</th>
+          </tr>
         </thead>
         <tbody>
           <tr v-if="loading" class="loading-row"><td colspan="6"><span class="spinner"></span></td></tr>
@@ -211,8 +222,12 @@ import { usePagination } from '@/composables/usePagination'
 import { useCrud } from '@/composables/useCrud'
 import { useConcurrencyHandlers } from '@/composables/useConcurrencyHandlers'
 import { useCatalogos } from '@/composables/useCatalogos'
+import { useSort } from '@/composables/useSort'
 
 const { catalogos, loadCatalogos } = useCatalogos()
+const { getSortIcon, toggleSort, applySortToParams } = useSort({
+  onChange: loadData
+})
 const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
 const { formErrors, clearErrors, applyFieldErrors, setError } = useFormErrors()
 const authStore = useAuthStore()
@@ -313,9 +328,12 @@ function validateForm() {
 async function loadData() {
   loading.value = true
   try {
-    const params = { page: page.value, per_page: perPage }
+    let params = { page: page.value, per_page: perPage }
     if (filters.search) params.search = filters.search
     if (filters.area_id) params.area_id = filters.area_id
+
+    params = applySortToParams(params)
+
     const res = await vistasApi.listResponsables(params)
     items.value = res.data.responsables
     setMeta(res.data)
@@ -410,6 +428,16 @@ onMounted(() => {
   border-radius: 12px;
   margin-bottom: 20px;
 }
+
+.sorted {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sorted:hover {
+  color: var(--primary);
+}
+
 .conflict-warning svg { color: #d97706; flex-shrink: 0; }
 .conflict-warning h4 { font-size: 16px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px; }
 .conflict-warning p { font-size: 13px; color: var(--gray-600); margin: 0; }
