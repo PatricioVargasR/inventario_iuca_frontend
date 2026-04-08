@@ -329,6 +329,8 @@ import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
 import { useCatalogos } from '@/composables/useCatalogos'
+import FilterBar from '@/components/ui/FilterBar.vue'
+import { useSort } from '@/composables/useSort'
 
 // ── Composables base ─────────────────────────────────────────────
 const { catalogos, loadCatalogos } = useCatalogos()
