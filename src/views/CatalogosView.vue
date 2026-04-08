@@ -28,18 +28,26 @@
         </button>
       </div>
 
-      <div style="padding:16px 20px;">
+      <div class="filters-row" style="padding: 16px 20px;">
         <div class="filter-group search">
           <label>Búsqueda general</label>
-          <div class="input-with-icon">
-            <svg class="input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input
+            <div class="input-with-icon">
+              <svg class="input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input
               v-model="search"
               class="form-input"
               :placeholder="`Buscar ${tabActual.labelSingular.toLowerCase()}...`"
               @input="onSearch"
-            />
+              />
           </div>
+        </div>
+        <div class="filter-group">
+          <label>Estado</label>
+          <select v-model="estado" class="form-select" @change="loadTab">
+            <option value="">Todos los estados</option>
+            <option value="true">Activo</option>
+            <option value="false">Inactivo</option>
+          </select>
         </div>
       </div>
     </div>
@@ -121,7 +129,7 @@
         v-if="!loading && itemsFiltrados.length > 0"
         :current="page"
         :total-pages="totalPages"
-        :total="itemsFiltrados.length"
+        :total="total"
         :per-page="perPage"
         @change="onPageChange"
       />
@@ -286,6 +294,7 @@ import Pagination from '@/components/ui/Pagination.vue'
 import { useFormErrors } from '@/composables/useFormErrors'
 import { usePagination } from '@/composables/usePagination'
 
+
 const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
 const { formErrors, clearErrors, applyFieldErrors, setError } = useFormErrors()
 const authStore = useAuthStore()
@@ -316,6 +325,7 @@ const DATA_KEY = {
 const activeTab  = ref('area')
 const loading    = ref(false)
 const search     = ref('')
+const estado     = ref('')
 const formTab    = ref('area')
 
 const items = ref([])
@@ -402,7 +412,7 @@ async function loadTab(resetPage = false) {
   if (resetPage) page.value = 1
   loading.value = true
   try {
-    const params = { page: page.value, per_page: perPage, search: search.value || undefined }
+    const params = { page: page.value, per_page: perPage, search: search.value, estado: estado.value  || undefined }
     let res
 
     switch (activeTab.value) {
@@ -414,9 +424,7 @@ async function loadTab(resetPage = false) {
 
     const key = DATA_KEY[activeTab.value]
     items.value      = res.data[key] || []
-    total.value      = res.data.total || 0
-    totalPages.value = res.data.pages || 1
-
+    setMeta(res.data)
     if (!search.value) {
       tabCounts[activeTab.value] = res.data.total || 0
     }
@@ -645,10 +653,6 @@ async function doDelete() {
     loadAllCounts()
     loadTab()
   } catch (e) {
-    if (pendingDelete.value) {
-      await releaseLock(pendingDelete.value.tabla, pendingDelete.value.id)
-      pendingDelete.value = null
-    }
     toast.fromError(e.response?.data)
   } finally {
     deleting.value = false
@@ -793,5 +797,12 @@ onMounted(async () => {
   color: white;
   border-color: var(--primary);
   box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
+
+.filters-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  flex-wrap: wrap;
 }
 </style>

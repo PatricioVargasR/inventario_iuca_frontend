@@ -200,6 +200,8 @@ export function useCrud({ tabla, apiGet, apiGetDetail, apiCreate, apiUpdate, api
     try {
       await apiDelete(id)
 
+      console.log('holi')
+
       // liberar lock correcto (el de eliminación)
       await _releaseLock(pendingDelete.value?.bloqueo)
 
@@ -210,10 +212,11 @@ export function useCrud({ tabla, apiGet, apiGetDetail, apiCreate, apiUpdate, api
       showConfirm.value = false
       _onSuccess?.()
     } catch (e) {
-      await _releaseLock(pendingDelete.value?.bloqueo)
+      console.log('hola')
+      // await _releaseLock(pendingDelete.value?.bloqueo)
 
-      pendingDelete.value = null
-      toDelete.value = null
+      // pendingDelete.value = null
+      // toDelete.value = null
 
       toast.fromError(e.response?.data)
     } finally {
