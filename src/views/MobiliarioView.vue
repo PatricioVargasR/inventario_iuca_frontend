@@ -14,38 +14,13 @@
     </div>
 
     <!-- Filtros -->
-    <div class="filter-bar">
-      <div class="filter-group search">
-        <label>Búsqueda general</label>
-        <div class="input-with-icon">
-          <svg class="input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input v-model="filters.search" class="form-input" placeholder="Buscar por marca, tipo..." @input="onSearch" />
-        </div>
-      </div>
-      <div class="filter-group">
-        <label>Tipo de mobiliario</label>
-        <select v-model="filters.tipo_mobiliario_id" class="form-select" @change="loadData">
-          <option value="">Todos los tipos</option>
-          <option v-for="t in catalogos.tipos" :key="t.nombre_tipo" :value="t.nombre_tipo">{{ t.nombre_tipo }}</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>Estado</label>
-        <select v-model="filters.estado_id" class="form-select" @change="loadData">
-          <option value="">Cualquier estado</option>
-          <option v-for="e in catalogos.estados" :key="e.nombre_estado" :value="e.nombre_estado">{{ e.nombre_estado }}</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>Responsable</label>
-        <select v-model="filters.usuario_id" class="form-select" @change="loadData">
-          <option value="">Todos los responsables</option>
-          <option v-for="u in catalogos.usuarios" :key="u.nombre_usuario" :value="u.nombre_usuario">{{ u.nombre_usuario }}</option>
-        </select>
-      </div>
-    </div>
+    <FilterBar
+      :modelValue="filters"
+      @update:modelValue="val => Object.assign(filters, val)"
+      :config="filterConfig"
+      @search="onSearch"
+      @change="loadData"
+    />
 
     <!-- Tabla -->
     <div class="table-wrapper">
@@ -344,7 +319,6 @@ import { usePagination } from '@/composables/usePagination'
 import { useCrud } from '@/composables/useCrud'
 import { useConcurrencyHandlers } from '@/composables/useConcurrencyHandlers'
 import { useCatalogos } from '@/composables/useCatalogos'
-import { useSort } from '@/composables/useSort'
 
 const { getSortIcon, toggleSort, applySortToParams } = useSort({
   onChange: loadData
@@ -416,6 +390,36 @@ const {
   clearErrors,
   toast
 })
+
+const filterConfig = computed(() => ({
+  search: true,
+  selects: [
+    {
+      key: "tipo_mobiliario_id",
+      label: "Tipo de mobiliario",
+      options: catalogos.tipos,
+      optionLabel: "nombre_tipo",
+      optionValue: "nombre_tipo",
+      placeholder: "Todos los tipos"
+    },
+    {
+      key: "estado_id",
+      label: "Estado",
+      options: catalogos.estados,
+      optionLabel: "nombre_estado",
+      optionValue: "nombre_estado",
+      placeholder: "Cualquier estado"
+    },
+    {
+      key: "usuario_id",
+      label: "Responsable",
+      options: catalogos.usuarios,
+      optionLabel: "nombre_usuario",
+      optionValue: "nombre_usuario",
+      placeholder: "Todos los responsables"
+    }
+  ]
+}))
 
 // ── Validación frontend ──────────────────────────────────────────
 function validateForm() {
