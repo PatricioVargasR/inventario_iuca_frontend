@@ -77,7 +77,7 @@ function parseBackendError(errorData) {
   }
 
   // Si el backend mandó mensaje legible directamente
-  if (raw && raw.length < 120) return raw
+  if (raw) return raw
 
   return 'Ocurrió un error inesperado. Intenta de nuevo.'
 }
