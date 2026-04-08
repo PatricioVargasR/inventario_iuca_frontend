@@ -5,6 +5,7 @@
     <div v-if="config.search" class="filter-group search">
       <label>Búsqueda General</label>
       <div class="input-with-icon">
+        <svg class="input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input
           v-model="localFilters.search"
           class="form-input"
