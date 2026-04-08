@@ -8,7 +8,6 @@
       <h1 class="login-title">Sistema de inventario</h1>
       <p class="login-org">IUCA – Tulancingo</p>
 
-      <!-- Alerta de sesión invalidada: alguien inició sesión con esta cuenta desde otra IP -->
       <!-- Banner: sesión cerrada por otro dispositivo -->
       <Transition name="alert-slide">
         <div v-if="sessionInvalidated" class="session-alert warning">
@@ -41,58 +40,54 @@
 
       <h2 class="login-section">Iniciar sesión</h2>
 
-      <form @submit.prevent="handleLogin" class="login-form">
-        <div class="input-with-icon">
-          <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-          </svg>
-          <input
-            v-model="form.correo"
-            type="email"
-            class="form-input"
-            :class="{ 'input-error': formError }"
-            placeholder="usuario@iuca.edu.mx"
-            required
-            autocomplete="email"
-            @input="formError = ''"
-          />
-        </div>
-
-        <div class="input-with-icon" style="margin-top: 10px;">
-          <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
-          <input
-            v-model="form.password"
-            :type="showPass ? 'text' : 'password'"
-            class="form-input"
-            :class="{ 'input-error': formError }"
-            placeholder="••••••••"
-            required
-            autocomplete="current-password"
-            style="padding-right: 38px;"
-            @input="formError = ''"
-          />
-          <button type="button" class="toggle-pass" @click="showPass = !showPass">
-            <svg v-if="!showPass" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+      <form @submit.prevent="handleLogin" class="login-form" novalidate>
+        <!-- Correo -->
+        <div class="form-group">
+          <div class="input-with-icon">
+            <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
             </svg>
-            <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
-              <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>
-            </svg>
-          </button>
-        </div>
-
-        <!-- Error inline persistente (reemplaza el toast para errores de login) -->
-        <Transition name="alert-slide">
-          <div v-if="formError" class="login-error">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>
-            </svg>
-            {{ formError }}
+            <input
+              v-model="form.correo"
+              type="email"
+              class="form-input"
+              :class="{ 'input-error': formErrors.correo }"
+              placeholder="usuario@iuca.edu.mx"
+              autocomplete="email"
+              @input="clearErrors()"
+            />
           </div>
-        </Transition>
+          <span v-if="formErrors.correo" class="field-error">{{ formErrors.correo }}</span>
+        </div>
+
+        <!-- Contraseña -->
+        <div class="form-group" style="margin-top: 10px;">
+          <div class="input-with-icon">
+            <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <input
+              v-model="form.password"
+              :type="showPass ? 'text' : 'password'"
+              class="form-input"
+              :class="{ 'input-error': formErrors.password }"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              style="padding-right: 38px;"
+              @input="clearErrors()"
+            />
+            <button type="button" class="toggle-pass" @click="showPass = !showPass">
+              <svg v-if="!showPass" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
+                <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>
+              </svg>
+            </button>
+          </div>
+          <span v-if="formErrors.password" class="field-error">{{ formErrors.password }}</span>
+        </div>
 
         <button
           type="submit"
@@ -108,7 +103,7 @@
       <p class="login-help">¿Problemas para acceder? Contacta al administrador</p>
     </div>
 
-    <!-- ── Modal: sesión activa en la MISMA IP (mismo dispositivo) ── -->
+    <!-- Modal: sesión activa en la MISMA IP -->
     <Teleport to="body">
       <Transition name="fade">
         <div v-if="showSameIpModal" class="modal-overlay" @click.self="showSameIpModal = false">
@@ -126,12 +121,6 @@
                   </svg>
                   <span>Inició: {{ formatSessionDate(sameIpSessionInfo?.fecha_inicio) }}</span>
                 </div>
-                <div class="session-detail-item">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/>
-                    <line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
-                  </svg>
-                </div>
               </div>
             </div>
             <div class="modal-footer" style="justify-content:center;gap:10px;">
@@ -148,7 +137,7 @@
       </Transition>
     </Teleport>
 
-    <!-- ── Modal: sesión activa en DIFERENTE IP ── -->
+    <!-- Modal: sesión activa en DIFERENTE IP -->
     <Teleport to="body">
       <Transition name="fade">
         <div v-if="showSessionModal" class="modal-overlay" @click.self="showSessionModal = false">
@@ -196,16 +185,19 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/composables/useToast'
+import { useFormErrors } from '@/composables/useFormErrors'
 import logo from '@/assets/logo-iuca-exp.png'
 import { primeraRutaPermitida } from '@/router'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const { toast } = useToast()
+const { formErrors, clearErrors, setError } = useFormErrors()
 
 const form = ref({ correo: '', password: '' })
 const showPass = ref(false)
-const formError = ref('')
 
 // Modales de sesión
 const showSameIpModal = ref(false)
@@ -213,13 +205,39 @@ const sameIpSessionInfo = ref(null)
 const showSessionModal = ref(false)
 const activeSessionInfo = ref(null)
 
-// Banner de sesión cerrada remotamente
+// Banners de sesión
 const sessionInvalidated = ref(false)
 const sessionExpired = ref(false)
 
+// ── Validación frontend ──────────────────────────────────────────────────────
+function validateForm() {
+  clearErrors()
+  let valid = true
+
+  if (!form.value.correo?.trim()) {
+    setError('correo', 'El correo electrónico es obligatorio')
+    valid = false
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.correo.trim())) {
+    setError('correo', 'El formato del correo no es válido')
+    valid = false
+  }
+
+  if (!form.value.password) {
+    setError('password', 'La contraseña es obligatoria')
+    valid = false
+  }
+
+  return valid
+}
+
+// ── Login ────────────────────────────────────────────────────────────────────
 async function handleLogin() {
-  formError.value = ''
-  const result = await authStore.login(form.value.correo, form.value.password)
+  if (!validateForm()) {
+    toast.warning('Revisa los campos del formulario')
+    return
+  }
+
+  const result = await authStore.login(form.value.correo.trim(), form.value.password)
 
   if (result.success) {
     router.push(primeraRutaPermitida(authStore))
@@ -240,13 +258,24 @@ async function handleLogin() {
     return
   }
 
-  // Error de credenciales u otro → mostrar inline (persistente)
-  formError.value = authStore.error || 'Error al iniciar sesión'
+  // Error de credenciales u otro → toast de error + marcar campos
+  const mensaje = authStore.error || 'Error al iniciar sesión'
+
+  if (mensaje.toLowerCase().includes('correo') || mensaje.toLowerCase().includes('encontrado')) {
+    setError('correo', 'Correo electrónico no encontrado')
+  } else if (mensaje.toLowerCase().includes('contraseña') || mensaje.toLowerCase().includes('incorrecta')) {
+    setError('password', 'Contraseña incorrecta')
+  } else {
+    // Error genérico: marcar ambos campos sin mensaje específico
+    setError('correo', ' ')
+    setError('password', ' ')
+  }
+
+  toast.error(mensaje, 'Error al iniciar sesión')
 }
 
 async function handleForceLogin() {
-  formError.value = ''
-  const result = await authStore.forceLogin(form.value.correo, form.value.password)
+  const result = await authStore.forceLogin(form.value.correo.trim(), form.value.password)
 
   if (result.success) {
     showSameIpModal.value = false
@@ -254,9 +283,8 @@ async function handleForceLogin() {
     return
   }
 
-  // Si algo falló al forzar (ej. contraseña cambió entre medio)
   showSameIpModal.value = false
-  formError.value = authStore.error || 'Error al iniciar sesión'
+  toast.error(authStore.error || 'Error al iniciar sesión', 'Error')
 }
 
 function formatSessionDate(dateStr) {
@@ -268,13 +296,10 @@ function formatSessionDate(dateStr) {
 }
 
 onMounted(() => {
-  // Mostrar banner si la sesión fue invalidada porque alguien inició sesión con esta cuenta
   sessionInvalidated.value = route.query.session_invalidated === 'true'
   sessionExpired.value = route.query.session_expired === 'true'
 
   if (sessionInvalidated.value || sessionExpired.value) {
-    // Limpiar el query param de inmediato para que una recarga no muestre el banner de nuevo,
-    // pero el banner se queda visible hasta que el usuario inicie sesión
     router.replace({ query: {} })
   }
 })
@@ -350,12 +375,27 @@ onMounted(() => {
 
 .login-form { text-align: left; }
 
-/* Marcar campos con error */
+/* ── Errores de campo (igual que el resto de las vistas) ── */
 .input-error {
   border-color: var(--danger) !important;
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
 }
 
+.field-error {
+  display: block;
+  font-size: 11.5px;
+  color: var(--danger);
+  margin-top: 4px;
+  font-weight: 500;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Toggle contraseña ── */
 .toggle-pass {
   position: absolute;
   right: 10px;
@@ -370,29 +410,13 @@ onMounted(() => {
 }
 .toggle-pass:hover { color: var(--gray-600); }
 
-/* Error inline — persistente, no desaparece solo */
-.login-error {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 10px;
-  padding: 10px 14px;
-  background: var(--danger-light);
-  border: 1px solid #fca5a5;
-  border-radius: 8px;
-  font-size: 13px;
-  color: var(--danger);
-  font-weight: 500;
-  text-align: left;
-}
-
 .login-help {
   margin-top: 18px;
   font-size: 12.5px;
   color: var(--gray-400);
 }
 
-/* Banner de sesión invalidada */
+/* ── Banners de sesión ── */
 .session-alert {
   display: flex;
   align-items: flex-start;
@@ -401,13 +425,19 @@ onMounted(() => {
   border-radius: 10px;
   margin-bottom: 20px;
   border: 1px solid;
+  text-align: left;
 }
 
 .session-alert.warning {
   background: #fef3c7;
   border-color: #fde68a;
   color: #92400e;
-  text-align: left;
+}
+
+.session-alert.expired {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #991b1b;
 }
 
 .session-alert strong {
@@ -422,7 +452,7 @@ onMounted(() => {
   opacity: 0.9;
 }
 
-/* Detalles de sesión en modales */
+/* ── Detalles de sesión en modales ── */
 .session-details {
   background: var(--gray-50);
   border-radius: 8px;
@@ -477,7 +507,7 @@ onMounted(() => {
   filter: drop-shadow(0 4px 10px rgba(0,0,0,0.15));
 }
 
-/* Transiciones */
+/* ── Transiciones ── */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
@@ -487,12 +517,5 @@ onMounted(() => {
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: translateY(0); }
-}
-
-.session-alert.expired {
-  background: #fee2e2;
-  border-color: #fca5a5;
-  color: #991b1b;
-  text-align: left;
 }
 </style>

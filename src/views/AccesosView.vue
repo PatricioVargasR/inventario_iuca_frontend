@@ -66,7 +66,26 @@
     <div class="table-wrapper">
       <table class="data-table">
         <thead>
-          <tr><th>ID</th><th>Nombre</th><th>Correo</th><th>Área</th><th>Último acceso</th><th>Acciones</th></tr>
+          <tr>
+            <th @click="toggleSort('id_acceso')" class="sorted">
+              ID <span>{{  getSortIcon('id_acceso') }}</span>
+            </th>
+            <th @click="toggleSort('nombre_acceso')" class="sorted">
+              Nombre <span>{{  getSortIcon('nombre_acceso') }}</span>
+            </th>
+            <th>
+              Correo
+            </th>
+            <th>
+              Área
+            </th>
+            <th>
+              Último acceso
+            </th>
+            <th>
+              Acciones
+            </th>
+          </tr>
         </thead>
         <tbody>
           <tr v-if="loading" class="loading-row"><td colspan="7"><span class="spinner"></span></td></tr>
@@ -325,11 +344,15 @@ import { usePagination } from '@/composables/usePagination'
 import { useCrud } from '@/composables/useCrud'
 import { useConcurrencyHandlers } from '@/composables/useConcurrencyHandlers'
 import { useCatalogos } from '@/composables/useCatalogos'
+import { useSort } from '@/composables/useSort'
 
 const authStore = useAuthStore()
 const { toast } = useToast()
 const currentUserId = computed(() => authStore.user?.id_acceso)
 const { catalogos, loadCatalogos } = useCatalogos()
+const { getSortIcon, toggleSort, applySortToParams } = useSort({
+  onChange: loadData
+})
 const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
 const { formErrors, clearErrors, applyFieldErrors, setError } = useFormErrors()
 
@@ -581,9 +604,12 @@ function toggleTodos() {
 async function loadData() {
   loading.value = true
   try {
-    const params = { page: page.value, per_page: perPage }
+    let params = { page: page.value, per_page: perPage }
     if (filters.search) params.search = filters.search
     if (filters.area_id) params.area_id = filters.area_id
+
+    params = applySortToParams(params)
+
     const permisosObj = Object.fromEntries(
       filters.modulos.map(m => [m, filters.permisos])
     )
@@ -807,4 +833,13 @@ onMounted(() => {
   accent-color: var(--primary);
 }
 .select-all-label:hover { color: var(--primary); }
+
+.sorted {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sorted:hover {
+  color: var(--primary);
+}
 </style>

@@ -109,6 +109,8 @@ export const usuariosApi = {
   createAcceso: (data) => api.post('/usuarios/accesos', data),
   updateAcceso: (id, data) => api.put(`/usuarios/accesos/${id}`, data),
   deleteAcceso: (id) => api.delete(`/usuarios/accesos/${id}`),
+
+  listAccesosFiltro: () => api.get('/usuarios/accesos-filtro')
 }
 
 // ===== HISTORIAL =====

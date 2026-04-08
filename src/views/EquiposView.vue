@@ -25,7 +25,16 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>ID</th><th>Tipo</th><th>Nombre</th><th>Marca</th>
+            <th @click="toggleSort('id_activo')" class="sorted">
+              ID {{  getSortIcon('id_activo') }}
+            </th>
+            <th @click="toggleSort('tipo_activo')" class="sorted">
+              Tipo {{ getSortIcon('tipo_activo') }}
+            </th>
+            <th>
+              Nombre
+            </th>
+            <th>Marca</th>
             <th>Modelo</th><th>NO. Serie</th><th>Estado</th>
             <th>Responsable</th><th>Acciones</th>
           </tr>
@@ -320,11 +329,12 @@ import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
 import { useCatalogos } from '@/composables/useCatalogos'
-import FilterBar from '@/components/ui/FilterBar.vue'
-
 
 // ── Composables base ─────────────────────────────────────────────
 const { catalogos, loadCatalogos } = useCatalogos()
+const { getSortIcon, toggleSort, applySortToParams } = useSort({
+  onChange: loadData
+})
 const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
 const { formErrors, clearErrors } = useFormErrors()
 const authStore = useAuthStore()
@@ -619,11 +629,13 @@ function removeSpec(i) { form.especificaciones.splice(i, 1); delete specErrors[i
 async function loadData() {
   loading.value = true
   try {
-    const params = { page: page.value, per_page: perPage }
+    let params = { page: page.value, per_page: perPage }
     if (filters.search) params.search = filters.search
     if (filters.tipo_activo_id) params.tipo_activo_id = filters.tipo_activo_id
     if (filters.estado_id) params.estado_id = filters.estado_id
     if (filters.usuario_id) params.usuario_id = filters.usuario_id
+
+    params = applySortToParams(params)
     const res = await vistasApi.listEquipos(params)
     equipos.value = res.data.equipos
     setMeta(res.data)
@@ -801,4 +813,13 @@ onMounted(() => { loadCatalogos(['tiposActivo', 'estados', 'usuarios']); loadDat
 .sug-ejemplo { font-size: 11px; color: var(--gray-400); }
 
 .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.sorted {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sorted:hover {
+  color: var(--primary);
+}
 </style>

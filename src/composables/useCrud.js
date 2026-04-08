@@ -188,7 +188,6 @@ export function useCrud({ tabla, apiGet, apiGetDetail, apiCreate, apiUpdate, api
       }
       return false
     }
-    console.log(item)
     pendingDelete.value = { bloqueo: lockResult.bloqueo, id }
     toDelete.value = item
     showConfirm.value = true

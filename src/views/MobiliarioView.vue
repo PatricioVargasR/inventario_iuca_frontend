@@ -27,8 +27,22 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>ID</th><th>Tipo</th><th>Marca</th><th>Modelo</th>
-            <th>Color</th><th>Estado</th><th>Responsable</th><th>Acciones</th>
+            <th @click="toggleSort('id_mueble')" class="sorted">
+              ID {{ getSortIcon('id_mueble') }}
+            </th>
+            <th @click="toggleSort('tipo_mobiliario')" class="sorted">
+              Tipo {{ getSortIcon('tipo_mobiliario') }}
+            </th>
+            <th>
+              Marca
+            </th>
+            <th>Modelo</th>
+            <th>Color</th>
+            <th>Estado</th>
+            <th>
+              Responsable
+            </th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -305,8 +319,10 @@ import { usePagination } from '@/composables/usePagination'
 import { useCrud } from '@/composables/useCrud'
 import { useConcurrencyHandlers } from '@/composables/useConcurrencyHandlers'
 import { useCatalogos } from '@/composables/useCatalogos'
-import FilterBar from '@/components/ui/FilterBar.vue'
 
+const { getSortIcon, toggleSort, applySortToParams } = useSort({
+  onChange: loadData
+})
 const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
 const { formErrors, clearErrors, applyFieldErrors, setError } = useFormErrors()
 
@@ -443,11 +459,13 @@ const form = reactive({
 async function loadData() {
   loading.value = true
   try {
-    const params = { page: page.value, per_page: perPage }
+    let params = { page: page.value, per_page: perPage }
     if (filters.search) params.search = filters.search
     if (filters.tipo_mobiliario_id) params.tipo_mobiliario_id = filters.tipo_mobiliario_id
     if (filters.estado_id) params.estado_id = filters.estado_id
     if (filters.usuario_id) params.usuario_id = filters.usuario_id
+
+    params = applySortToParams(params)
     const res = await vistasApi.listMobiliario(params)
     mobiliario.value = res.data.mobiliario
     setMeta(res.data)
@@ -574,4 +592,13 @@ onMounted(() => {
 .conflict-option p { font-size: 12px; color: var(--gray-600); margin: 0; }
 
 .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.sorted {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sorted:hover {
+  color: var(--primary);
+}
 </style>
