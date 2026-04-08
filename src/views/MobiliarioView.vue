@@ -319,6 +319,8 @@ import { usePagination } from '@/composables/usePagination'
 import { useCrud } from '@/composables/useCrud'
 import { useConcurrencyHandlers } from '@/composables/useConcurrencyHandlers'
 import { useCatalogos } from '@/composables/useCatalogos'
+import FilterBar from '@/components/ui/FilterBar.vue'
+import { useSort } from '@/composables/useSort'
 
 const { getSortIcon, toggleSort, applySortToParams } = useSort({
   onChange: loadData
