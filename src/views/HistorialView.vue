@@ -141,6 +141,8 @@
         :current="page"
         :total-pages="totalPages"
         :total="total"
+        :from="from"
+        :to="to"
         :per-page="perPage"
         @change="onPageChange"
       />

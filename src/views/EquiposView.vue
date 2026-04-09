@@ -80,7 +80,15 @@
           </tr>
         </tbody>
       </table>
-      <Pagination :current="page" :total-pages="totalPages" :total="total" :per-page="20" @change="onPageChange" />
+      <Pagination
+        :current="page"
+        :total-pages="totalPages"
+        :total="total"
+        :from="from"
+        :to="to"
+        :per-page="20"
+        @change="onPageChange"
+      />
     </div>
 
     <!-- Detail Modal -->
