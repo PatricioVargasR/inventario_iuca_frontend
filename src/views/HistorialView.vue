@@ -97,7 +97,7 @@
             >
               <td>
                 <span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">
-                  {{ item.id_historial }}
+                  {{ item.index }}
                 </span>
               </td>
               <td>
