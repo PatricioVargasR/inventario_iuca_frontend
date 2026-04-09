@@ -110,7 +110,9 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { primeraRutaPermitida } from '@/router'
+import { useToast } from '@/composables/useToast'
 
+const { toast } = useToast()
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
@@ -139,6 +141,7 @@ function toggleMobileMenu() { mobileMenuOpen.value = !mobileMenuOpen.value }
 function handleLogout() {
   mobileMenuOpen.value = false
   authStore.logout()
+  toast.success('Se cerró la sesión exitosamente', 'Sesión')
   router.push('/login')
 }
 

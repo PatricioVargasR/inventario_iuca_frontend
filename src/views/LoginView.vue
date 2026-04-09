@@ -240,6 +240,7 @@ async function handleLogin() {
   const result = await authStore.login(form.value.correo.trim(), form.value.password)
 
   if (result.success) {
+    toast.success('Inicio de sesión éxitoso', 'Sesión')
     router.push(primeraRutaPermitida(authStore))
     return
   }
@@ -279,6 +280,7 @@ async function handleForceLogin() {
 
   if (result.success) {
     showSameIpModal.value = false
+    toast.success('Inicio de sesión éxitoso', 'Inicio de sesión')
     router.push(primeraRutaPermitida(authStore))
     return
   }
