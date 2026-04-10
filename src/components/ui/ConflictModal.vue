@@ -35,13 +35,6 @@ defineProps({
   entityLabel: { type: String, default: 'este registro' }
 })
 
-defineEmits(['update:modelValue', 'reload'])
-
-function handleReload() {
-  emit('reload')
-  emit('update:modelValue', false)
-}
-
 </script>
 
 <style scoped>
