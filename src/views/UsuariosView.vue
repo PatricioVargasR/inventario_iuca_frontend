@@ -99,6 +99,9 @@
 
     <!-- Form Modal -->
     <BaseModal v-model="showForm" :title="editMode ? 'Actualizar responsable' : 'Nuevo responsable'" size="sm" @update:model-value="handleFormClose">
+
+      <LockWarningBanner v-if="editMode" :message="lockWarning" />
+
       <form id="usuariosForm" @submit.prevent="saveItem" novalidate>
         <div class="form-grid">
           <div class="form-group">
@@ -214,6 +217,7 @@ import { useConcurrencyHandlers } from '@/composables/useConcurrencyHandlers'
 import { useCatalogos } from '@/composables/useCatalogos'
 import { useSort } from '@/composables/useSort'
 import ConflictModal from '@/components/ui/ConflictModal.vue'
+import LockWarningBanner from '@/components/ui/LockWarningBanner.vue'
 
 const { catalogos, loadCatalogos } = useCatalogos()
 const { getSortIcon, toggleSort, applySortToParams } = useSort({

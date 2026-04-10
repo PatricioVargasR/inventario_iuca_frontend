@@ -150,17 +150,9 @@
 
     <!-- Create/Edit Modal -->
     <BaseModal v-model="showForm" :title="editMode ? 'Actualizar Mobiliario' : 'Nuevo Mobiliario'" size="lg" @update:model-value="handleFormClose">
+
       <!-- Banner de advertencia si alguien más está editando -->
-      <div v-if="editMode && lockWarning" class="lock-warning">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-        </svg>
-        <div>
-          <strong>Advertencia:</strong>
-          <span>{{ lockWarning }}</span>
-        </div>
-      </div>
+      <LockWarningBanner v-if="editMode" :message="lockWarning" />
 
       <form id="mobiliarioForm" @submit.prevent="saveMobiliario" novalidate>
         <div class="section-title" style="display:flex;align-items:center;gap:6px;">
@@ -312,6 +304,7 @@ import { useCatalogos } from '@/composables/useCatalogos'
 import FilterBar from '@/components/ui/FilterBar.vue'
 import { useSort } from '@/composables/useSort'
 import ConflictModal from '@/components/ui/ConflictModal.vue'
+import LockWarningBanner from '@/components/ui/LockWarningBanner.vue'
 
 const { getSortIcon, toggleSort, applySortToParams } = useSort({
   onChange: loadData
@@ -550,22 +543,6 @@ onMounted(() => {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
-
-/* ── Lock warning ── */
-.lock-warning {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 16px;
-  background: #fef3c7;
-  border: 1px solid #fde68a;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  color: #92400e;
-}
-.lock-warning svg { flex-shrink: 0; margin-top: 2px; }
-.lock-warning strong { display: block; font-size: 13px; margin-bottom: 2px; }
-.lock-warning span { font-size: 12px; }
 
 .conflict-option p { font-size: 12px; color: var(--gray-600); margin: 0; }
 
