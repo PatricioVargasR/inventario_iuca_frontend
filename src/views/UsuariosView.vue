@@ -313,19 +313,19 @@ function validateForm() {
   let valid = true
 
   if (!form.nombre_usuario?.trim()) {
-    formErrors.nombre_usuario = '"Nombre completo" es obligatorio'
+    setError('nombre_usuario', '"Nombre completo" es obligatorio')
     valid = false
   }
   if (!form.puesto?.trim()) {
-    formErrors.puesto = '"Puesto" es obligatorio'
+    setError('puesto', '"Puesto" es obligatorio')
     valid = false
   }
   if (!form.area_id) {
-    formErrors.area_id = '"Área de adscripción" es obligatoria'
+    setError('area_id', '"Área de adscripción" es obligatoria')
     valid = false
   }
   if (form.numero_nomina && !/^\d+$/.test(form.numero_nomina)) {
-    formErrors.numero_nomina = 'Solo se permiten dígitos'
+    setError('numero_nomina', 'Solo se permiten dígitos')
     valid = false
   }
 

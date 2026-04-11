@@ -10,7 +10,7 @@
         <button
           v-if="authStore.canDo('computo', 'puede_crear')"
           class="btn btn-primary"
-          @click="openCreate"
+          @click="handleOpenCreate"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Nuevo equipo
@@ -332,7 +332,7 @@ const { getSortIcon, toggleSort, applySortToParams } = useSort({
   onChange: loadData
 })
 const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
-const { formErrors, clearErrors } = useFormErrors()
+const { formErrors, clearErrors, setError } = useFormErrors()
 const authStore = useAuthStore()
 const { toast } = useToast()
 const currentUserId = computed(() => authStore.user?.id_acceso)
@@ -504,31 +504,32 @@ function validateForm() {
   let valid = true
 
   if (!form.tipo_activo_id) {
-    formErrors.tipo_activo_id = '"Tipo de activo" es obligatorio'
+    setError('tipo_activo_id', '"Tipo de activo es obligatorio"')
+    // formErrors.tipo_activo_id = '"Tipo de activo" es obligatorio'
     valid = false
   }
   if (!form.estado_id) {
-    formErrors.estado_id = '"Estado" es obligatorio'
+    setError('estado_id', '"Estado" es obligatorio')
     valid = false
   }
   if (!form.nombre_activo?.trim()) {
-    formErrors.nombre_activo = '"Nombre del activo" es obligatorio'
+    setError('nombre_activo', '"Nombre del activo" es obligatorio')
     valid = false
   }
   if (!form.marca?.trim()) {
-    formErrors.marca = '"Marca" es obligatoria'
+    setError('marca', '"Marca" es obligatoria')
     valid = false
   }
   if (!form.modelo?.trim()) {
-    formErrors.modelo = '"Modelo" es obligatorio'
+    setError('modelo', '"Modelo es obligatorio"')
     valid = false
   }
   if (!form.numero_serie?.trim()) {
-    formErrors.numero_serie = '"Número de serie" es obligatorio'
+    setError('numero_serie', '"Número de serie" es obligatorio')
     valid = false
   }
   if (!form.sucursal_nombre?.trim()) {
-    formErrors.sucursal_nombre = '"Sucursal" es obligatoria'
+    setError('sucursal_nombre', '"Sucursal" es obligatoria')
     valid = false
   }
   form.especificaciones.forEach((spec, i) => {

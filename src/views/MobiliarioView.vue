@@ -398,15 +398,15 @@ function validateForm() {
   let valid = true
 
   if (!form.tipo_mobiliario_id) {
-    formErrors.tipo_mobiliario_id = '"Tipo de mobiliario" es obligatorio'
+    setError('tipo_mobiliario_id', '"Tipo de mobiliario" es obligatorio')
     valid = false
   }
   if (!form.estado_id) {
-    formErrors.estado_id = '"Estado" es obligatorio'
+    setError('estado_id', '"Estado" es obligatorio')
     valid = false
   }
   if (!form.sucursal_nombre?.trim()) {
-    formErrors.sucursal_nombre = '"Sucursal" es obligatoria'
+    setError('sucursal_nombre', '"Sucursal" es obligatoria')
     valid = false
   }
 

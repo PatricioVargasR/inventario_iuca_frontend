@@ -371,23 +371,23 @@ function validateForm() {
   const tipo = editMode.value ? activeTab.value : formTab.value
 
   if (!form.nombre?.trim()) {
-    formErrors.nombre = '"Nombre" es obligatorio'
+    setError('nombre', '"Nombre" es obligatorio')
     valid = false
   } else {
     // Límites según tipo: área/estado/tipos → 50 chars (nombre_area, nombre_estado); tipos → 30
     const maxLen = (tipo === 'tipo_activo' || tipo === 'tipo_mobiliario') ? 30 : 50
     if (form.nombre.trim().length > maxLen) {
-      formErrors.nombre = `"Nombre" no puede superar ${maxLen} caracteres`
+      setError('nombre', `"Nombre" no puede superar ${maxLen} caracteres`)
       valid = false
     }
   }
 
   if (tipo === 'estado') {
     if (!form.color_hex?.trim()) {
-      formErrors.color_hex = '"Color" es obligatorio para los estados'
+      setError('color_hex', '"Color" es obligatorio para los estados')
       valid = false
     } else if (!/^#[0-9A-Fa-f]{6}$/.test(form.color_hex)) {
-      formErrors.color_hex = 'El color debe tener formato HEX válido (Ej: #FF5733)'
+      setError('color_hex', 'El color debe tener formato HEX válido (Ej: #FF5733)')
       valid = false
     }
   }
