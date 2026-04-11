@@ -342,6 +342,7 @@ import LockWarningBanner from '@/components/ui/LockWarningBanner.vue'
 import TableActions from '@/components/ui/TableActions.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
+import { formatDate } from '@/utils/formatters'
 
 const authStore = useAuthStore()
 const { toast } = useToast()
@@ -546,12 +547,6 @@ const form = reactive({
   permisos: JSON.parse(JSON.stringify(defaultPermisos)),
   version: null
 })
-
-function formatDate(d) {
-  if (!d) return '–'
-  const dt = new Date(d)
-  return dt.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + dt.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
-}
 
 const DEPENDEN_DE_LEER = ['puede_crear', 'puede_actualizar', 'puede_eliminar']
 

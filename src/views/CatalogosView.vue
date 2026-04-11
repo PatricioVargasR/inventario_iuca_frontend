@@ -302,7 +302,7 @@ import Pagination from '@/components/ui/Pagination.vue'
 import { useFormErrors } from '@/composables/useFormErrors'
 import { usePagination } from '@/composables/usePagination'
 import PageHeader from '@/components/ui/PageHeader.vue'
-
+import { formatDateShort as formatDate } from '@/utils/formatters'
 
 const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
 const { formErrors, clearErrors, applyFieldErrors, setError } = useFormErrors()
@@ -409,11 +409,6 @@ function getItemId(item) {
 
 function getItemNombre(item) {
   return item?.nombre_area ?? item?.nombre_tipo ?? item?.nombre_estado ?? '–'
-}
-
-function formatDate(d) {
-  if (!d) return '–'
-  return new Date(d).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 // ── Carga de datos ───────────────────────────────────────────────
