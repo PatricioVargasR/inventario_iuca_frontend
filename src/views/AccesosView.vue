@@ -95,7 +95,14 @@
         </thead>
         <tbody>
           <tr v-if="loading" class="loading-row"><td colspan="7"><span class="spinner"></span></td></tr>
-          <tr v-else-if="!items.length"><td colspan="7"><div class="empty-state"><div class="empty-icon">🔑</div><p>No hay accesos registrados</p></div></td></tr>
+          <tr v-else-if="!items.length">
+            <td colspan="7">
+              <EmptyState
+                text="No se encontraron accesos"
+                icon="🔑"
+              />
+            </td>
+          </tr>
           <tr v-else v-for="acc in items" :key="acc.id_acceso">
             <td><span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">{{ acc.id_acceso }}</span></td>
             <td style="font-weight:700;">{{ acc.nombre_usuario }}</td>
@@ -334,6 +341,7 @@ import ConflictModal from '@/components/ui/ConflictModal.vue'
 import LockWarningBanner from '@/components/ui/LockWarningBanner.vue'
 import TableActions from '@/components/ui/TableActions.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
 
 const authStore = useAuthStore()
 const { toast } = useToast()

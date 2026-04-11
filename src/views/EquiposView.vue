@@ -49,7 +49,12 @@
         <tbody>
           <tr v-if="loading" class="loading-row"><td colspan="9"><span class="spinner"></span></td></tr>
           <tr v-else-if="!equipos.length">
-            <td colspan="9"><div class="empty-state"><div class="empty-icon">💻</div><p>No se encontraron equipos</p></div></td>
+            <td colspan="9">
+              <EmptyState
+                text="No se encontraron equipos"
+                icon="💻"
+              />
+            </td>
           </tr>
           <tr v-else v-for="eq in equipos" :key="eq.id_activo">
             <td><span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">{{ eq.id_activo }}</span></td>
@@ -319,6 +324,7 @@ import ConflictModal from '@/components/ui/ConflictModal.vue'
 import LockWarningBanner from '@/components/ui/LockWarningBanner.vue'
 import TableActions from '@/components/ui/TableActions.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
 
 // ── Composables base ─────────────────────────────────────────────
 const { catalogos, loadCatalogos } = useCatalogos()

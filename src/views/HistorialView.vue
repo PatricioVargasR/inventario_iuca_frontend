@@ -60,8 +60,10 @@
     </div>
 
     <div v-else-if="!grouped.length" class="card" style="padding:48px;text-align:center;color:var(--gray-400);">
-      <div style="font-size:36px;margin-bottom:12px;">🔍</div>
-      <p>No se encontraron movimientos en el rango seleccionado.</p>
+      <EmptyState
+          text="No se encontraron movimientos"
+          icon="🔍"
+        />
     </div>
 
     <div v-else class="table-wrapper">
@@ -224,6 +226,7 @@ import { useCatalogos } from '@/composables/useCatalogos'
 import { useSort } from '@/composables/useSort'
 import TableActions from '@/components/ui/TableActions.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
 
 const { getSortIcon, toggleSort, applySortToParams } = useSort({
   onChange: loadData

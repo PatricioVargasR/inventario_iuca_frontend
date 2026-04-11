@@ -56,10 +56,10 @@
           </tr>
           <tr v-else-if="!mobiliario.length">
             <td colspan="8">
-              <div class="empty-state">
-                <div class="empty-icon">🪑</div>
-                <p>No se encontró mobiliario</p>
-              </div>
+              <EmptyState
+                text="No se encontraron muebles"
+                icon="🔑"
+              />
             </td>
           </tr>
           <tr v-else v-for="mueble in mobiliario" :key="mueble.id_mueble">
@@ -289,6 +289,7 @@ import ConflictModal from '@/components/ui/ConflictModal.vue'
 import LockWarningBanner from '@/components/ui/LockWarningBanner.vue'
 import TableActions from '@/components/ui/TableActions.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
 
 const { getSortIcon, toggleSort, applySortToParams } = useSort({
   onChange: loadData

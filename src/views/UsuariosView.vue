@@ -53,7 +53,13 @@
         </thead>
         <tbody>
           <tr v-if="loading" class="loading-row"><td colspan="6"><span class="spinner"></span></td></tr>
-          <tr v-else-if="!items.length"><td colspan="6"><div class="empty-state"><div class="empty-icon">👤</div><p>No se encontraron responsables</p></div></td></tr>
+          <tr v-else-if="!items.length">
+            <td colspan="6">
+              <EmptyState
+                text="No se encontraron responsables"
+                icon="👤"
+              />
+            </td></tr>
           <tr v-else v-for="u in items" :key="u.id_usuario">
             <td><span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">{{ u.id_usuario }}</span></td>
             <td style="font-weight:700;color:var(--gray-900)">{{ u.nombre_usuario }}</td>
@@ -223,6 +229,7 @@ import ConflictModal from '@/components/ui/ConflictModal.vue'
 import LockWarningBanner from '@/components/ui/LockWarningBanner.vue'
 import TableActions from '@/components/ui/TableActions.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
 
 const { catalogos, loadCatalogos } = useCatalogos()
 const { getSortIcon, toggleSort, applySortToParams } = useSort({
