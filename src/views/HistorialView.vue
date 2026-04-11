@@ -126,11 +126,7 @@
                 {{ formatTime(item.fecha) }}
               </td>
               <td>
-                <div class="actions-cell">
-                  <button class="action-btn view" @click="openDetail(item)" title="Ver detalle">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                  </button>
-                </div>
+                <TableActions @view="openDetail(item)" />
               </td>
             </tr>
           </template>
@@ -226,6 +222,7 @@ import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'
 import { useCatalogos } from '@/composables/useCatalogos'
 import { useSort } from '@/composables/useSort'
+import TableActions from '@/components/ui/TableActions.vue'
 
 const { getSortIcon, toggleSort, applySortToParams } = useSort({
   onChange: loadData
