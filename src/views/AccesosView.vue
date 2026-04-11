@@ -1,15 +1,21 @@
 <template>
   <div class="page-container">
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">Accesos al sistema</h1>
-        <p class="page-subtitle">Usuarios con credenciales para acceder al sistema</p>
-      </div>
-      <button v-if="authStore.canDo('acceso', 'puede_crear')" class="btn btn-primary" @click="openCreate">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Nuevo acceso
-      </button>
-    </div>
+
+    <PageHeader
+      title="Accesos al sistema"
+      subtitle="Usuarios con credenciales para acceder al sistema"
+    >
+      <template #actions>
+        <button
+          v-if="authStore.canDo('acceso', 'puede_crear')"
+          class="btn btn-primary"
+          @click="openCreate"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nuevo acceso
+        </button>
+      </template>
+    </PageHeader>
 
     <!-- Filtros Unificados -->
     <div class="filters-card">
@@ -327,6 +333,7 @@ import { useSort } from '@/composables/useSort'
 import ConflictModal from '@/components/ui/ConflictModal.vue'
 import LockWarningBanner from '@/components/ui/LockWarningBanner.vue'
 import TableActions from '@/components/ui/TableActions.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
 
 const authStore = useAuthStore()
 const { toast } = useToast()

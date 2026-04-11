@@ -1,11 +1,11 @@
 <template>
   <div class="page-container">
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">Historial de movimientos</h1>
-        <p class="page-subtitle">Registro completo de cambios y auditoría del sistema</p>
-      </div>
-    </div>
+
+    <PageHeader
+      title="Historial de movimientos"
+      subtitle="Registro completo de cambios y auditoría del sistema"
+    >
+    </PageHeader>
 
     <!-- Filtros -->
     <div class="card" style="padding:18px 20px;margin-bottom:20px;">
@@ -223,6 +223,7 @@ import { useToast } from '@/composables/useToast'
 import { useCatalogos } from '@/composables/useCatalogos'
 import { useSort } from '@/composables/useSort'
 import TableActions from '@/components/ui/TableActions.vue'
+import PageHeader from '@/components/ui/PageHeader.vue'
 
 const { getSortIcon, toggleSort, applySortToParams } = useSort({
   onChange: loadData

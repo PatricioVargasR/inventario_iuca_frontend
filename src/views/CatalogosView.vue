@@ -1,15 +1,21 @@
 <template>
   <div class="page-container">
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">Catálogos del sistema</h1>
-        <p class="page-subtitle">Administración de catálogos y configuraciones</p>
-      </div>
-      <button v-if="authStore.canDo('catalogos', 'puede_crear')" class="btn btn-primary" @click="openCreate(activeTab)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Nuevo {{ tabActual.labelSingular }}
-      </button>
-    </div>
+
+    <PageHeader
+      title="Catálogos del sistema"
+      subtitle="Administración de catálogos y configuraciones"
+    >
+      <template #actions>
+        <button
+          v-if="authStore.canDo('catalogos', 'puede_crear')"
+          class="btn btn-primary"
+          @click="openCreate(activeTab)"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nuevo {{ tabActual.labelSingular }}
+        </button>
+      </template>
+    </PageHeader>
 
     <!-- Tabs + búsqueda -->
     <div class="card" style="padding:0;margin-bottom:20px;overflow:hidden;">
@@ -295,6 +301,7 @@ import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import { useFormErrors } from '@/composables/useFormErrors'
 import { usePagination } from '@/composables/usePagination'
+import PageHeader from '@/components/ui/PageHeader.vue'
 
 
 const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
