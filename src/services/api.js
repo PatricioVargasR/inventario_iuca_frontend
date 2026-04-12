@@ -19,23 +19,39 @@ api.interceptors.response.use(
   err => {
     const errorData = err.response?.data
 
-    // Sesión invalidada desde otro dispositivo
     if (errorData?.error === 'session_invalidated') {
       localStorage.clear()
       window.location.href = '/login?session_invalidated=true'
       return Promise.reject(err)
     }
 
-    // 401 genérico (token expirado, error de backend, etc.)
     if (err.response?.status === 401 && !errorData?.error) {
       localStorage.clear()
-      window.location.href = '/login?session_expired=true'  // <-- param diferente
+      window.location.href = '/login?session_expired=true'
       return Promise.reject(err)
     }
 
     return Promise.reject(err)
   }
 )
+
+/**
+ * Serializa parámetros para que los arrays se envíen como múltiples
+ * query params del mismo nombre: usuario_id=1&usuario_id=2
+ * (en lugar del formato por defecto usuario_id[]=1&usuario_id[]=2)
+ */
+function paramsSerializer(params) {
+  const parts = []
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === null || value === '') continue
+    if (Array.isArray(value)) {
+      value.forEach(v => parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(v)}`))
+    } else {
+      parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    }
+  }
+  return parts.join('&')
+}
 
 // ===== AUTH =====
 export const authApi = {
@@ -65,7 +81,6 @@ export const mobiliarioApi = {
 
 // ===== CATÁLOGOS =====
 export const catalogosApi = {
-  // ── GET con paginación y búsqueda ──
   getAreas:          (params) => api.get('/catalogos/areas',           { params }),
   getAreasCompleto:        () => api.get('/catalogos/areas-completo'             ),
   getTiposActivo:    (params) => api.get('/catalogos/tipos-activo',    { params }),
@@ -75,13 +90,11 @@ export const catalogosApi = {
   getTiposMobiliario:(params) => api.get('/catalogos/tipos-mobiliario',{ params }),
   getMobiliarioCompleto:   () => api.get('/catalogos/tipo-completo'  ),
 
-  // ── GET individual ──
   getArea:    (id) => api.get(`/catalogos/areas/${id}`),
   getActivo:  (id) => api.get(`/catalogos/activo/${id}`),
   getEstado:  (id) => api.get(`/catalogos/estados/${id}`),
   getMobiliario: (id) => api.get(`/catalogos/mobiliario/${id}`),
 
-  // ── CRUD ──
   createArea:           (data)     => api.post('/catalogos/areas', data),
   updateArea:           (id, data) => api.put(`/catalogos/areas/${id}`, data),
   deleteArea:           (id)       => api.delete(`/catalogos/areas/${id}`),
@@ -122,11 +135,18 @@ export const historialApi = {
 export default api
 
 // ===== VISTAS =====
+// Usamos paramsSerializer para soportar arrays (múltiples usuario_id)
 export const vistasApi = {
-  listEquipos: (params) => api.get('/vistas/equipos-completo/', { params }),
+  listEquipos: (params) => api.get('/vistas/equipos-completo/', {
+    params,
+    paramsSerializer
+  }),
   getEquipos: (id) => api.get(`/vistas/equipo-completo/${id}`),
 
-  listMobiliario: (params) => api.get('/vistas/mobiliarios-completo/', { params }),
+  listMobiliario: (params) => api.get('/vistas/mobiliarios-completo/', {
+    params,
+    paramsSerializer
+  }),
   getMobiliario: (id) => api.get(`/vistas/mobiliario-completo/${id}`),
 
   listResponsables: (params) => api.get('/vistas/responsables-completo/', { params }),

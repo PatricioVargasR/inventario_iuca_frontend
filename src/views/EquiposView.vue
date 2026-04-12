@@ -1,7 +1,6 @@
 <template>
   <div class="page-container">
 
-
     <PageHeader
       title="Equipos de cómputo"
       subtitle="Gestión del inventario de equipos"
@@ -19,41 +18,59 @@
     </PageHeader>
 
     <!-- Filtros -->
-    <FilterBar
-      :modelValue="filters"
-      @update:modelValue="val => Object.assign(filters, val)"
-      :config="filterConfig"
-      @search="onSearch"
-      @change="loadData"
-    />
+    <div class="filter-bar">
+      <div class="filter-group search">
+        <label>Búsqueda general</label>
+        <div class="input-with-icon">
+          <svg class="input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input v-model="filters.search" class="form-input" placeholder="Buscar equipo..." @input="onSearch" />
+        </div>
+      </div>
+      <div class="filter-group">
+        <label>Tipo de equipo</label>
+        <select v-model="filters.tipo_activo_id" class="form-select" @change="loadData">
+          <option value="">Todos los tipos</option>
+          <option v-for="t in catalogos.tipos" :key="t.nombre_tipo" :value="t.nombre_tipo">{{ t.nombre_tipo }}</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Estado</label>
+        <select v-model="filters.estado_id" class="form-select" @change="loadData">
+          <option value="">Cualquier estado</option>
+          <option v-for="e in catalogos.estados" :key="e.nombre_estado" :value="e.nombre_estado">{{ e.nombre_estado }}</option>
+        </select>
+      </div>
+      <!-- Filtro multi-responsable -->
+      <ResponsablesFilter
+        v-model="filters.usuario_ids"
+        :usuarios="catalogos.usuarios"
+        label="Responsable"
+        placeholder="Todos los responsables"
+        @change="loadData"
+      />
+    </div>
 
     <!-- Tabla -->
     <div class="table-wrapper">
       <table class="data-table">
         <thead>
           <tr>
-            <th @click="toggleSort('id_activo')" class="sorted">
-              ID {{  getSortIcon('id_activo') }}
-            </th>
-            <th @click="toggleSort('tipo_activo')" class="sorted">
-              Tipo {{ getSortIcon('tipo_activo') }}
-            </th>
-            <th>
-              Nombre
-            </th>
+            <th @click="toggleSort('id_activo')" class="sorted">ID {{ getSortIcon('id_activo') }}</th>
+            <th @click="toggleSort('tipo_activo')" class="sorted">Tipo {{ getSortIcon('tipo_activo') }}</th>
+            <th>Nombre</th>
             <th>Marca</th>
-            <th>Modelo</th><th>NO. Serie</th><th>Estado</th>
-            <th>Responsable</th><th>Acciones</th>
+            <th>Modelo</th>
+            <th>NO. Serie</th>
+            <th>Estado</th>
+            <th>Responsables</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="loading" class="loading-row"><td colspan="9"><span class="spinner"></span></td></tr>
           <tr v-else-if="!equipos.length">
             <td colspan="9">
-              <EmptyState
-                text="No se encontraron equipos"
-                icon="💻"
-              />
+              <EmptyState text="No se encontraron equipos" icon="💻" />
             </td>
           </tr>
           <tr v-else v-for="eq in equipos" :key="eq.id_activo">
@@ -69,7 +86,20 @@
             <td>{{ eq.modelo || '–' }}</td>
             <td><span style="font-family:var(--font-mono);font-size:12px">{{ eq.numero_serie || '–' }}</span></td>
             <td><StatusBadge :estado="eq.estado" :color="eq.color_estado" /></td>
-            <td>{{ eq.responsable || '–' }}</td>
+            <td>
+              <!-- Mostrar múltiples responsables como badges compactos -->
+              <div class="responsables-cell">
+                <template v-if="eq.responsables && eq.responsables.length > 0">
+                  <span v-for="r in eq.responsables.slice(0, 2)" :key="r.id_usuario" class="resp-mini-badge">
+                    {{ r.nombre_usuario }}
+                  </span>
+                  <span v-if="eq.responsables.length > 2" class="resp-more">
+                    +{{ eq.responsables.length - 2 }}
+                  </span>
+                </template>
+                <span v-else style="color:var(--gray-400)">–</span>
+              </div>
+            </td>
             <td>
               <TableActions
                 :show-edit="authStore.canDo('computo', 'puede_actualizar')"
@@ -104,7 +134,19 @@
           <div class="detail-item"><label>Nombre</label><strong>{{ selected.nombre_activo }}</strong></div>
           <div class="detail-item"><label>Estado</label><StatusBadge :estado="selected.estado" :color="selected.color_estado" /></div>
           <div class="detail-item"><label>Marca</label><strong>{{ selected.marca || '–' }}</strong></div>
-          <div class="detail-item"><label>Responsable</label><strong>{{ selected.responsable || '–' }}</strong></div>
+          <!-- Responsables en detalle -->
+          <div class="detail-item span-full">
+            <label>Responsables</label>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
+              <template v-if="selected.responsables && selected.responsables.length">
+                <span v-for="r in selected.responsables" :key="r.id_usuario" class="resp-detail-badge">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                  {{ r.nombre_usuario }}
+                </span>
+              </template>
+              <span v-else style="color:var(--gray-400);font-size:13px">Sin responsables asignados</span>
+            </div>
+          </div>
         </div>
         <div v-if="selected.especificaciones" style="margin-top:16px;">
           <div class="section-title">Especificaciones</div>
@@ -152,11 +194,9 @@
             <span v-if="formErrors.nombre_activo" class="field-error">{{ formErrors.nombre_activo }}</span>
           </div>
           <div class="form-group">
-            <label class="form-label">Responsable</label>
-            <select v-model="form.usuario_asignado_id" class="form-select">
-              <option value="">Sin asignar</option>
-              <option v-for="u in catalogos.usuarios" :key="u.id_usuario" :value="u.id_usuario">{{ u.nombre_usuario }}</option>
-            </select>
+            <label class="form-label">Sucursal <span class="required">*</span></label>
+            <input v-model="form.sucursal_nombre" class="form-input" :class="{ 'input-error': formErrors.sucursal_nombre }" maxlength="50" />
+            <span v-if="formErrors.sucursal_nombre" class="field-error">{{ formErrors.sucursal_nombre }}</span>
           </div>
         </div>
 
@@ -177,16 +217,21 @@
             <input v-model="form.numero_serie" class="form-input" :class="{ 'input-error': formErrors.numero_serie }" placeholder="Ej: ABC123XYZ456" maxlength="50" />
             <span v-if="formErrors.numero_serie" class="field-error">{{ formErrors.numero_serie }}</span>
           </div>
-          <div class="form-group">
-            <label class="form-label">Sucursal <span class="required">*</span></label>
-            <input v-model="form.sucursal_nombre" class="form-input" :class="{ 'input-error': formErrors.sucursal_nombre }" maxlength="50" />
-            <span v-if="formErrors.sucursal_nombre" class="field-error">{{ formErrors.sucursal_nombre }}</span>
-          </div>
           <div class="form-group span-full">
             <label class="form-label">Observaciones</label>
             <textarea v-model="form.observaciones" class="form-textarea" placeholder="Observaciones relevantes..." maxlength="500"></textarea>
             <small style="color:var(--gray-400);font-size:11px;">{{ form.observaciones.length }} / 500</small>
           </div>
+        </div>
+
+        <!-- Responsables múltiples -->
+        <div class="section-title">Responsables</div>
+        <div class="form-group">
+          <label class="form-label">Personas responsables del equipo</label>
+          <ResponsablesSelector
+            v-model="form.responsables_ids"
+            :usuarios="catalogos.usuarios"
+          />
         </div>
 
         <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
@@ -211,10 +256,6 @@
             <svg v-else width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             {{ sug.nombre }}
           </button>
-        </div>
-        <div v-else-if="!form.tipo_activo_id" class="spec-hint">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Selecciona un tipo de equipo para ver sugerencias de especificaciones
         </div>
 
         <div
@@ -260,7 +301,6 @@
           </button>
         </div>
 
-        <!-- Error global de specs -->
         <p v-if="formErrors.especificaciones" class="field-error" style="margin-top:6px;">{{ formErrors.especificaciones }}</p>
       </form>
 
@@ -283,7 +323,6 @@
       @cancel="handleCancelDelete_"
     />
 
-    <!-- Concurrency Alert -->
     <ConcurrencyAlert
       v-model="showConcurrencyAlert"
       :title="concurrencyAlert.title"
@@ -294,7 +333,6 @@
       @retry="handleConcurrencyRetry"
     />
 
-    <!-- Conflict Modal -->
     <ConflictModal
       v-model="showConflictModal"
       entity-label="este equipo"
@@ -318,39 +356,36 @@ import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
 import { useCatalogos } from '@/composables/useCatalogos'
-import FilterBar from '@/components/ui/FilterBar.vue'
 import { useSort } from '@/composables/useSort'
 import ConflictModal from '@/components/ui/ConflictModal.vue'
 import LockWarningBanner from '@/components/ui/LockWarningBanner.vue'
 import TableActions from '@/components/ui/TableActions.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
+import ResponsablesSelector from '@/components/ui/ResponsablesSelector.vue'
+import ResponsablesFilter from '@/components/ui/ResponsablesFilter.vue'
 import { useSpecsEditor } from '@/composables/useSpecsEditor'
 import { SPECS_MAP } from '@/constants/equiposMap'
 
-// ── Composables base ─────────────────────────────────────────────
 const { catalogos, loadCatalogos } = useCatalogos()
-const { getSortIcon, toggleSort, applySortToParams } = useSort({
-  onChange: loadData
-})
+const { getSortIcon, toggleSort, applySortToParams } = useSort({ onChange: loadData })
 const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
 const { formErrors, clearErrors, setError } = useFormErrors()
 const authStore = useAuthStore()
 const { toast } = useToast()
 const currentUserId = computed(() => authStore.user?.id_acceso)
 
-
-
-// ── Estado local ─────────────────────────────────────────────────
 const equipos = ref([])
 const loading = ref(false)
-const filters = reactive({ search: '', tipo_activo_id: '', estado_id: '', usuario_id: '' })
+// usuario_ids es ahora un array para filtro multi-responsable
+const filters = reactive({ search: '', tipo_activo_id: '', estado_id: '', usuario_ids: [] })
 const specErrors = reactive({})
 
 const form = reactive({
   _id: null,
   tipo_activo_id: '', estado_id: '', nombre_activo: '',
-  usuario_asignado_id: '', marca: '', modelo: '',
+  responsables_ids: [],  // array de IDs de responsables
+  marca: '', modelo: '',
   numero_serie: '', sucursal_nombre: 'Tulancingo',
   observaciones: '', especificaciones: [],
   version: null
@@ -364,18 +399,13 @@ const specSuggestions = computed(() => {
   return SPECS_MAP[match] || SPECS_MAP['default']
 })
 
-
 const {
   activeSuggestionIndex,
-  openSuggestions,
-  closeSuggestions,
-  applySuggestion,
-  filteredSuggestions,
-  addSpec,
-  removeSpec
+  openSuggestions, closeSuggestions,
+  applySuggestion, filteredSuggestions,
+  addSpec, removeSpec
 } = useSpecsEditor(form, specErrors, specSuggestions)
 
-// ── useCrud ──────────────────────────────────────────────────────
 const {
   showForm, showConfirm, showConcurrencyAlert, showConflictModal,
   showDetail, selected,
@@ -395,80 +425,42 @@ const {
   applyFieldErrors
 })
 
-const filterConfig = computed(() => ({
-  search: true,
-  selects: [
-    {
-      key: "tipo_activo_id",
-      label: "Tipo de Equipo",
-      options: catalogos.tipos,
-      optionLabel: "nombre_tipo",
-      optionValue: "nombre_tipo",
-      placeholder: "Todos los tipos"
-    },
-    {
-      key: "estado_id",
-      label: "Estado",
-      options: catalogos.estados,
-      optionLabel: "nombre_estado",
-      optionValue: "nombre_estado",
-      placeholder: "Cualquier estado"
-    },
-    {
-      key: "usuario_id",
-      label: "Responsable",
-      options: catalogos.usuarios,
-      optionLabel: "nombre_usuario",
-      optionValue: "nombre_usuario",
-      placeholder: "Todos los responsables"
-    }
-  ]
-}))
-
-
-// ── populate reutilizable ────────────────────────────────────────
+// populate reutilizable — ahora con responsables_ids
 function populateForm(d) {
   Object.assign(form, {
-    _id:                 d.id_activo,
-    tipo_activo_id:      d.tipo_activo_id,
-    estado_id:           d.estado_id,
-    nombre_activo:       d.nombre_activo,
-    usuario_asignado_id: d.usuario_asignado_id || '',
-    marca:               d.marca || '',
-    modelo:              d.modelo || '',
-    numero_serie:        d.numero_serie || '',
-    sucursal_nombre:     d.sucursal_nombre || 'Tulancingo',
-    observaciones:       d.observaciones || '',
-    especificaciones:    d.especificaciones || [],
-    version:             d.version
+    _id:               d.id_activo,
+    tipo_activo_id:    d.tipo_activo_id,
+    estado_id:         d.estado_id,
+    nombre_activo:     d.nombre_activo,
+    responsables_ids:  d.responsables_ids || [],
+    marca:             d.marca || '',
+    modelo:            d.modelo || '',
+    numero_serie:      d.numero_serie || '',
+    sucursal_nombre:   d.sucursal_nombre || 'Tulancingo',
+    observaciones:     d.observaciones || '',
+    especificaciones:  d.especificaciones || [],
+    version:           d.version
   })
 }
 
-// ── useConcurrencyHandlers ───────────────────────────────────────
 const {
   handleConcurrencyCancel,
   handleConcurrencyRetry,
   handleConflictReload: reloadConflict
 } = useConcurrencyHandlers({
-  showConcurrencyAlert,
-  showConflictModal,
-  concurrencyAlert,
-  items: equipos,
-  idKey: 'id_activo',
+  showConcurrencyAlert, showConflictModal, concurrencyAlert,
+  items: equipos, idKey: 'id_activo',
   openEdit:      (eq) => handleOpenEdit(eq),
   confirmDelete: (eq) => confirmDelete(eq.id_activo, eq),
   apiGet:        (id) => equiposApi.get(id),
-  clearErrors,
-  toast
+  clearErrors, toast
 })
 
-// ── Wrappers específicos del módulo ──────────────────────────────
 function handleOpenCreate() {
   openCreate(() => {
     Object.assign(form, {
-      _id: null,
-      tipo_activo_id: '', estado_id: '', nombre_activo: '',
-      usuario_asignado_id: '', marca: '', modelo: '',
+      _id: null, tipo_activo_id: '', estado_id: '', nombre_activo: '',
+      responsables_ids: [], marca: '', modelo: '',
       numero_serie: '', sucursal_nombre: 'Tulancingo',
       observaciones: '', especificaciones: [], version: null
     })
@@ -488,7 +480,20 @@ async function handleSave() {
     toast.warning('Revisa los campos marcados en el formulario')
     return
   }
-  await save(form._id, { ...form })
+  const payload = {
+    tipo_activo_id:  form.tipo_activo_id,
+    nombre_activo:   form.nombre_activo,
+    marca:           form.marca,
+    modelo:          form.modelo,
+    numero_serie:    form.numero_serie,
+    estado_id:       form.estado_id,
+    observaciones:   form.observaciones,
+    sucursal_nombre: form.sucursal_nombre,
+    especificaciones: form.especificaciones,
+    responsables_ids: form.responsables_ids,
+    version:         form.version
+  }
+  await save(form._id, payload)
 }
 
 async function handleDoDelete() {
@@ -503,7 +508,6 @@ async function handleConflictReload() {
   await reloadConflict(form._id, populateForm)
 }
 
-// ── Validación ───────────────────────────────────────────────────
 function applyFieldErrors(campos) {
   if (!campos) return
   Object.entries(campos).forEach(([campo, mensaje]) => {
@@ -526,35 +530,14 @@ function validateForm() {
   Object.keys(specErrors).forEach(k => delete specErrors[k])
   let valid = true
 
-  if (!form.tipo_activo_id) {
-    setError('tipo_activo_id', '"Tipo de activo es obligatorio"')
-    // formErrors.tipo_activo_id = '"Tipo de activo" es obligatorio'
-    valid = false
-  }
-  if (!form.estado_id) {
-    setError('estado_id', '"Estado" es obligatorio')
-    valid = false
-  }
-  if (!form.nombre_activo?.trim()) {
-    setError('nombre_activo', '"Nombre del activo" es obligatorio')
-    valid = false
-  }
-  if (!form.marca?.trim()) {
-    setError('marca', '"Marca" es obligatoria')
-    valid = false
-  }
-  if (!form.modelo?.trim()) {
-    setError('modelo', '"Modelo es obligatorio"')
-    valid = false
-  }
-  if (!form.numero_serie?.trim()) {
-    setError('numero_serie', '"Número de serie" es obligatorio')
-    valid = false
-  }
-  if (!form.sucursal_nombre?.trim()) {
-    setError('sucursal_nombre', '"Sucursal" es obligatoria')
-    valid = false
-  }
+  if (!form.tipo_activo_id) { setError('tipo_activo_id', '"Tipo de activo" es obligatorio'); valid = false }
+  if (!form.estado_id) { setError('estado_id', '"Estado" es obligatorio'); valid = false }
+  if (!form.nombre_activo?.trim()) { setError('nombre_activo', '"Nombre del activo" es obligatorio'); valid = false }
+  if (!form.marca?.trim()) { setError('marca', '"Marca" es obligatoria'); valid = false }
+  if (!form.modelo?.trim()) { setError('modelo', '"Modelo" es obligatorio'); valid = false }
+  if (!form.numero_serie?.trim()) { setError('numero_serie', '"Número de serie" es obligatorio'); valid = false }
+  if (!form.sucursal_nombre?.trim()) { setError('sucursal_nombre', '"Sucursal" es obligatoria'); valid = false }
+
   form.especificaciones.forEach((spec, i) => {
     if (!spec.nombre_especificacion?.trim()) {
       if (!specErrors[i]) specErrors[i] = {}
@@ -570,10 +553,6 @@ function validateForm() {
   return valid
 }
 
-
-
-
-// ── Datos ────────────────────────────────────────────────────────
 async function loadData() {
   loading.value = true
   try {
@@ -581,8 +560,10 @@ async function loadData() {
     if (filters.search) params.search = filters.search
     if (filters.tipo_activo_id) params.tipo_activo_id = filters.tipo_activo_id
     if (filters.estado_id) params.estado_id = filters.estado_id
-    if (filters.usuario_id) params.usuario_id = filters.usuario_id
-
+    // Array de IDs → se envían como múltiples query params
+    if (filters.usuario_ids && filters.usuario_ids.length > 0) {
+      params.usuario_id = filters.usuario_ids
+    }
     params = applySortToParams(params)
     const res = await vistasApi.listEquipos(params)
     equipos.value = res.data.equipos
@@ -594,28 +575,18 @@ async function loadData() {
   }
 }
 
-// ── Lifecycle ────────────────────────────────────────────────────
-onBeforeUnmount(async () => {
-  await releaseOnUnmount()
-})
+onBeforeUnmount(async () => { await releaseOnUnmount() })
 setOnSuccess(loadData)
 setLoadFn(loadData)
 onMounted(() => { loadCatalogos(['tiposActivo', 'estados', 'usuarios']); loadData() })
 </script>
 
 <style scoped>
-/* ── Errores de campo ── */
-.input-error {
-  border-color: var(--danger) !important;
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
-}
+.input-error { border-color: var(--danger) !important; box-shadow: 0 0 0 3px rgba(220,38,38,0.1) !important; }
 
 .field-error {
-  display: block;
-  font-size: 11.5px;
-  color: var(--danger);
-  margin-top: 4px;
-  font-weight: 500;
+  display: block; font-size: 11.5px; color: var(--danger);
+  margin-top: 4px; font-weight: 500;
   animation: fadeIn 0.15s ease;
 }
 
@@ -624,117 +595,89 @@ onMounted(() => { loadCatalogos(['tiposActivo', 'estados', 'usuarios']); loadDat
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Badge edición activa ── */
 .editing-badge {
-  display: inline-flex;
-  align-items: center;
-  margin-left: 6px;
-  color: #f59e0b;
-  animation: pulse 2s infinite;
+  display: inline-flex; align-items: center; margin-left: 6px;
+  color: #f59e0b; animation: pulse 2s infinite;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+/* ── Celda responsables en tabla ── */
+.responsables-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.resp-mini-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  background: var(--gray-100);
+  color: var(--gray-600);
+  border-radius: 10px;
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.resp-more {
+  display: inline-block;
+  padding: 2px 6px;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ── Responsables en modal detalle ── */
+.resp-detail-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border: 1px solid rgba(37, 99, 235, 0.2);
 }
 
 /* ── Spec chips ── */
 .spec-quick-chips {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 12px;
-  padding: 10px 12px;
-  background: var(--gray-50);
-  border: 1px dashed var(--gray-300);
-  border-radius: 8px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  margin-bottom: 12px; padding: 10px 12px;
+  background: var(--gray-50); border: 1px dashed var(--gray-300); border-radius: 8px;
 }
-.spec-chips-label {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--gray-400);
-  margin-right: 4px;
-  white-space: nowrap;
-}
+.spec-chips-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gray-400); margin-right: 4px; white-space: nowrap; }
 .spec-chip-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border-radius: 14px;
-  border: 1.5px solid var(--gray-300);
-  background: white;
-  color: var(--gray-600);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
+  display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px;
+  border-radius: 14px; border: 1.5px solid var(--gray-300); background: white;
+  color: var(--gray-600); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s;
 }
-.spec-chip-btn:hover:not(.used) {
-  border-color: var(--primary);
-  color: var(--primary);
-  background: var(--primary-light, #eef2ff);
-  transform: translateY(-1px);
-}
-.spec-chip-btn.used {
-  background: #f0fdf4;
-  border-color: #86efac;
-  color: #16a34a;
-  cursor: default;
-  opacity: 0.75;
-}
-.spec-hint {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--gray-400);
-  margin-bottom: 10px;
-  font-style: italic;
-}
+.spec-chip-btn:hover:not(.used) { border-color: var(--primary); color: var(--primary); background: var(--primary-light); transform: translateY(-1px); }
+.spec-chip-btn.used { background: #f0fdf4; border-color: #86efac; color: #16a34a; cursor: default; opacity: 0.75; }
 .spec-nombre-wrapper { position: relative; flex: 1; }
 .spec-suggestions-dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  background: white;
-  border: 1.5px solid var(--gray-200);
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-  z-index: 100;
-  overflow: hidden;
-  max-height: 220px;
-  overflow-y: auto;
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  background: white; border: 1.5px solid var(--gray-200); border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 100; overflow: hidden; max-height: 220px; overflow-y: auto;
 }
 .spec-suggestion-item {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  width: 100%;
-  padding: 8px 12px;
-  background: none;
-  border: none;
-  text-align: left;
-  cursor: pointer;
-  transition: background 0.1s;
+  display: flex; flex-direction: column; gap: 1px;
+  width: 100%; padding: 8px 12px; background: none; border: none;
+  text-align: left; cursor: pointer; transition: background 0.1s;
 }
 .spec-suggestion-item:hover:not(.used) { background: var(--gray-50); }
 .spec-suggestion-item.used { opacity: 0.4; cursor: default; }
 .sug-nombre { font-size: 13px; font-weight: 600; color: var(--gray-800); }
 .sug-ejemplo { font-size: 11px; color: var(--gray-400); }
 
-.action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.sorted {
-  cursor: pointer;
-  user-select: none;
-}
-
-.sorted:hover {
-  color: var(--primary);
-}
+.sorted { cursor: pointer; user-select: none; }
+.sorted:hover { color: var(--primary); }
 </style>
