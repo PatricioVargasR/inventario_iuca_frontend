@@ -325,6 +325,8 @@ import LockWarningBanner from '@/components/ui/LockWarningBanner.vue'
 import TableActions from '@/components/ui/TableActions.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
+import { useSpecsEditor } from '@/composables/useSpecsEditor'
+import { SPECS_MAP } from '@/constants/equiposMap'
 
 // ── Composables base ─────────────────────────────────────────────
 const { catalogos, loadCatalogos } = useCatalogos()
@@ -336,6 +338,8 @@ const { formErrors, clearErrors, setError } = useFormErrors()
 const authStore = useAuthStore()
 const { toast } = useToast()
 const currentUserId = computed(() => authStore.user?.id_acceso)
+
+
 
 // ── Estado local ─────────────────────────────────────────────────
 const equipos = ref([])
@@ -351,6 +355,25 @@ const form = reactive({
   observaciones: '', especificaciones: [],
   version: null
 })
+
+const specSuggestions = computed(() => {
+  const tipo = catalogos.tipos.find(t => t.id_tipo_activo === form.tipo_activo_id)
+  if (!tipo) return SPECS_MAP['default']
+  const key = tipo.nombre_tipo.toLowerCase()
+  const match = Object.keys(SPECS_MAP).find(k => key.includes(k))
+  return SPECS_MAP[match] || SPECS_MAP['default']
+})
+
+
+const {
+  activeSuggestionIndex,
+  openSuggestions,
+  closeSuggestions,
+  applySuggestion,
+  filteredSuggestions,
+  addSpec,
+  removeSpec
+} = useSpecsEditor(form, specErrors, specSuggestions)
 
 // ── useCrud ──────────────────────────────────────────────────────
 const {
@@ -547,80 +570,8 @@ function validateForm() {
   return valid
 }
 
-// ── Specs ────────────────────────────────────────────────────────
-const SPECS_MAP = {
-  'pc': [
-    { nombre: 'Procesador', placeholder: 'Ej: Intel Core i7-12700, 3.6GHz' },
-    { nombre: 'Núcleos', placeholder: 'Ej: 8' },
-    { nombre: 'Memoria RAM', placeholder: 'Ej: 16 GB' },
-    { nombre: 'Disco Duro (HDD)', placeholder: 'Ej: 1 TB' },
-    { nombre: 'SSD', placeholder: 'Ej: 500 GB' },
-    { nombre: 'Tarjeta de Video', placeholder: 'Ej: NVIDIA Quadro P1000' },
-    { nombre: 'VRAM', placeholder: 'Ej: 4 GB' },
-    { nombre: 'Sistema Operativo', placeholder: 'Ej: Windows 10 Pro 64 bits' },
-  ],
-  'laptop': [
-    { nombre: 'Procesador', placeholder: 'Ej: Intel Core i7-4810MQ, 2.7GHz' },
-    { nombre: 'Memoria RAM', placeholder: 'Ej: 32 GB' },
-    { nombre: 'SSD', placeholder: 'Ej: 446 GB' },
-    { nombre: 'Disco Duro (HDD)', placeholder: 'Ej: 500 GB' },
-    { nombre: 'Tarjeta de Video', placeholder: 'Ej: NVIDIA Quadro K2100M' },
-    { nombre: 'Sistema Operativo', placeholder: 'Ej: Windows 10 Enterprise 64 bits' },
-    { nombre: 'Pantalla', placeholder: 'Ej: 15.6" FHD' },
-  ],
-  'monitor': [
-    { nombre: 'Tamaño', placeholder: 'Ej: 24"' },
-    { nombre: 'Resolución', placeholder: 'Ej: 1920x1080' },
-    { nombre: 'Panel', placeholder: 'Ej: IPS, TN, VA' },
-    { nombre: 'Frecuencia', placeholder: 'Ej: 144 Hz' },
-    { nombre: 'Tipo de conexión', placeholder: 'Ej: HDMI, DisplayPort' },
-  ],
-  'impresora': [
-    { nombre: 'Tipo', placeholder: 'Ej: Láser, Inyección de tinta' },
-    { nombre: 'Tecnología', placeholder: 'Ej: Monocromática, Color' },
-    { nombre: 'Conectividad', placeholder: 'Ej: USB, WiFi, Red' },
-    { nombre: 'Velocidad', placeholder: 'Ej: 30 ppm' },
-  ],
-  'teléfono': [
-    { nombre: 'Memoria RAM', placeholder: 'Ej: 3 GB' },
-    { nombre: 'Almacenamiento', placeholder: 'Ej: 64 GB' },
-    { nombre: 'Sistema Operativo', placeholder: 'Ej: Android 11' },
-    { nombre: 'IMEI', placeholder: 'Ej: 867166067556000' },
-  ],
-  'default': [
-    { nombre: 'Procesador', placeholder: 'Ej: Intel Core i7' },
-    { nombre: 'Memoria RAM', placeholder: 'Ej: 16 GB' },
-    { nombre: 'Almacenamiento', placeholder: 'Ej: 500 GB' },
-    { nombre: 'Sistema Operativo', placeholder: 'Ej: Windows 10' },
-  ]
-}
 
-const specSuggestions = computed(() => {
-  const tipo = catalogos.tipos.find(t => t.id_tipo_activo === form.tipo_activo_id)
-  if (!tipo) return SPECS_MAP['default']
-  const key = tipo.nombre_tipo.toLowerCase()
-  const match = Object.keys(SPECS_MAP).find(k => key.includes(k))
-  return SPECS_MAP[match] || SPECS_MAP['default']
-})
 
-const activeSuggestionIndex = ref(null)
-function openSuggestions(i) { activeSuggestionIndex.value = i }
-function closeSuggestions() { setTimeout(() => { activeSuggestionIndex.value = null }, 150) }
-function applySuggestion(i, sugerencia) {
-  form.especificaciones[i].nombre_especificacion = sugerencia.nombre
-  form.especificaciones[i]._placeholder = sugerencia.placeholder
-  activeSuggestionIndex.value = null
-  nextTick(() => {
-    const inputs = document.querySelectorAll(`.spec-row-${i} .spec-value-input`)
-    if (inputs[0]) inputs[0].focus()
-  })
-}
-function filteredSuggestions(i) {
-  const texto = (form.especificaciones[i].nombre_especificacion || '').toLowerCase()
-  return specSuggestions.value.filter(s => s.nombre.toLowerCase().includes(texto))
-}
-function addSpec() { form.especificaciones.push({ nombre_especificacion: '', valor_especificacion: '' }) }
-function removeSpec(i) { form.especificaciones.splice(i, 1); delete specErrors[i] }
 
 // ── Datos ────────────────────────────────────────────────────────
 async function loadData() {
