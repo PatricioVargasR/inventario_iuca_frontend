@@ -14,17 +14,21 @@
           <label>Búsqueda General</label>
           <div class="input-with-icon">
             <svg class="input-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input v-model="filters.search" class="form-input" placeholder="Usuario, equipo, descripción..." @input="onSearch" />
+            <input v-model="filters.search" class="form-input" placeholder="Buscar por usuario o ID de registro" @input="onSearch" />
           </div>
         </div>
         <div class="filter-group">
           <label>Tipo de registro</label>
           <select v-model="filters.tipo_registro" class="form-select" @change="loadData">
-            <option value="">Todos</option>
-            <option value="acceso">Acceso</option>
-            <option value="computo">Equipo</option>
+            <option value="">Todos los registros</option>
+            <option value="computo">Equipos de cómputo</option>
             <option value="mobiliario">Mobiliario</option>
-            <option value="usuario">Usuario</option>
+            <option value="usuario">Responsables</option>
+            <option value="acceso">Accesos</option>
+            <option value="cat_areas">Áreas</option>
+            <option value="cat_estados">Estados</option>
+            <option value="cat_tipos_activo">Tipos de activo</option>
+            <option value="cat_tipos_mobiliario">Tipos de mobiliario</option>
           </select>
         </div>
         <div class="filter-group">
@@ -99,7 +103,7 @@
             >
               <td>
                 <span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">
-                  {{ item.index }}
+                  {{ item.id_historial }}
                 </span>
               </td>
               <td>
