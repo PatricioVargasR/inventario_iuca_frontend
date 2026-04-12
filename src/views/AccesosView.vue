@@ -42,7 +42,7 @@
       <div class="filter-chips-section">
         <label class="filter-label">Módulos</label>
         <div class="chips-group">
-          <label v-for="(value, key) in modulos_disponibles" :key="key" class="chip-checkbox">
+          <label v-for="(value, key) in MODULOS_DISPONIBLES" :key="key" class="chip-checkbox">
             <input type="checkbox" :value="key" v-model="filters.modulos" @change="onModuloChange" />
             <span class="chip-text">{{ value }}</span>
           </label>
@@ -57,7 +57,7 @@
         </label>
         <div class="chips-group">
           <label
-            v-for="(value, key) in permisos_disponibles"
+            v-for="(value, key) in PERMISOS_DISPONIBLES"
             :key="key"
             class="chip-checkbox"
             :class="{ disabled: filters.modulos.length === 0 }"
@@ -153,7 +153,7 @@
           <thead><tr><th>Módulo</th><th>Leer</th><th>Crear</th><th>Editar</th><th>Eliminar</th></tr></thead>
           <tbody>
             <tr
-              v-for="p in [...selected.permisos].sort((a, b) => a.modulo.localeCompare(b.modulo))"
+              v-for="p in [...permisosDetalleComoArray(selected.permisos)].sort((a, b) => a.modulo.localeCompare(b.modulo))"
               :key="p.modulo"
             >
               <td><span style="text-transform: capitalize;">{{ p.modulo }}</span></td>
@@ -343,6 +343,8 @@ import TableActions from '@/components/ui/TableActions.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 import { formatDate } from '@/utils/formatters'
+import { MODULOS_DISPONIBLES, PERMISOS_DISPONIBLES, DEFAULT_PERMISOS, NOMBRES_MODULOS } from '@/constants/accesos'
+import { usePermisos } from '@/composables/usePermisos'
 
 const authStore = useAuthStore()
 const { toast } = useToast()
@@ -403,7 +405,6 @@ const {
   toast
 })
 
-
 // populate reutilizable
 function populateForm(d) {
   Object.assign(form, {
@@ -415,7 +416,7 @@ function populateForm(d) {
     confirm_password:  '',
     permisos:          d.permisos
                          ? JSON.parse(JSON.stringify(d.permisos))
-                         : JSON.parse(JSON.stringify(defaultPermisos)),
+                         : JSON.parse(JSON.stringify(DEFAULT_PERMISOS)),
     version:           d.version
   })
 }
@@ -430,9 +431,10 @@ function openCreate() {
       password: '',
       confirm_password: '',
       area_id: '',
-      permisos: JSON.parse(JSON.stringify(defaultPermisos)),
+      permisos: JSON.parse(JSON.stringify(DEFAULT_PERMISOS)),
       version: null
-    })
+    }),
+    resetPermisos()
   })
 }
 
@@ -454,56 +456,59 @@ function validateForm() {
   let valid = true
 
   if (!form.nombre_usuario?.trim()) {
-    formErrors.nombre_usuario = '"Nombre completo" es obligatorio'
+    setError('nombre_usuario', '"Nombre completo" es obligatorio')
     valid = false
   } else if (form.nombre_usuario.trim().length > 100) {
-    formErrors.nombre_usuario = 'El nombre no puede superar 100 caracteres'
+    setError('nombre_usuario', 'El nombre no puede superar 100 caracteres')
     valid = false
   }
 
   if (!editMode.value) {
     if (!form.correo_electronico?.trim()) {
-      formErrors.correo_electronico = '"Correo electrónico" es obligatorio'
+      setError('correo_electronico', '"Correo electrónico", es obligatorio')
       valid = false
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.correo_electronico)) {
-      formErrors.correo_electronico = 'El correo electrónico no tiene un formato válido'
+      setError('correo_electronico', 'El correo electrónico no tienen un formato válido')
       valid = false
     }
   }
 
   if (!form.area_id) {
+    setError('area_id', '"Área asignada" es obligatoria')
     formErrors.area_id = '"Área asignada" es obligatoria'
     valid = false
   }
 
   if (!editMode.value) {
     if (!form.password) {
-      formErrors.password = '"Contraseña" es obligatoria'
+      setError('password', '"Contraseña" es obligatoria')
       valid = false
     } else if (form.password.length !== 10) {
+      setError('password', 'La contraseña debe tener exactamente 10 caracteres')
       formErrors.password = 'La contraseña debe tener exactamente 10 caracteres'
       valid = false
     }
 
     if (!form.confirm_password) {
+      setError('confirm_password', 'Debes confirmar la contraseña')
       formErrors.confirm_password = 'Debes confirmar la contraseña'
       valid = false
     } else if (form.password && form.password !== form.confirm_password) {
-      formErrors.confirm_password = 'Las contraseñas no coinciden'
+      setError('confirm_password', 'Las contraseñas no coinciden')
       valid = false
     }
   } else {
     // En edición, la contraseña es opcional pero si se llena se valida
     if (form.password) {
       if (form.password.length !== 10) {
-        formErrors.password = 'La contraseña debe tener exactamente 10 caracteres'
+        setError('password', 'La contraseña debe tener exactamente 10 caracters')
         valid = false
       }
       if (!form.confirm_password) {
-        formErrors.confirm_password = 'Debes confirmar la nueva contraseña'
+        setError('confirm_password', 'Debes confirmar la nueva contraseña')
         valid = false
       } else if (form.password !== form.confirm_password) {
-        formErrors.confirm_password = 'Las contraseñas no coinciden'
+        setError('confirm_password', 'las contraseñas no coinciden')
         valid = false
       }
     }
@@ -512,31 +517,6 @@ function validateForm() {
   return valid
 }
 
-const modulos_disponibles = {
-  'acceso':      'Acceso',
-  'catalogos':   'Catálogos',
-  'computo':     'Cómputo',
-  'historial':   'Historial',
-  'mobiliario':  'Mobiliario',
-  'responsable': 'Responsable',
-}
-
-const permisos_disponibles = {
-  'puede_actualizar': 'Actualizar',
-  'puede_crear':      'Crear',
-  'puede_eliminar':   'Eliminar',
-  'puede_leer':       'Leer',
-}
-
-const defaultPermisos = [
-  { modulo: 'acceso',      puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
-  { modulo: 'catalogos',   puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
-  { modulo: 'computo',     puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
-  { modulo: 'historial',   puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
-  { modulo: 'mobiliario',  puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
-  { modulo: 'responsable', puede_leer: false, puede_crear: false, puede_actualizar: false, puede_eliminar: false },
-]
-
 const form = reactive({
   _id: null,
   nombre_usuario: '',
@@ -544,54 +524,19 @@ const form = reactive({
   password: '',
   confirm_password: '',
   area_id: '',
-  permisos: JSON.parse(JSON.stringify(defaultPermisos)),
+  permisos: JSON.parse(JSON.stringify(DEFAULT_PERMISOS)),
   version: null
 })
 
-const DEPENDEN_DE_LEER = ['puede_crear', 'puede_actualizar', 'puede_eliminar']
-
-function togglePermiso(p, campo) {
-  const nuevoValor = !p[campo]
-  p[campo] = nuevoValor
-
-  if (nuevoValor && DEPENDEN_DE_LEER.includes(campo) && !p.puede_leer) {
-    p.puede_leer = true
-  }
-
-  if (!nuevoValor && campo === 'puede_leer') {
-    p.puede_crear = false
-    p.puede_actualizar = false
-    p.puede_eliminar = false
-  }
-}
-
-function permisosComoArray() {
-  if (Array.isArray(form.permisos)) return form.permisos
-  return Object.values(form.permisos)
-}
-
-const todosSeleccionados = computed(() =>
-  permisosComoArray().every(p =>
-    p.puede_leer && p.puede_crear && p.puede_actualizar && p.puede_eliminar
-  )
-)
-
-const algunosSeleccionados = computed(() =>
-  !todosSeleccionados.value &&
-  permisosComoArray().some(p =>
-    p.puede_leer || p.puede_crear || p.puede_actualizar || p.puede_eliminar
-  )
-)
-
-function toggleTodos() {
-  const activar = !todosSeleccionados.value
-  permisosComoArray().forEach(p => {
-    p.puede_leer       = activar
-    p.puede_crear      = activar
-    p.puede_actualizar = activar
-    p.puede_eliminar   = activar
-  })
-}
+const {
+  permisosComoArray,
+  permisosDetalleComoArray,
+  togglePermiso,
+  todosSeleccionados,
+  algunosSeleccionados,
+  toggleTodos,
+  resetPermisos
+} = usePermisos(form)
 
 async function loadData() {
   loading.value = true
@@ -638,11 +583,7 @@ async function saveItem() {
 }
 
 function formatModuloNombre(modulo) {
-  const nombres = {
-    'computo': 'Cómputo', 'mobiliario': 'Mobiliario', 'responsable': 'Responsables',
-    'catalogos': 'Catálogos', 'historial': 'Historial', 'acceso': 'Accesos'
-  }
-  return nombres[modulo] || modulo
+  return NOMBRES_MODULOS[modulo] || modulo
 }
 
 async function handleDoDelete() {

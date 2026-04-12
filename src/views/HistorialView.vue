@@ -278,7 +278,7 @@ const grouped = computed(() => {
 async function loadData() {
   loading.value = true
   try {
-    let params = { page: page.value, per_page: perPage }
+    let params = { ...filters, page: page.value, per_page: perPage }
     params = applySortToParams(params)
     const res = await vistasApi.listHistoriales(params)
     items.value    = res.data.movimientos || []
