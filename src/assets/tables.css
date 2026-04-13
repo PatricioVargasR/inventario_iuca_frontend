@@ -138,3 +138,71 @@
     padding: 18px 20px;
   }
 }
+/* ── NOTA: reemplaza los selectores .sorted existentes en tables.css ──────── */
+/* Puedes pegar este bloque al final del archivo y borrar el .sorted anterior  */
+
+.data-table th.sorted {
+  cursor: pointer;
+  user-select: none;
+}
+
+.data-table th.sorted:hover {
+  color: var(--gray-800);
+}
+
+/* Envuelve el texto del header + el icono */
+.sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Contenedor de las dos flechitas apiladas */
+.sort-icon {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 1.5px;
+  flex-shrink: 0;
+  opacity: 0.35;
+  transition: opacity 0.15s;
+}
+
+/* Estado neutro: ambas flechas visibles y tenues */
+.data-table th.sorted:hover .sort-icon {
+  opacity: 0.6;
+}
+
+/* Estado activo: el icono se vuelve completamente visible */
+.sort-icon.asc,
+.sort-icon.desc {
+  opacity: 1;
+  color: var(--primary);
+}
+
+/* Triángulo hacia arriba */
+.arr-up {
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 3.5px solid transparent;
+  border-right: 3.5px solid transparent;
+  border-bottom: 4px solid currentColor;
+}
+
+/* Triángulo hacia abajo */
+.arr-down {
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 3.5px solid transparent;
+  border-right: 3.5px solid transparent;
+  border-top: 4px solid currentColor;
+}
+
+/* Cuando ordena asc: flecha de arriba activa, abajo apagada */
+.sort-icon.asc .arr-up  { opacity: 1; }
+.sort-icon.asc .arr-down { opacity: 0.25; }
+
+/* Cuando ordena desc: flecha de abajo activa, arriba apagada */
+.sort-icon.desc .arr-down { opacity: 1; }
+.sort-icon.desc .arr-up   { opacity: 0.25; }

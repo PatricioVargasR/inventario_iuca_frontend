@@ -1,10 +1,3 @@
-/**
- * Mapeo de nombres técnicos de campos (snake_case, title-case del backend,
- * y variantes con/sin tildes) a nombres legibles en español.
- *
- * El backend a veces envía campo.replace('_',' ').title(), por eso hay entradas
- * duplicadas como 'numero_serie' y 'numero serie'.
- */
 export const CAMPOS_LEGIBLES = {
   // ── IDs ──────────────────────────────────────────────────────────
   'id_activo':             'ID del elemento',
@@ -17,6 +10,8 @@ export const CAMPOS_LEGIBLES = {
   'id_tipo_mobiliario':    'ID del tipo de mobiliario',
   'id_especificacion':     'ID de especificación',
   'id_permiso':            'ID del permiso',
+  'id_equipo_responsable': 'ID de asignación',
+  'id_mueble_responsable': 'ID de asignación',
   // variantes title-case del backend
   'id activo':             'ID del elemento',
   'id mueble':             'ID del elemento',
@@ -28,6 +23,8 @@ export const CAMPOS_LEGIBLES = {
   'id tipo mobiliario':    'ID del tipo de mobiliario',
   'id especificacion':     'ID de especificación',
   'id permiso':            'ID del permiso',
+  'id equipo responsable': 'ID de asignación',
+  'id mueble responsable': 'ID de asignación',
 
   // ── Claves foráneas ───────────────────────────────────────────────
   'area_id':               'Área',
@@ -36,7 +33,10 @@ export const CAMPOS_LEGIBLES = {
   'tipo_mobiliario_id':    'Tipo de mobiliario',
   'usuario_asignado_id':   'Responsable asignado',
   'acceso_id':             'ID de acceso',
-  'equipo_id':             'ID del equipo',
+  'equipo_id':             'Equipo',
+  'mueble_id':             'Mueble',
+  'usuario_id':            'Responsable',
+  'fecha_asignacion':      'Fecha de asignación',
   // variantes title-case
   'area id':               'Área',
   'estado id':             'Estado',
@@ -44,7 +44,10 @@ export const CAMPOS_LEGIBLES = {
   'tipo mobiliario id':    'Tipo de mobiliario',
   'usuario asignado id':   'Responsable asignado',
   'acceso id':             'ID de acceso',
-  'equipo id':             'ID del equipo',
+  'equipo id':             'Equipo',
+  'mueble id':             'Mueble',
+  'usuario id':            'Responsable',
+  'fecha asignacion':      'Fecha de asignación',
 
   // ── Equipos de cómputo ────────────────────────────────────────────
   'nombre_activo':         'Nombre del activo',
@@ -62,8 +65,6 @@ export const CAMPOS_LEGIBLES = {
   // ── Mobiliario ────────────────────────────────────────────────────
   'caracteristicas':       'Características',
   'color':                 'Color',
-  'fecha_asignacion':      'Fecha de asignación',
-  'fecha asignacion':      'Fecha de asignación',
 
   // ── Usuarios / responsables ───────────────────────────────────────
   'nombre_usuario':        'Nombre del usuario',
@@ -147,6 +148,8 @@ export const NOMBRES_TABLAS = {
   'cat_tipos_mobiliario':    'Tipo de mobiliario',
   'especificaciones_equipo': 'Especificación de equipo',
   'permisos':                'Permiso',
+  'equipos_responsables':    'Asignación de responsable (equipo)',
+  'mobiliario_responsables': 'Asignación de responsable (mueble)',
 }
 
 /**
