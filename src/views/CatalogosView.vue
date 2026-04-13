@@ -60,24 +60,59 @@
 
     <!-- Tabla -->
     <div class="table-wrapper">
-      <div v-if="loading" style="text-align:center;padding:48px;">
-        <span class="spinner" style="width:24px;height:24px;"></span>
-      </div>
-
-      <table v-else class="data-table">
+      <table class="data-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Nombre</th>
+            <th @click="toggleSort('id')" class="sorted">
+              <span class="sort-btn">
+                ID
+                <span class="sort-icon" :class="getSortClass('id')">
+                  <span class="arr-up"></span>
+                  <span class="arr-down"></span>
+                </span>
+              </span>
+            </th>
+            <th @click="toggleSort('nombre')" class="sorted">
+              <span class="sort-btn">
+                Nombre
+                <span class="sort-icon" :class="getSortClass('nombre')">
+                  <span class="arr-up"></span>
+                  <span class="arr-down"></span>
+                </span>
+              </span>
+            </th>
             <th>Descripción</th>
             <th v-if="activeTab === 'estado'">Color</th>
-            <th>Estado</th>
-            <th>Creado</th>
+            <th @click="toggleSort('activo')" class="sorted">
+              <span class="sort-btn">
+                Estado
+                <span class="sort-icon" :class="getSortClass('activo')">
+                  <span class="arr-up"></span>
+                  <span class="arr-down"></span>
+                </span>
+              </span>
+            </th>
+            <th @click="toggleSort('fecha_creacion')" class="sorted">
+              <span class="sort-btn">
+                Creado
+                <span class="sort-icon" :class="getSortClass('fecha_creacion')">
+                  <span class="arr-up"></span>
+                  <span class="arr-down"></span>
+                </span>
+              </span>
+            </th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-if="!itemsFiltrados.length">
+          <!-- Loading state -->
+          <tr v-if="loading" class="loading-row">
+            <td :colspan="activeTab === 'estado' ? 7 : 6">
+              <span class="spinner"></span>
+            </td>
+          </tr>
+          <!-- Empty state -->
+          <tr v-else-if="!itemsFiltrados.length">
             <td :colspan="activeTab === 'estado' ? 7 : 6">
               <div class="empty-state">
                 <div class="empty-icon">📋</div>
@@ -85,49 +120,52 @@
               </div>
             </td>
           </tr>
-          <tr v-else v-for="item in itemsPaginados" :key="getItemId(item)">
-            <td>
-              <span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">
-                {{ getItemId(item) }}
-              </span>
-            </td>
-            <td style="font-weight:700;color:var(--gray-900)">{{ getItemNombre(item) }}</td>
-            <td style="color:var(--gray-500);font-size:13px;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-              {{ item.descripcion || '–' }}
-            </td>
-            <td v-if="activeTab === 'estado'">
-              <div style="display:flex;align-items:center;gap:8px;">
-                <span
-                  style="width:14px;height:14px;border-radius:50%;display:inline-block;border:1px solid var(--border);"
-                  :style="{ background: item.color_hex || '#ccc' }"
-                ></span>
+          <!-- Data rows -->
+          <template v-else>
+            <tr v-for="item in itemsPaginados" :key="getItemId(item)">
+              <td>
                 <span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">
-                  {{ item.color_hex || '–' }}
+                  {{ getItemId(item) }}
                 </span>
-              </div>
-            </td>
-            <td>
-              <span class="badge" :class="item.activo ? 'badge-success' : 'badge-danger'">
-                {{ item.activo ? 'Activo' : 'Inactivo' }}
-              </span>
-            </td>
-            <td style="font-size:12px;color:var(--gray-400);font-family:var(--font-mono)">
-              {{ formatDate(item.fecha_creacion) }}
-            </td>
-            <td>
-              <div class="actions-cell">
-                <button class="action-btn view" @click="openDetail(activeTab, item)" title="Ver detalle">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                </button>
-                <button v-if="authStore.canDo('catalogos', 'puede_actualizar')" class="action-btn edit" @click="openEdit(activeTab, item)" title="Editar">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                </button>
-                <button v-if="authStore.canDo('catalogos', 'puede_eliminar')" class="action-btn delete" @click="confirmDelete(activeTab, item)" title="Eliminar">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                </button>
-              </div>
-            </td>
-          </tr>
+              </td>
+              <td style="font-weight:700;color:var(--gray-900)">{{ getItemNombre(item) }}</td>
+              <td style="color:var(--gray-500);font-size:13px;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                {{ item.descripcion || '–' }}
+              </td>
+              <td v-if="activeTab === 'estado'">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span
+                    style="width:14px;height:14px;border-radius:50%;display:inline-block;border:1px solid var(--border);"
+                    :style="{ background: item.color_hex || '#ccc' }"
+                  ></span>
+                  <span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">
+                    {{ item.color_hex || '–' }}
+                  </span>
+                </div>
+              </td>
+              <td>
+                <span class="badge" :class="item.activo ? 'badge-success' : 'badge-danger'">
+                  {{ item.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td style="font-size:12px;color:var(--gray-400);font-family:var(--font-mono)">
+                {{ formatDate(item.fecha_creacion) }}
+              </td>
+              <td>
+                <div class="actions-cell">
+                  <button class="action-btn view" @click="openDetail(activeTab, item)" title="Ver detalle">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                  <button v-if="authStore.canDo('catalogos', 'puede_actualizar')" class="action-btn edit" @click="openEdit(activeTab, item)" title="Editar">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button v-if="authStore.canDo('catalogos', 'puede_eliminar')" class="action-btn delete" @click="confirmDelete(activeTab, item)" title="Eliminar">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </template>
         </tbody>
       </table>
 
@@ -150,11 +188,11 @@
       size="md"
       @update:model-value="handleFormClose"
     >
-      <form id="catalogoForm" @submit.prevent="saveItem" class="form-grid" novalidate>
+      <form id="catalogoForm" @submit.prevent="saveItem" novalidate>
 
         <!-- Selector de tipo solo al crear -->
-        <div v-if="!editMode" class="form-group span-full">
-          <label class="form-label">Tipo de catálogo <span class="required">*</span></label>
+        <div v-if="!editMode">
+          <div class="section-title" style="margin-top:0;">Tipo de catálogo</div>
           <div class="catalog-type-selector">
             <button
               v-for="tab in tabs"
@@ -169,27 +207,30 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Nombre <span class="required">*</span></label>
-          <input
-            v-model="form.nombre"
-            class="form-input"
-            :class="{ 'input-error': formErrors.nombre }"
-            :placeholder="tipoActual.placeholder"
-            maxlength="50"
-          />
-          <span v-if="formErrors.nombre" class="field-error">{{ formErrors.nombre }}</span>
+        <div class="section-title" :style="editMode ? 'margin-top:0;' : ''">Información</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Nombre <span class="required">*</span></label>
+            <input
+              v-model="form.nombre"
+              class="form-input"
+              :class="{ 'input-error': formErrors.nombre }"
+              :placeholder="tipoActual.placeholder"
+              maxlength="50"
+            />
+            <span v-if="formErrors.nombre" class="field-error">{{ formErrors.nombre }}</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Estado <span class="required">*</span></label>
+            <select v-model="form.estado_catalogo" class="form-select">
+              <option value="activo">Activo</option>
+              <option value="inactivo">Inactivo</option>
+            </select>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Estado <span class="required">*</span></label>
-          <select v-model="form.estado_catalogo" class="form-select">
-            <option value="activo">Activo</option>
-            <option value="inactivo">Inactivo</option>
-          </select>
-        </div>
-
-        <div v-if="(editMode && activeTab === 'estado') || (!editMode && formTab === 'estado')" class="form-group span-full">
+        <div v-if="(editMode && activeTab === 'estado') || (!editMode && formTab === 'estado')" class="form-group" style="margin-top:4px;">
           <label class="form-label">Color <span class="required">*</span></label>
           <div style="display:flex;gap:10px;align-items:center;">
             <input
@@ -207,8 +248,8 @@
           <small style="color:var(--gray-400);font-size:11px;">Puedes elegir el color o escribir el código HEX manualmente.</small>
         </div>
 
-        <div class="form-group span-full">
-          <label class="form-label">Descripción</label>
+        <div class="section-title">Descripción</div>
+        <div class="form-group">
           <textarea
             v-model="form.descripcion"
             class="form-textarea"
@@ -231,6 +272,7 @@
     <!-- Detail Modal -->
     <BaseModal v-model="showDetail" :title="`Detalles — ${tabActual.labelSingular}`" size="sm">
       <template v-if="selected">
+        <div class="section-title" style="margin-top:0;">Información general</div>
         <div class="detail-grid">
           <div class="detail-item">
             <label>ID</label>
@@ -253,10 +295,15 @@
               <strong style="font-family:var(--font-mono)">{{ selected.color_hex }}</strong>
             </div>
           </div>
-          <div class="detail-item span-full">
-            <label>Descripción</label>
-            <strong>{{ selected.descripcion || 'Sin descripción' }}</strong>
-          </div>
+        </div>
+
+        <div v-if="selected.descripcion">
+          <div class="section-title">Descripción</div>
+          <div class="obs-box" style="font-size:13.5px;color:var(--gray-700)">{{ selected.descripcion }}</div>
+        </div>
+
+        <div class="section-title">Auditoría</div>
+        <div class="detail-grid">
           <div class="detail-item">
             <label>Fecha de creación</label>
             <strong>{{ formatDate(selected.fecha_creacion) }}</strong>
@@ -304,6 +351,25 @@ import { usePagination } from '@/composables/usePagination'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import { formatDateShort as formatDate } from '@/utils/formatters'
 
+// ── Sort local para catálogos ────────────────────────────────────
+const sortField = ref('')
+const sortDir   = ref('asc')
+
+function toggleSort(field) {
+  if (sortField.value === field) {
+    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortField.value = field
+    sortDir.value   = 'asc'
+  }
+}
+
+function getSortClass(field) {
+  if (sortField.value !== field) return ''
+  return sortDir.value
+}
+
+// ── Pagination ───────────────────────────────────────────────────
 const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
 const { formErrors, clearErrors, applyFieldErrors, setError } = useFormErrors()
 const authStore = useAuthStore()
@@ -374,7 +440,6 @@ function validateForm() {
     setError('nombre', '"Nombre" es obligatorio')
     valid = false
   } else {
-    // Límites según tipo: área/estado/tipos → 50 chars (nombre_area, nombre_estado); tipos → 30
     const maxLen = (tipo === 'tipo_activo' || tipo === 'tipo_mobiliario') ? 30 : 50
     if (form.nombre.trim().length > maxLen) {
       setError('nombre', `"Nombre" no puede superar ${maxLen} caracteres`)
@@ -396,11 +461,40 @@ function validateForm() {
 }
 
 // ── Computeds ────────────────────────────────────────────────────
-const tabActual   = computed(() => tabs.find(t => t.key === activeTab.value))
-const tipoActual  = computed(() => tabs.find(t => t.key === (editMode.value ? activeTab.value : formTab.value)))
+const tabActual  = computed(() => tabs.find(t => t.key === activeTab.value))
+const tipoActual = computed(() => tabs.find(t => t.key === (editMode.value ? activeTab.value : formTab.value)))
 
-const itemsFiltrados = computed(() => items.value)
-const itemsPaginados = computed(() => items.value)
+// Ordenamiento local sobre los items ya cargados
+const itemsFiltrados = computed(() => {
+  if (!sortField.value) return items.value
+
+  return [...items.value].sort((a, b) => {
+    let valA, valB
+
+    if (sortField.value === 'id') {
+      valA = getItemId(a)
+      valB = getItemId(b)
+    } else if (sortField.value === 'nombre') {
+      valA = (getItemNombre(a) || '').toLowerCase()
+      valB = (getItemNombre(b) || '').toLowerCase()
+    } else if (sortField.value === 'activo') {
+      valA = a.activo ? 1 : 0
+      valB = b.activo ? 1 : 0
+    } else if (sortField.value === 'fecha_creacion') {
+      valA = a.fecha_creacion || ''
+      valB = b.fecha_creacion || ''
+    } else {
+      valA = a[sortField.value]
+      valB = b[sortField.value]
+    }
+
+    if (valA < valB) return sortDir.value === 'asc' ? -1 : 1
+    if (valA > valB) return sortDir.value === 'asc' ? 1 : -1
+    return 0
+  })
+})
+
+const itemsPaginados = computed(() => itemsFiltrados.value)
 
 // ── Helpers ──────────────────────────────────────────────────────
 function getItemId(item) {
@@ -427,7 +521,7 @@ async function loadTab(resetPage = false) {
     }
 
     const key = DATA_KEY[activeTab.value]
-    items.value      = res.data[key] || []
+    items.value = res.data[key] || []
     setMeta(res.data)
     if (!search.value) {
       tabCounts[activeTab.value] = res.data.total || 0
@@ -462,9 +556,10 @@ function switchTab(key) {
   activeTab.value = key
   search.value    = ''
   page.value      = 1
+  sortField.value = ''
+  sortDir.value   = 'asc'
   loadTab()
 }
-
 
 // ── CRUD ─────────────────────────────────────────────────────────
 function openCreate() {
@@ -727,12 +822,9 @@ onMounted(async () => {
   gap: 2px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: none;
 }
-
-.tabs-bar::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
-}
+.tabs-bar::-webkit-scrollbar { display: none; }
 
 .tab-btn {
   display: inline-flex;
@@ -749,8 +841,8 @@ onMounted(async () => {
   cursor: pointer;
   transition: all 0.15s;
   margin-bottom: -1px;
-  white-space: nowrap; /* evita que el texto se parta */
-  flex-shrink: 0;      /* evita que los tabs se encojan */
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .tab-btn:hover  { color: var(--gray-800); }
 .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
@@ -779,6 +871,7 @@ onMounted(async () => {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  margin-bottom: 4px;
 }
 
 .catalog-type-btn {
@@ -809,4 +902,10 @@ onMounted(async () => {
   align-items: flex-end;
   flex-wrap: wrap;
 }
+
+.sorted {
+  cursor: pointer;
+  user-select: none;
+}
+.sorted:hover { color: var(--gray-800); }
 </style>
