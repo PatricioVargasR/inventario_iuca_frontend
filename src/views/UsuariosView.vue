@@ -40,10 +40,22 @@
         <thead>
           <tr>
             <th @click="toggleSort('id_usuario')" class="sorted">
-              ID <span>{{ getSortIcon('id_usuario') }}</span>
+              <span class="sort-btn">
+                ID
+                <span class="sort-icon" :class="getSortClass('id_usuario')">
+                  <span class="arr-up"></span>
+                  <span class="arr-down"></span>
+                </span>
+              </span>
             </th>
             <th @click="toggleSort('nombre_usuario')" class="sorted">
-              Nombre <span>{{ getSortIcon('nombre_usuario') }}</span>
+              <span class="sort-btn">
+                Nombre
+                <span class="sort-icon" :class="getSortClass('nombre_usuario')">
+                  <span class="arr-up"></span>
+                  <span class="arr-down"></span>
+                </span>
+              </span>
             </th>
             <th>Nómina</th>
             <th>Puesto</th>
@@ -232,7 +244,7 @@ import PageHeader from '@/components/ui/PageHeader.vue'
 import EmptyState from '@/components/ui/EmptyState.vue'
 
 const { catalogos, loadCatalogos } = useCatalogos()
-const { getSortIcon, toggleSort, applySortToParams } = useSort({
+const { getSortClass, toggleSort, applySortToParams } = useSort({
   onChange: loadData
 })
 const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()

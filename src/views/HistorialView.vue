@@ -74,8 +74,24 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th @click="toggleSort('id_historial')" class="sorted">ID {{ getSortIcon('id_historial') }}</th>
-            <th @click="toggleSort('operacion')" class="sorted">Movimiento {{ getSortIcon('operacoin') }}</th>
+            <th @click="toggleSort('id_historial')" class="sorted">
+              <span class="sort-btn">
+                ID
+                <span class="sort-icon" :class="getSortClass('id_historial')">
+                  <span class="arr-up"></span>
+                  <span class="arr-down"></span>
+                </span>
+              </span>
+            </th>
+            <th @click="toggleSort('operacion')" class="sorted">
+              <span class="sort-btn">
+                Movimiento
+                <span class="sort-icon" :class="getSortClass('operacion')">
+                  <span class="arr-up"></span>
+                  <span class="arr-down"></span>
+                </span>
+              </span>
+            </th>
             <th>Descripción</th>
             <th>Registro</th>
             <th>Usuario</th>
@@ -89,8 +105,14 @@
             <tr class="date-separator-row">
               <td colspan="7">
                 <div class="date-separator sorted" @click="toggleSort('fecha')">
-                  <span class="date-label">{{ group.dateLabel }}</span>
-                  <span class="date-count">{{ group.items.length }} movimiento{{ group.items.length !== 1 ? 's' : '' }} {{ getSortIcon('fecha') }}</span>
+                  <span class="date-label">{{ group.dateLabel }} </span>
+                  <span class="date-count short-icon">
+                    {{ group.items.length }} movimiento{{ group.items.length !== 1 ? 's' : '' }}
+                    <span class="sort-icon" :class="getSortClass('operacion')">
+                      <span class="arr-up"></span>
+                      <span class="arr-down"></span>
+                    </span>
+                  </span>
                   <div class="date-line"></div>
                 </div>
               </td>
@@ -242,7 +264,7 @@ import {
   buildDescWithColor
 } from '@/utils/historialFormatters'
 
-const { getSortIcon, toggleSort, applySortToParams } = useSort({
+const { getSortClass, toggleSort, applySortToParams } = useSort({
   onChange: loadData
 })
 const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()

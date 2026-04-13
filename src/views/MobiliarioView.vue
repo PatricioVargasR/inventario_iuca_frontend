@@ -52,8 +52,24 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th @click="toggleSort('id_mueble')" class="sorted">ID {{ getSortIcon('id_mueble') }}</th>
-            <th @click="toggleSort('tipo_mobiliario')" class="sorted">Tipo {{ getSortIcon('tipo_mobiliario') }}</th>
+            <th @click="toggleSort('id_mueble')" class="sorted">
+              <span class="sort-btn">
+                ID
+                <span class="sort-icon" :class="getSortClass('id_mueble')">
+                  <span class="arr-up"></span>
+                  <span class="arr-down"></span>
+                </span>
+              </span>
+            </th>
+            <th @click="toggleSort('tipo_mobiliario')" class="sorted">
+              <span class="sort-btn">
+                Tipo
+                <span class="sort-icon" :class="getSortClass('tipo_mobiliario')">
+                  <span class="arr-up"></span>
+                  <span class="arr-down"></span>
+                </span>
+              </span>
+            </th>
             <th>Marca</th>
             <th>Modelo</th>
             <th>Color</th>
@@ -269,7 +285,7 @@ import EmptyState from '@/components/ui/EmptyState.vue'
 import ResponsablesSelector from '@/components/ui/ResponsablesSelector.vue'
 import ResponsablesFilter from '@/components/ui/ResponsablesFilter.vue'
 
-const { getSortIcon, toggleSort, applySortToParams } = useSort({ onChange: loadData })
+const { getSortClass, toggleSort, applySortToParams } = useSort({ onChange: loadData })
 const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
 const { formErrors, clearErrors, applyFieldErrors, setError } = useFormErrors()
 const { catalogos, loadCatalogos } = useCatalogos()

@@ -74,10 +74,22 @@
         <thead>
           <tr>
             <th @click="toggleSort('id_acceso')" class="sorted">
-              ID <span>{{  getSortIcon('id_acceso') }}</span>
+              <span class="sort-btn">
+                ID
+                <span class="sort-icon" :class="getSortClass('id_acceso')">
+                  <span class="arr-up"></span>
+                  <span class="arr-down"></span>
+                </span>
+              </span>
             </th>
             <th @click="toggleSort('nombre_acceso')" class="sorted">
-              Nombre <span>{{  getSortIcon('nombre_acceso') }}</span>
+              <span class="sort-btn">
+                Nombre
+                <span class="sort-icon" :class="getSortClass('nombre_acceso')">
+                  <span class="arr-up"></span>
+                  <span class="arr-down"></span>
+                </span>
+              </span>
             </th>
             <th>
               Correo
@@ -350,7 +362,7 @@ const authStore = useAuthStore()
 const { toast } = useToast()
 const currentUserId = computed(() => authStore.user?.id_acceso)
 const { catalogos, loadCatalogos } = useCatalogos()
-const { getSortIcon, toggleSort, applySortToParams } = useSort({
+const { getSortClass, toggleSort, applySortToParams } = useSort({
   onChange: loadData
 })
 const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
