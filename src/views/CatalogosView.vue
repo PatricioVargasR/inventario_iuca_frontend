@@ -9,7 +9,7 @@
         <button
           v-if="authStore.canDo('catalogos', 'puede_crear')"
           class="btn btn-primary"
-          @click="openCreate(activeTab)"
+          @click="openCreate"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Nuevo {{ tabActual.labelSingular }}
@@ -19,9 +19,9 @@
 
     <!-- Tabs + búsqueda -->
     <div class="card" style="padding:0;margin-bottom:20px;overflow:hidden;">
-      <div class="tabs-bar" style="padding:0 16px;border-bottom:1px solid var(--border);">
+      <div class="tabs-bar">
         <button
-          v-for="tab in tabs"
+          v-for="tab in TABS"
           :key="tab.key"
           class="tab-btn"
           :class="{ active: activeTab === tab.key }"
@@ -34,7 +34,7 @@
         </button>
       </div>
 
-      <div class="filters-row" style="padding: 16px 20px;">
+      <div class="filters-row">
         <div class="filter-group search">
           <label>Búsqueda general</label>
           <div class="input-with-icon">
@@ -64,40 +64,32 @@
         <thead>
           <tr>
             <th @click="toggleSort('id')" class="sorted">
-              <span class="sort-btn">
-                ID
+              <span class="sort-btn">ID
                 <span class="sort-icon" :class="getSortClass('id')">
-                  <span class="arr-up"></span>
-                  <span class="arr-down"></span>
+                  <span class="arr-up"></span><span class="arr-down"></span>
                 </span>
               </span>
             </th>
             <th @click="toggleSort('nombre')" class="sorted">
-              <span class="sort-btn">
-                Nombre
+              <span class="sort-btn">Nombre
                 <span class="sort-icon" :class="getSortClass('nombre')">
-                  <span class="arr-up"></span>
-                  <span class="arr-down"></span>
+                  <span class="arr-up"></span><span class="arr-down"></span>
                 </span>
               </span>
             </th>
             <th>Descripción</th>
             <th v-if="activeTab === 'estado'">Color</th>
             <th @click="toggleSort('activo')" class="sorted">
-              <span class="sort-btn">
-                Estado
+              <span class="sort-btn">Estado
                 <span class="sort-icon" :class="getSortClass('activo')">
-                  <span class="arr-up"></span>
-                  <span class="arr-down"></span>
+                  <span class="arr-up"></span><span class="arr-down"></span>
                 </span>
               </span>
             </th>
             <th @click="toggleSort('fecha_creacion')" class="sorted">
-              <span class="sort-btn">
-                Creado
+              <span class="sort-btn">Creado
                 <span class="sort-icon" :class="getSortClass('fecha_creacion')">
-                  <span class="arr-up"></span>
-                  <span class="arr-down"></span>
+                  <span class="arr-up"></span><span class="arr-down"></span>
                 </span>
               </span>
             </th>
@@ -105,13 +97,11 @@
           </tr>
         </thead>
         <tbody>
-          <!-- Loading state -->
           <tr v-if="loading" class="loading-row">
             <td :colspan="activeTab === 'estado' ? 7 : 6">
               <span class="spinner"></span>
             </td>
           </tr>
-          <!-- Empty state -->
           <tr v-else-if="!items.length">
             <td :colspan="activeTab === 'estado' ? 7 : 6">
               <div class="empty-state">
@@ -120,7 +110,6 @@
               </div>
             </td>
           </tr>
-          <!-- Data rows -->
           <template v-else>
             <tr v-for="item in items" :key="getItemId(item)">
               <td>
@@ -181,7 +170,7 @@
       />
     </div>
 
-    <!-- Create/Edit Modal -->
+    <!-- Create / Edit Modal -->
     <BaseModal
       v-model="showForm"
       :title="editMode ? `Actualizar ${tabActual.labelSingular.toLowerCase()}` : 'Nuevo catálogo'"
@@ -190,12 +179,11 @@
     >
       <form id="catalogoForm" @submit.prevent="saveItem" novalidate>
 
-        <!-- Selector de tipo solo al crear -->
         <div v-if="!editMode">
           <div class="section-title" style="margin-top:0;">Tipo de catálogo</div>
           <div class="catalog-type-selector">
             <button
-              v-for="tab in tabs"
+              v-for="tab in TABS"
               :key="tab.key"
               type="button"
               class="catalog-type-btn"
@@ -220,7 +208,6 @@
             />
             <span v-if="formErrors.nombre" class="field-error">{{ formErrors.nombre }}</span>
           </div>
-
           <div class="form-group">
             <label class="form-label">Estado <span class="required">*</span></label>
             <select v-model="form.estado_catalogo" class="form-select">
@@ -233,15 +220,7 @@
         <div v-if="(editMode && activeTab === 'estado') || (!editMode && formTab === 'estado')" class="form-group" style="margin-top:4px;">
           <label class="form-label">Color <span class="required">*</span></label>
           <div style="display:flex;gap:10px;align-items:center;">
-            <input
-              type="text"
-              v-model="form.color_hex"
-              class="form-input"
-              :class="{ 'input-error': formErrors.color_hex }"
-              placeholder="#000000"
-              maxlength="7"
-              style="max-width:120px;"
-            />
+            <input type="text" v-model="form.color_hex" class="form-input" :class="{ 'input-error': formErrors.color_hex }" placeholder="#000000" maxlength="7" style="max-width:120px;" />
             <input type="color" v-model="form.color_hex" style="width:50px;height:40px;padding:0;border:none;background:none;cursor:pointer;" />
           </div>
           <span v-if="formErrors.color_hex" class="field-error">{{ formErrors.color_hex }}</span>
@@ -250,12 +229,7 @@
 
         <div class="section-title">Descripción</div>
         <div class="form-group">
-          <textarea
-            v-model="form.descripcion"
-            class="form-textarea"
-            placeholder="Descripción opcional..."
-            maxlength="200"
-          ></textarea>
+          <textarea v-model="form.descripcion" class="form-textarea" placeholder="Descripción opcional..." maxlength="200"></textarea>
           <small style="color:var(--gray-400);font-size:11px;">{{ form.descripcion.length }} / 200</small>
         </div>
 
@@ -296,12 +270,10 @@
             </div>
           </div>
         </div>
-
         <div v-if="selected.descripcion">
           <div class="section-title">Descripción</div>
           <div class="obs-box" style="font-size:13.5px;color:var(--gray-700)">{{ selected.descripcion }}</div>
         </div>
-
         <div class="section-title">Auditoría</div>
         <div class="detail-grid">
           <div class="detail-item">
@@ -331,452 +303,76 @@
       :lock-info="concurrencyAlert.lockInfo"
       :show-retry="concurrencyAlert.showRetry"
       @cancel="handleConcurrencyCancel"
-      @retry="handleConcurrencyRetry"
+      @retry="handleConcurrencyRetry(items)"
     />
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
-import { catalogosApi } from '@/services/api'
-import { acquireLock, releaseLock } from '@/services/concurrency'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { useToast } from '@/composables/useToast'
 import { useSort } from '@/composables/useSort'
+import { formatDateShort as formatDate } from '@/utils/formatters'
+import { TABS, getItemId, getItemNombre } from '@/constants/catalogos'
+import { useCatalogosData } from '@/composables/useCatalogosData'
+import { useCatalogosForm } from '@/composables/useCatalogosForm'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
 import Pagination from '@/components/ui/Pagination.vue'
-import { useFormErrors } from '@/composables/useFormErrors'
-import { usePagination } from '@/composables/usePagination'
 import PageHeader from '@/components/ui/PageHeader.vue'
-import { formatDateShort as formatDate } from '@/utils/formatters'
 
-// ── Mapa de campos lógicos → columnas reales por tab ─────────────
-// Los campos 'id' y 'nombre' son alias lógicos usados en el template.
-// Antes de enviar al backend se traducen al nombre real de columna
-// según el tab activo, ya que cada tabla tiene nombres distintos.
-const SORT_FIELD_MAP = {
-  area:            { id: 'id_area',            nombre: 'nombre_area'   },
-  estado:          { id: 'id_estado',          nombre: 'nombre_estado' },
-  tipo_activo:     { id: 'id_tipo_activo',     nombre: 'nombre_tipo'   },
-  tipo_mobiliario: { id: 'id_tipo_mobiliario', nombre: 'nombre_tipo'   },
-}
+const authStore = useAuthStore()
+const activeTab = ref('area')
+const search    = ref('')
+const estado    = ref('')
 
-/**
- * Traduce un campo lógico ('id', 'nombre') al nombre real de columna
- * en la BD según el tab activo. Los campos genéricos como 'activo'
- * y 'fecha_creacion' son iguales en todas las tablas, se pasan directo.
- */
-function resolveField(logicalField) {
-  const map = SORT_FIELD_MAP[activeTab.value]
-  return map?.[logicalField] ?? logicalField
-}
+// ── Computeds de tab ─────────────────────────────────────────
+const tabActual  = computed(() => TABS.find(t => t.key === activeTab.value))
+const tipoActual = computed(() => TABS.find(t => t.key === (editMode.value ? activeTab.value : formTab.value)))
 
-// ── Sort (backend) ───────────────────────────────────────────────
+// ── Sort ─────────────────────────────────────────────────────
 const { toggleSort, getSortClass, applySortToParams, resetSort } = useSort({
   onChange: () => loadTab(true),
 })
 
-// ── Pagination ───────────────────────────────────────────────────
-const { page, total, totalPages, perPage, from, to, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
-const { formErrors, clearErrors, applyFieldErrors, setError } = useFormErrors()
-const authStore = useAuthStore()
-const { toast } = useToast()
+// ── Datos ────────────────────────────────────────────────────
+const {
+  items, loading, tabCounts,
+  page, total, totalPages, perPage, from, to,
+  onSearch, onPageChange,
+  loadTab, loadAllCounts,
+} = useCatalogosData({ activeTab, search, estado, applySortToParams })
 
-const tabs = [
-  { key: 'area',            label: 'Áreas',               labelSingular: 'área',               placeholder: 'Ej: Dirección, Sistemas...'  },
-  { key: 'estado',          label: 'Estados',             labelSingular: 'estado',             placeholder: 'Ej: Bueno, Regular...'       },
-  { key: 'tipo_activo',     label: 'Tipos de activo',     labelSingular: 'tipo de activo',     placeholder: 'Ej: Laptop, Escritorio...'   },
-  { key: 'tipo_mobiliario', label: 'Tipos de mobiliario', labelSingular: 'tipo de mobiliario', placeholder: 'Ej: Silla, Mesa...'          },
-]
-
-const TABLA_MAP = {
-  area:            'cat_areas',
-  estado:          'cat_estados',
-  tipo_activo:     'cat_tipos_activo',
-  tipo_mobiliario: 'cat_tipos_mobiliario',
-}
-
-const DATA_KEY = {
-  area:            'areas',
-  estado:          'estados',
-  tipo_activo:     'tipos_activo',
-  tipo_mobiliario: 'tipos_mobiliario',
-}
-
-// ── Estado ──────────────────────────────────────────────────────
-const activeTab  = ref('area')
-const loading    = ref(false)
-const search     = ref('')
-const estado     = ref('')
-const formTab    = ref('area')
-
-const items = ref([])
-
-const tabCounts = reactive({
-  area: 0, tipo_activo: 0, estado: 0, tipo_mobiliario: 0,
+// ── Formulario / CRUD ────────────────────────────────────────
+const {
+  showForm, showDetail, showConfirm, showConcurrencyAlert,
+  form, formTab, formErrors, editMode, saving, deleting,
+  selected, toDelete, concurrencyAlert,
+  openCreate, openEdit, openDetail, handleFormClose,
+  saveItem, confirmDelete, doDelete, handleCancelDelete,
+  handleConcurrencyCancel, handleConcurrencyRetry,
+  releasCurrentLock, clearErrors,
+} = useCatalogosForm({
+  activeTab,
+  tabActual,
+  tipoActual,
+  onSaved:   () => { loadAllCounts(); loadTab() },
+  onDeleted: () => { loadAllCounts(); loadTab() },
 })
 
-const showForm             = ref(false)
-const showDetail           = ref(false)
-const showConfirm          = ref(false)
-const showConcurrencyAlert = ref(false)
-
-const selected      = ref(null)
-const toDelete      = ref(null)
-const editMode      = ref(false)
-const saving        = ref(false)
-const deleting      = ref(false)
-const pendingDelete = ref(null)
-const currentLock   = ref(null)
-
-const concurrencyAlert = reactive({
-  title: '', message: '', lockInfo: null, showRetry: false,
-})
-
-const form = reactive({
-  nombre: '', descripcion: '', estado_catalogo: 'activo', color_hex: '', version: null, _id: null
-})
-
-// ── Validación frontend ──────────────────────────────────────────
-function validateForm() {
-  clearErrors()
-  let valid = true
-  const tipo = editMode.value ? activeTab.value : formTab.value
-
-  if (!form.nombre?.trim()) {
-    setError('nombre', '"Nombre" es obligatorio')
-    valid = false
-  } else {
-    const maxLen = (tipo === 'tipo_activo' || tipo === 'tipo_mobiliario') ? 30 : 50
-    if (form.nombre.trim().length > maxLen) {
-      setError('nombre', `"Nombre" no puede superar ${maxLen} caracteres`)
-      valid = false
-    }
-  }
-
-  if (tipo === 'estado') {
-    if (!form.color_hex?.trim()) {
-      setError('color_hex', '"Color" es obligatorio para los estados')
-      valid = false
-    } else if (!/^#[0-9A-Fa-f]{6}$/.test(form.color_hex)) {
-      setError('color_hex', 'El color debe tener formato HEX válido (Ej: #FF5733)')
-      valid = false
-    }
-  }
-
-  return valid
-}
-
-// ── Computeds ────────────────────────────────────────────────────
-const tabActual  = computed(() => tabs.find(t => t.key === activeTab.value))
-const tipoActual = computed(() => tabs.find(t => t.key === (editMode.value ? activeTab.value : formTab.value)))
-
-// ── Helpers ──────────────────────────────────────────────────────
-function getItemId(item) {
-  return item?.id_area ?? item?.id_tipo_activo ?? item?.id_estado ?? item?.id_tipo_mobiliario
-}
-
-function getItemNombre(item) {
-  return item?.nombre_area ?? item?.nombre_tipo ?? item?.nombre_estado ?? '–'
-}
-
-// ── Carga de datos ───────────────────────────────────────────────
-async function loadTab(resetPage = false) {
-  if (resetPage) page.value = 1
-  loading.value = true
-  try {
-    const params = {
-      page:     page.value,
-      per_page: perPage,
-      search:   search.value,
-      estado:   estado.value || undefined,
-    }
-
-    // Agrega sort_by y sort_dir al params si hay un campo activo,
-    // traduciendo el alias lógico al nombre real de columna en BD.
-    applySortToParams(params)
-    if (params.sort_by) {
-      params.sort_by = resolveField(params.sort_by)
-    }
-
-    let res
-    switch (activeTab.value) {
-      case 'area':            res = await catalogosApi.getAreas(params); break
-      case 'tipo_activo':     res = await catalogosApi.getTiposActivo(params); break
-      case 'estado':          res = await catalogosApi.getEstados(params); break
-      case 'tipo_mobiliario': res = await catalogosApi.getTiposMobiliario(params); break
-    }
-
-    const key = DATA_KEY[activeTab.value]
-    items.value = res.data[key] || []
-    setMeta(res.data)
-    if (!search.value) {
-      tabCounts[activeTab.value] = res.data.total || 0
-    }
-  } catch {
-    toast.error('Error al cargar los datos')
-    items.value = []
-  } finally {
-    loading.value = false
-  }
-}
-
-async function loadAllCounts() {
-  try {
-    const [a, t, e, m] = await Promise.all([
-      catalogosApi.getAreas({ page: 1, per_page: 1 }),
-      catalogosApi.getTiposActivo({ page: 1, per_page: 1 }),
-      catalogosApi.getEstados({ page: 1, per_page: 1 }),
-      catalogosApi.getTiposMobiliario({ page: 1, per_page: 1 }),
-    ])
-    tabCounts.area            = a.data.total || 0
-    tabCounts.tipo_activo     = t.data.total || 0
-    tabCounts.estado          = e.data.total || 0
-    tabCounts.tipo_mobiliario = m.data.total || 0
-  } catch {
-    toast.error('No se pudieron cargar los contadores')
-  }
-}
-
-// ── Navegación ───────────────────────────────────────────────────
+// ── Navegación entre tabs ────────────────────────────────────
 function switchTab(key) {
   activeTab.value = key
   search.value    = ''
   estado.value    = ''
-  page.value      = 1
-  resetSort()           // limpia el sort al cambiar de tab
+  resetSort()
   loadTab()
 }
 
-// ── CRUD ─────────────────────────────────────────────────────────
-function openCreate() {
-  editMode.value = false
-  formTab.value  = activeTab.value
-  clearErrors()
-  Object.assign(form, { nombre: '', descripcion: '', estado_catalogo: 'activo', color_hex: '', version: null, _id: null })
-  showForm.value = true
-}
+// ── Ciclo de vida ────────────────────────────────────────────
+onBeforeUnmount(releasCurrentLock)
 
-async function openEdit(type, item) {
-  const id    = getItemId(item)
-  const tabla = TABLA_MAP[type]
-
-  const lockResult = await acquireLock(tabla, id, 10, 'edicion')
-  if (!lockResult.success) {
-    if (lockResult.locked) {
-      concurrencyAlert.title   = 'Registro en uso'
-      concurrencyAlert.message = lockResult.lockInfo.tipo_bloqueo === 'edicion'
-        ? `${lockResult.lockInfo.nombre_usuario} está editando este registro`
-        : `No puedes editar porque ${lockResult.lockInfo.nombre_usuario} lo está eliminando`
-      concurrencyAlert.lockInfo  = lockResult.lockInfo
-      concurrencyAlert.showRetry = true
-      showConcurrencyAlert.value = true
-    } else {
-      toast.error(lockResult.error || 'Error al adquirir bloqueo')
-    }
-    return
-  }
-
-  currentLock.value = { tabla, id }
-  editMode.value    = true
-  clearErrors()
-
-  try {
-    let res
-    switch (type) {
-      case 'area':            res = await catalogosApi.getArea(item.id_area); break
-      case 'tipo_activo':     res = await catalogosApi.getActivo(item.id_tipo_activo); break
-      case 'estado':          res = await catalogosApi.getEstado(item.id_estado); break
-      case 'tipo_mobiliario': res = await catalogosApi.getMobiliario(item.id_tipo_mobiliario); break
-    }
-
-    const d = res.data
-    Object.assign(form, {
-      nombre:          d.nombre_area ?? d.nombre_tipo ?? d.nombre_estado ?? '',
-      descripcion:     d.descripcion || '',
-      estado_catalogo: d.activo ? 'activo' : 'inactivo',
-      color_hex:       d.color_hex || '',
-      version:         d.version ?? null,
-      _id:             id,
-    })
-    showForm.value = true
-  } catch {
-    toast.error('No se pudieron cargar los datos del registro')
-    await releaseLock(tabla, id)
-    currentLock.value = null
-  }
-}
-
-async function openDetail(type, item) {
-  try {
-    let res
-    switch (type) {
-      case 'area':            res = await catalogosApi.getArea(item.id_area); break
-      case 'tipo_activo':     res = await catalogosApi.getActivo(item.id_tipo_activo); break
-      case 'estado':          res = await catalogosApi.getEstado(item.id_estado); break
-      case 'tipo_mobiliario': res = await catalogosApi.getMobiliario(item.id_tipo_mobiliario); break
-    }
-    selected.value = res.data
-  } catch {
-    selected.value = item
-  }
-  showDetail.value = true
-}
-
-async function handleFormClose(shouldClose = true) {
-  if (currentLock.value && editMode.value) {
-    await releaseLock(currentLock.value.tabla, currentLock.value.id)
-    currentLock.value = null
-  }
-  if (shouldClose) {
-    showForm.value = false
-    clearErrors()
-  }
-}
-
-async function saveItem() {
-  if (!validateForm()) {
-    toast.warning('Revisa los campos marcados en el formulario')
-    return
-  }
-
-  const tipo   = editMode.value ? activeTab.value : formTab.value
-  saving.value = true
-
-  const campoNombre = tipo === 'area'   ? 'nombre_area'
-    : tipo === 'estado'                 ? 'nombre_estado'
-    : 'nombre_tipo'
-
-  const payload = {
-    [campoNombre]: form.nombre.trim(),
-    descripcion:   form.descripcion,
-    activo:        form.estado_catalogo === 'activo',
-    ...(form.version != null && { version: form.version }),
-  }
-
-  if (tipo === 'estado') payload.color_hex = form.color_hex
-
-  const metodoMap = {
-    area:            { create: 'createArea',           update: 'updateArea'           },
-    estado:          { create: 'createEstado',         update: 'updateEstado'         },
-    tipo_activo:     { create: 'createTipoActivo',     update: 'updateTipoActivo'     },
-    tipo_mobiliario: { create: 'createTipoMobiliario', update: 'updateTipoMobiliario' },
-  }
-
-  try {
-    const accion = editMode.value ? 'update' : 'create'
-    const metodo = metodoMap[tipo][accion]
-
-    if (editMode.value) {
-      await catalogosApi[metodo](form._id, payload)
-      toast.success(`${tabActual.value.labelSingular.charAt(0).toUpperCase() + tabActual.value.labelSingular.slice(1)} actualizado correctamente`, 'Actualización exitosa')
-    } else {
-      await catalogosApi[metodo](payload)
-      toast.success(`${tipoActual.value.labelSingular.charAt(0).toUpperCase() + tipoActual.value.labelSingular.slice(1)} creado correctamente`, 'Registro exitoso')
-    }
-
-    await handleFormClose(true)
-    loadAllCounts()
-    loadTab()
-  } catch (e) {
-    const errorData = e.response?.data
-
-    if (errorData?.error === 'conflict') {
-      toast.warning('El registro fue modificado por otro usuario. Recarga e intenta de nuevo.')
-    } else if (errorData?.campos) {
-      applyFieldErrors(errorData.campos)
-      toast.warning(errorData.error || 'Revisa los campos del formulario')
-    } else {
-      toast.fromError(errorData)
-    }
-  } finally {
-    saving.value = false
-  }
-}
-
-async function confirmDelete(type, item) {
-  const id    = getItemId(item)
-  const tabla = TABLA_MAP[type]
-
-  const lockResult = await acquireLock(tabla, id, 2, 'eliminacion')
-  if (!lockResult.success) {
-    if (lockResult.locked) {
-      concurrencyAlert.title   = 'No se puede eliminar'
-      concurrencyAlert.message = lockResult.lockInfo.tipo_bloqueo === 'edicion'
-        ? `No puedes eliminar porque ${lockResult.lockInfo.nombre_usuario} lo está editando`
-        : `${lockResult.lockInfo.nombre_usuario} ya está eliminando este registro`
-      concurrencyAlert.lockInfo  = lockResult.lockInfo
-      concurrencyAlert.showRetry = true
-      showConcurrencyAlert.value = true
-    } else {
-      toast.error(lockResult.error || 'Error al adquirir bloqueo')
-    }
-    return
-  }
-
-  pendingDelete.value = { tabla, id }
-  toDelete.value = { ...item, nombre: getItemNombre(item) }
-  showConfirm.value = true
-}
-
-async function doDelete() {
-  deleting.value = true
-  try {
-    const id = getItemId(toDelete.value)
-    switch (activeTab.value) {
-      case 'area':            await catalogosApi.deleteArea(id); break
-      case 'tipo_activo':     await catalogosApi.deleteTipoActivo(id); break
-      case 'estado':          await catalogosApi.deleteEstado(id); break
-      case 'tipo_mobiliario': await catalogosApi.deleteTipoMobiliario(id); break
-    }
-    if (pendingDelete.value) {
-      await releaseLock(pendingDelete.value.tabla, pendingDelete.value.id)
-      pendingDelete.value = null
-    }
-    toast.success(`"${toDelete.value.nombre}" fue eliminado`, 'Eliminado')
-    showConfirm.value = false
-    toDelete.value    = null
-    loadAllCounts()
-    loadTab()
-  } catch (e) {
-    toast.fromError(e.response?.data)
-  } finally {
-    deleting.value = false
-  }
-}
-
-async function handleCancelDelete() {
-  if (pendingDelete.value) {
-    await releaseLock(pendingDelete.value.tabla, pendingDelete.value.id)
-    pendingDelete.value = null
-  }
-  toDelete.value    = null
-  showConfirm.value = false
-}
-
-function handleConcurrencyCancel() { showConcurrencyAlert.value = false }
-
-async function handleConcurrencyRetry() {
-  showConcurrencyAlert.value = false
-  setTimeout(() => {
-    const registroId = concurrencyAlert.lockInfo?.registro_id
-    const item = items.value.find(i => getItemId(i) === registroId)
-    if (item) {
-      if (concurrencyAlert.title === 'No se puede eliminar') confirmDelete(activeTab.value, item)
-      else openEdit(activeTab.value, item)
-    }
-  }, 1000)
-}
-
-onBeforeUnmount(async () => {
-  if (currentLock.value) {
-    await releaseLock(currentLock.value.tabla, currentLock.value.id)
-  }
-})
-
-setLoadFn(loadTab)
 onMounted(async () => {
   await loadAllCounts()
   loadTab()
@@ -784,7 +380,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* ── Errores de campo ── */
 .input-error {
   border-color: var(--danger) !important;
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
@@ -804,11 +399,11 @@ onMounted(async () => {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Tabs ── */
 .tabs-bar {
   display: flex;
   padding: 0 16px;
   gap: 2px;
+  border-bottom: 1px solid var(--border);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -855,7 +450,6 @@ onMounted(async () => {
   color: var(--primary);
 }
 
-/* ── Selector de tipo al crear ── */
 .catalog-type-selector {
   display: flex;
   gap: 8px;
@@ -874,27 +468,17 @@ onMounted(async () => {
   cursor: pointer;
   transition: all 0.2s;
 }
-.catalog-type-btn:hover {
-  border-color: var(--primary);
-  background: var(--gray-100);
-}
-.catalog-type-btn.active {
-  background: var(--primary);
-  color: white;
-  border-color: var(--primary);
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
-}
+.catalog-type-btn:hover  { border-color: var(--primary); background: var(--gray-100); }
+.catalog-type-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25); }
 
 .filters-row {
   display: flex;
   gap: 16px;
   align-items: flex-end;
   flex-wrap: wrap;
+  padding: 16px 20px;
 }
 
-.sorted {
-  cursor: pointer;
-  user-select: none;
-}
+.sorted { cursor: pointer; user-select: none; }
 .sorted:hover { color: var(--gray-800); }
 </style>
