@@ -378,4 +378,40 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
 .dropdown-leave-active { transition: opacity 0.12s ease, transform 0.12s ease; }
 .dropdown-enter-from,
 .dropdown-leave-to { opacity: 0; transform: translateY(-4px); }
+
+/* 📱 Responsive */
+@media (max-width: 760px) {
+  .resp-filter {
+    width: 100%;
+    min-width: unset; /* 👈 rompe el bloqueo */
+  }
+
+  .resp-filter-trigger {
+    width: 100%;
+  }
+
+  .resp-filter-dropdown {
+    min-width: unset; /* 👈 clave */
+    width: 100%;
+  }
+}
+
+
+@media (max-width: 640px) {
+  .resp-filter-dropdown {
+    position: fixed;
+    top: 10%;
+    left: 5%;
+    right: 5%;
+    width: auto;
+    max-height: 70vh;
+    border-radius: 12px;
+  }
+
+  .dropdown-options {
+    max-height: 55vh;
+  }
+}
+
+
 </style>
