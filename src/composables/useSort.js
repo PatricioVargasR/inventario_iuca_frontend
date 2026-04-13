@@ -16,17 +16,21 @@ export function useSort({ onChange } = {}) {
   }
 
   /**
-   * Devuelve la clase CSS que debe aplicarse al .sort-icon
-   * según si el campo está activo y en qué dirección.
+   * Devuelve la clase CSS para el .sort-icon según el campo activo y dirección.
    *   ''     → neutro (ambas flechas tenues)
    *   'asc'  → flecha arriba activa
    *   'desc' → flecha abajo activa
    */
   function getSortClass(field) {
     if (sort.field !== field) return ''
-    return sort.direction  // 'asc' | 'desc'
+    return sort.direction
   }
 
+  /**
+   * Agrega sort_by y sort_dir al objeto de params si hay un campo activo.
+   * El llamador es responsable de traducir sort_by al nombre real de columna
+   * antes de enviarlo al backend (ver SORT_FIELD_MAP en el componente).
+   */
   function applySortToParams(params) {
     if (sort.field) {
       params.sort_by  = sort.field

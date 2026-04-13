@@ -37,14 +37,14 @@
       <div class="filters-row" style="padding: 16px 20px;">
         <div class="filter-group search">
           <label>Búsqueda general</label>
-            <div class="input-with-icon">
-              <svg class="input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input
+          <div class="input-with-icon">
+            <svg class="input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input
               v-model="search"
               class="form-input"
               :placeholder="`Buscar ${tabActual.labelSingular.toLowerCase()}...`"
               @input="onSearch"
-              />
+            />
           </div>
         </div>
         <div class="filter-group">
@@ -112,7 +112,7 @@
             </td>
           </tr>
           <!-- Empty state -->
-          <tr v-else-if="!itemsFiltrados.length">
+          <tr v-else-if="!items.length">
             <td :colspan="activeTab === 'estado' ? 7 : 6">
               <div class="empty-state">
                 <div class="empty-icon">📋</div>
@@ -122,7 +122,7 @@
           </tr>
           <!-- Data rows -->
           <template v-else>
-            <tr v-for="item in itemsPaginados" :key="getItemId(item)">
+            <tr v-for="item in items" :key="getItemId(item)">
               <td>
                 <span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">
                   {{ getItemId(item) }}
@@ -170,7 +170,7 @@
       </table>
 
       <Pagination
-        v-if="!loading && itemsFiltrados.length > 0"
+        v-if="!loading && items.length > 0"
         :current="page"
         :total-pages="totalPages"
         :total="total"
@@ -342,6 +342,7 @@ import { catalogosApi } from '@/services/api'
 import { acquireLock, releaseLock } from '@/services/concurrency'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
+import { useSort } from '@/composables/useSort'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 import ConcurrencyAlert from '@/components/ui/ConcurrencyAlert.vue'
@@ -351,26 +352,34 @@ import { usePagination } from '@/composables/usePagination'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import { formatDateShort as formatDate } from '@/utils/formatters'
 
-// ── Sort local para catálogos ────────────────────────────────────
-const sortField = ref('')
-const sortDir   = ref('asc')
-
-function toggleSort(field) {
-  if (sortField.value === field) {
-    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
-  } else {
-    sortField.value = field
-    sortDir.value   = 'asc'
-  }
+// ── Mapa de campos lógicos → columnas reales por tab ─────────────
+// Los campos 'id' y 'nombre' son alias lógicos usados en el template.
+// Antes de enviar al backend se traducen al nombre real de columna
+// según el tab activo, ya que cada tabla tiene nombres distintos.
+const SORT_FIELD_MAP = {
+  area:            { id: 'id_area',            nombre: 'nombre_area'   },
+  estado:          { id: 'id_estado',          nombre: 'nombre_estado' },
+  tipo_activo:     { id: 'id_tipo_activo',     nombre: 'nombre_tipo'   },
+  tipo_mobiliario: { id: 'id_tipo_mobiliario', nombre: 'nombre_tipo'   },
 }
 
-function getSortClass(field) {
-  if (sortField.value !== field) return ''
-  return sortDir.value
+/**
+ * Traduce un campo lógico ('id', 'nombre') al nombre real de columna
+ * en la BD según el tab activo. Los campos genéricos como 'activo'
+ * y 'fecha_creacion' son iguales en todas las tablas, se pasan directo.
+ */
+function resolveField(logicalField) {
+  const map = SORT_FIELD_MAP[activeTab.value]
+  return map?.[logicalField] ?? logicalField
 }
+
+// ── Sort (backend) ───────────────────────────────────────────────
+const { toggleSort, getSortClass, applySortToParams, resetSort } = useSort({
+  onChange: () => loadTab(true),
+})
 
 // ── Pagination ───────────────────────────────────────────────────
-const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
+const { page, total, totalPages, perPage, from, to, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
 const { formErrors, clearErrors, applyFieldErrors, setError } = useFormErrors()
 const authStore = useAuthStore()
 const { toast } = useToast()
@@ -464,38 +473,6 @@ function validateForm() {
 const tabActual  = computed(() => tabs.find(t => t.key === activeTab.value))
 const tipoActual = computed(() => tabs.find(t => t.key === (editMode.value ? activeTab.value : formTab.value)))
 
-// Ordenamiento local sobre los items ya cargados
-const itemsFiltrados = computed(() => {
-  if (!sortField.value) return items.value
-
-  return [...items.value].sort((a, b) => {
-    let valA, valB
-
-    if (sortField.value === 'id') {
-      valA = getItemId(a)
-      valB = getItemId(b)
-    } else if (sortField.value === 'nombre') {
-      valA = (getItemNombre(a) || '').toLowerCase()
-      valB = (getItemNombre(b) || '').toLowerCase()
-    } else if (sortField.value === 'activo') {
-      valA = a.activo ? 1 : 0
-      valB = b.activo ? 1 : 0
-    } else if (sortField.value === 'fecha_creacion') {
-      valA = a.fecha_creacion || ''
-      valB = b.fecha_creacion || ''
-    } else {
-      valA = a[sortField.value]
-      valB = b[sortField.value]
-    }
-
-    if (valA < valB) return sortDir.value === 'asc' ? -1 : 1
-    if (valA > valB) return sortDir.value === 'asc' ? 1 : -1
-    return 0
-  })
-})
-
-const itemsPaginados = computed(() => itemsFiltrados.value)
-
 // ── Helpers ──────────────────────────────────────────────────────
 function getItemId(item) {
   return item?.id_area ?? item?.id_tipo_activo ?? item?.id_estado ?? item?.id_tipo_mobiliario
@@ -510,9 +487,21 @@ async function loadTab(resetPage = false) {
   if (resetPage) page.value = 1
   loading.value = true
   try {
-    const params = { page: page.value, per_page: perPage, search: search.value, estado: estado.value  || undefined }
-    let res
+    const params = {
+      page:     page.value,
+      per_page: perPage,
+      search:   search.value,
+      estado:   estado.value || undefined,
+    }
 
+    // Agrega sort_by y sort_dir al params si hay un campo activo,
+    // traduciendo el alias lógico al nombre real de columna en BD.
+    applySortToParams(params)
+    if (params.sort_by) {
+      params.sort_by = resolveField(params.sort_by)
+    }
+
+    let res
     switch (activeTab.value) {
       case 'area':            res = await catalogosApi.getAreas(params); break
       case 'tipo_activo':     res = await catalogosApi.getTiposActivo(params); break
@@ -555,9 +544,9 @@ async function loadAllCounts() {
 function switchTab(key) {
   activeTab.value = key
   search.value    = ''
+  estado.value    = ''
   page.value      = 1
-  sortField.value = ''
-  sortDir.value   = 'asc'
+  resetSort()           // limpia el sort al cambiar de tab
   loadTab()
 }
 
