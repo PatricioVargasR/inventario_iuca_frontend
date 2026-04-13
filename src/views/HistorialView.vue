@@ -1,10 +1,7 @@
 <template>
   <div class="page-container">
 
-    <PageHeader
-      title="Historial de movimientos"
-      subtitle="Registro completo de cambios y auditoría del sistema"
-    >
+    <PageHeader title="Historial de movimientos" subtitle="Registro completo de cambios y auditoría del sistema">
     </PageHeader>
 
     <!-- Filtros -->
@@ -13,8 +10,13 @@
         <div class="filter-group search">
           <label>Búsqueda General</label>
           <div class="input-with-icon">
-            <svg class="input-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input v-model="filters.search" class="form-input" placeholder="Buscar por usuario o ID de registro" @input="onSearch" />
+            <svg class="input-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input v-model="filters.search" class="form-input" placeholder="Buscar por usuario o ID de registro"
+              @input="onSearch" />
           </div>
         </div>
         <div class="filter-group">
@@ -52,7 +54,8 @@
           <label>Usuario</label>
           <select v-model="filters.usuario_id" class="form-select" @change="loadData">
             <option value="">Todos los usuarios</option>
-            <option v-for="u in catalogos.accesos" :key="u.id_acceso" :value="u.id_acceso">{{ u.nombre_usuario }}</option>
+            <option v-for="u in catalogos.accesos" :key="u.id_acceso" :value="u.id_acceso">{{ u.nombre_usuario }}
+            </option>
           </select>
         </div>
       </div>
@@ -64,10 +67,7 @@
     </div>
 
     <div v-else-if="!grouped.length" class="card" style="padding:48px;text-align:center;color:var(--gray-400);">
-      <EmptyState
-          text="No se encontraron movimientos"
-          icon="🔍"
-        />
+      <EmptyState text="No se encontraron movimientos" icon="🔍" />
     </div>
 
     <div v-else class="table-wrapper">
@@ -95,34 +95,34 @@
             <th>Descripción</th>
             <th>Registro</th>
             <th>Usuario</th>
-            <th>Hora</th>
+            <th @click="toggleSort('fecha')" class="sorted">
+              <span class="sort-btn">
+                Hora
+                <span class="sort-icon" :class="getSortClass('fecha')">
+                  <span class="arr-up"></span>
+                  <span class="arr-down"></span>
+                </span>
+              </span>
+            </th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
           <template v-for="group in grouped" :key="group.date">
-            <!-- Separador de fecha -->
+            <!-- Separador de fecha — sin sort-icon dentro -->
             <tr class="date-separator-row">
               <td colspan="7">
-                <div class="date-separator sorted" @click="toggleSort('fecha')">
-                  <span class="date-label">{{ group.dateLabel }} </span>
-                  <span class="date-count short-icon">
+                <div class="date-separator">
+                  <span class="date-label">{{ group.dateLabel }}</span>
+                  <span class="date-count">
                     {{ group.items.length }} movimiento{{ group.items.length !== 1 ? 's' : '' }}
-                    <span class="sort-icon" :class="getSortClass('operacion')">
-                      <span class="arr-up"></span>
-                      <span class="arr-down"></span>
-                    </span>
                   </span>
                   <div class="date-line"></div>
                 </div>
               </td>
             </tr>
             <!-- Filas del grupo -->
-            <tr
-              v-for="item in group.items"
-              :key="item.id_historial"
-              class="data-row"
-            >
+            <tr v-for="item in group.items" :key="item.id_historial" class="data-row">
               <td>
                 <span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">
                   {{ item.id_historial }}
@@ -135,11 +135,7 @@
                 </span>
               </td>
               <td>
-                <span
-                  class="row-desc"
-                  :title="buildDescPlain(item)"
-                  v-html="buildDescWithColor(item)"
-                ></span>
+                <span class="row-desc" :title="buildDescPlain(item)" v-html="buildDescWithColor(item)"></span>
               </td>
               <td>
                 <span class="tabla-badge">{{ formatTableName(item.tabla) }} #{{ item.registro_id }}</span>
@@ -161,33 +157,32 @@
         </tbody>
       </table>
 
-      <Pagination
-        :current="page"
-        :total-pages="totalPages"
-        :total="total"
-        :from="from"
-        :to="to"
-        :per-page="perPage"
-        @change="onPageChange"
-      />
+      <Pagination :current="page" :total-pages="totalPages" :total="total" :from="from" :to="to" :per-page="perPage"
+        @change="onPageChange" />
     </div>
 
     <!-- Detail Modal -->
-    <BaseModal v-model="showDetail" :title="`Detalles del movimiento #${selected?.id_historial}`" :subtitle="selected ? formatFull(selected.fecha) : ''" size="lg">
+    <BaseModal v-model="showDetail" :title="`Movimiento #${selected?.id_historial}`"
+      :subtitle="selected ? formatFull(selected.fecha) : ''" size="lg">
       <template v-if="selected">
+
         <div class="section-title" style="margin-top:0">Información del movimiento</div>
-        <div class="card" style="padding:14px 16px;margin-bottom:14px;">
-          <div class="detail-grid" style="grid-template-columns:1fr 1fr 1fr;">
-            <div class="detail-item"><label>Fecha y hora</label><strong>{{ formatFull(selected.fecha) }}</strong></div>
-            <div class="detail-item"><label>Realizado por</label><strong>{{ selected.realizado_por || 'Sistema' }}</strong></div>
-            <div class="detail-item"><label>ID movimiento</label><strong style="font-family:var(--font-mono)">{{ selected.id_historial}}</strong></div>
-            <div class="detail-item"><label>Tipo de registro</label><strong>{{ formatTableName(selected.tabla) }}</strong></div>
-            <div class="detail-item"><label>ID de registro</label><strong style="font-family:var(--font-mono)">#{{ selected.registro_id }}</strong></div>
-            <div class="detail-item"><label>Tipo de movimiento</label><span class="op-badge" :class="opClass(selected.operacion)" style="font-size:12px;">{{ formatOperation(selected.operacion) }}</span></div>
+        <div class="detail-grid" style="grid-template-columns:1fr 1fr 1fr;">
+          <div class="detail-item"><label>Fecha y hora</label><strong>{{ formatFull(selected.fecha) }}</strong></div>
+          <div class="detail-item"><label>Realizado por</label><strong>{{ selected.realizado_por || 'Sistema'
+              }}</strong></div>
+          <div class="detail-item"><label>ID movimiento</label><strong style="font-family:var(--font-mono)">{{
+            selected.id_historial}}</strong></div>
+          <div class="detail-item"><label>Tipo de registro</label><strong>{{ formatTableName(selected.tabla) }}</strong>
           </div>
+          <div class="detail-item"><label>ID de registro</label><strong style="font-family:var(--font-mono)">#{{
+            selected.registro_id }}</strong></div>
+          <div class="detail-item"><label>Tipo de movimiento</label><span class="op-badge"
+              :class="opClass(selected.operacion)" style="font-size:12px;">{{ formatOperation(selected.operacion)
+              }}</span></div>
         </div>
 
-        <div v-if="selected.cambios_detallados && selected.cambios_detallados.length > 0" style="margin-bottom:14px;">
+        <div v-if="selected.cambios_detallados && selected.cambios_detallados.length > 0">
           <div class="section-title">Cambios realizados</div>
           <div style="overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);">
             <table class="data-table" style="table-layout:fixed;width:100%;min-width:480px;">
@@ -197,16 +192,20 @@
                 <col style="width:35%">
               </colgroup>
               <thead>
-                <tr><th>Campo</th><th>Valor anterior</th><th>Valor nuevo</th></tr>
+                <tr>
+                  <th>Campo</th>
+                  <th>Valor anterior</th>
+                  <th>Valor nuevo</th>
+                </tr>
               </thead>
               <tbody>
                 <tr v-for="(cambio, idx) in selected.cambios_detallados" :key="idx">
-                  <td style="font-weight:600;word-break:break-word;">{{ formatCampoLegible(cambio.campo_legible || cambio.campo) }}</td>
+                  <td style="font-weight:600;word-break:break-word;">{{ formatCampoLegible(cambio.campo_legible ||
+                    cambio.campo) }}</td>
                   <td style="word-break:break-word;">
                     <span
                       v-if="cambio.valor_anterior !== null && cambio.valor_anterior !== undefined && String(cambio.valor_anterior).trim() !== '' && String(cambio.valor_anterior).trim() !== 'None'"
-                      class="val-old"
-                    >
+                      class="val-old">
                       {{ formatValor(cambio.valor_anterior) }}
                     </span>
                     <span v-else style="color:var(--gray-300);font-size:13px;font-style:italic;">Sin valor previo</span>
@@ -214,8 +213,7 @@
                   <td style="word-break:break-word;">
                     <span
                       v-if="cambio.valor_nuevo !== null && cambio.valor_nuevo !== undefined && String(cambio.valor_nuevo).trim() !== '' && String(cambio.valor_nuevo).trim() !== 'None'"
-                      class="val-new"
-                    >
+                      class="val-new">
                       {{ formatValor(cambio.valor_nuevo) }}
                     </span>
                     <span v-else style="color:var(--gray-300);font-size:13px;font-style:italic;">Sin valor</span>
@@ -227,12 +225,15 @@
         </div>
 
         <div class="section-title">Registro afectado</div>
-        <div class="card" style="padding:16px;">
-          <div style="font-weight:700;font-size:14px;margin-bottom:8px;">{{ formatTableName(selected.tabla) }} #{{ selected.registro_id }}</div>
+        <div class="obs-box">
+          <div style="font-weight:700;font-size:14px;margin-bottom:6px;">{{ formatTableName(selected.tabla) }} #{{
+            selected.registro_id }}</div>
           <p style="font-size:13px;color:var(--gray-500);margin-bottom:0;">
-            Este movimiento afectó el registro con ID <strong>{{ selected.registro_id }}</strong> en el módulo de <strong>{{ formatTableName(selected.tabla) }}</strong>.
+            Este movimiento afectó el registro con ID <strong>{{ selected.registro_id }}</strong> en el módulo de
+            <strong>{{ formatTableName(selected.tabla) }}</strong>.
           </p>
         </div>
+
       </template>
       <template #footer>
         <button class="btn btn-primary" @click="showDetail = false">Cerrar</button>
@@ -272,10 +273,10 @@ const { toast } = useToast()
 
 const { catalogos, loadCatalogos } = useCatalogos()
 
-const items    = ref([])
-const loading  = ref(false)
+const items = ref([])
+const loading = ref(false)
 const showDetail = ref(false)
-const selected   = ref(null)
+const selected = ref(null)
 
 const filters = reactive({
   search: '',
@@ -299,7 +300,6 @@ const grouped = computed(() => {
     .map(([date, items]) => ({ date, dateLabel: formatDateLabel(date), items }))
 })
 
-
 // ── Datos ───────────────────────────────────────────────────────
 async function loadData() {
   loading.value = true
@@ -307,7 +307,7 @@ async function loadData() {
     let params = { ...filters, page: page.value, per_page: perPage }
     params = applySortToParams(params)
     const res = await vistasApi.listHistoriales(params)
-    items.value    = res.data.movimientos || []
+    items.value = res.data.movimientos || []
     setMeta(res.data)
   } catch {
     toast.error('Error al cargar el historial')
@@ -353,9 +353,17 @@ onMounted(async () => {
     grid-template-columns: 1fr;
   }
 }
+
 /* ── Separador de fecha ── */
-.date-separator-row td { padding: 0; }
-.date-separator-row:hover td { background: transparent !important; cursor: default; }
+.date-separator-row td {
+  padding: 0;
+}
+
+.date-separator-row:hover td {
+  background: transparent !important;
+  cursor: default;
+}
+
 .date-separator {
   display: flex;
   align-items: center;
@@ -365,7 +373,11 @@ onMounted(async () => {
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }
-.date-separator-row:first-child .date-separator { border-top: none; }
+
+.date-separator-row:first-child .date-separator {
+  border-top: none;
+}
+
 .date-label {
   font-size: 11px;
   font-weight: 700;
@@ -374,6 +386,7 @@ onMounted(async () => {
   color: var(--gray-500);
   white-space: nowrap;
 }
+
 .date-count {
   font-size: 10px;
   color: var(--gray-400);
@@ -381,11 +394,19 @@ onMounted(async () => {
   border-radius: 10px;
   padding: 1px 7px;
   white-space: nowrap;
+  flex-shrink: 0;
 }
-.date-line { flex: 1; height: 1px; background: var(--border); }
+
+.date-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
 
 /* ── Filas ── */
-.data-row { cursor: default; }
+.data-row {
+  cursor: default;
+}
 
 /* ── Badge de operación ── */
 .op-badge {
@@ -398,6 +419,7 @@ onMounted(async () => {
   font-weight: 600;
   white-space: nowrap;
 }
+
 .op-dot {
   width: 5px;
   height: 5px;
@@ -405,9 +427,21 @@ onMounted(async () => {
   background: currentColor;
   flex-shrink: 0;
 }
-.op-insert { background: #EAF3DE; color: #3B6D11; }
-.op-update  { background: #FAEEDA; color: #854F0B; }
-.op-delete  { background: #FCEBEB; color: #A32D2D; }
+
+.op-insert {
+  background: #EAF3DE;
+  color: #3B6D11;
+}
+
+.op-update {
+  background: #FAEEDA;
+  color: #854F0B;
+}
+
+.op-delete {
+  background: #FCEBEB;
+  color: #A32D2D;
+}
 
 /* ── Badge de tabla ── */
 .tabla-badge {
@@ -422,22 +456,18 @@ onMounted(async () => {
   white-space: nowrap;
 }
 
-/* CORRECCIÓN 4: Descripción — se ajusta el ancho y se agrega tooltip nativo */
+/* ── Descripción ── */
 .row-desc {
   font-size: 13px;
   color: var(--gray-700);
   display: block;
-  /* Ampliamos el espacio visible antes de truncar */
   max-width: 480px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  /* Cursor de texto para indicar que hay más contenido */
   cursor: default;
 }
 
-/* Hover: mostrar texto completo sin truncar (el title del navegador ya hace el tooltip,
-   pero además hacemos que el texto fluya al hacer hover para pantallas grandes) */
 .data-row:hover .row-desc {
   white-space: normal;
   overflow: visible;
@@ -452,6 +482,7 @@ onMounted(async () => {
   font-size: 13px;
   color: var(--gray-600);
 }
+
 .user-avatar {
   width: 24px;
   height: 24px;
@@ -475,6 +506,7 @@ onMounted(async () => {
   font-size: 13px;
   font-style: italic;
 }
+
 .val-new {
   background: #EAF3DE;
   color: #3B6D11;
