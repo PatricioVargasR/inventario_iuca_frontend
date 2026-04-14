@@ -3,7 +3,7 @@
 // Maneja el formulario, validación, CRUD y concurrencia.
 // ─────────────────────────────────────────────────────────────
 
-import { ref, reactive } from 'vue'
+import { ref, reactive, watch } from 'vue'   // ← agregado watch
 import { catalogosApi } from '@/services/api'
 import { acquireLock, releaseLock } from '@/services/concurrency'
 import { useToast } from '@/composables/useToast'
@@ -36,6 +36,16 @@ export function useCatalogosForm({ activeTab, tabActual, tipoActual, onSaved, on
 
   const form = reactive({
     nombre: '', descripcion: '', estado_catalogo: 'activo', color_hex: '', version: null, _id: null,
+  })
+
+  // ── Watcher: liberar bloqueo de eliminación si el ConfirmDialog
+  //    se cierra por cualquier vía (botón X, click fuera, cancelar) ──
+  watch(showConfirm, async (isOpen) => {
+    if (!isOpen && pendingDelete.value) {
+      await releaseLock(pendingDelete.value.tabla, pendingDelete.value.id)
+      pendingDelete.value = null
+      toDelete.value = null
+    }
   })
 
   // ── Validación ───────────────────────────────────────────────
@@ -195,6 +205,7 @@ export function useCatalogosForm({ activeTab, tabActual, tipoActual, onSaved, on
     const ok = await tryAcquireLock(tab, id, 2, 'eliminacion')
     if (!ok) return
 
+    // Guardar con tabla y id para que el watcher pueda liberar si el modal se cierra
     pendingDelete.value = { tabla: TABLA_MAP[tab], id }
     toDelete.value      = { ...item, nombre: getItemNombre(item) }
     showConfirm.value   = true
@@ -206,13 +217,13 @@ export function useCatalogosForm({ activeTab, tabActual, tipoActual, onSaved, on
       const id = getItemId(toDelete.value)
       await catalogosApi[METODO_MAP[activeTab.value].delete](id)
 
-      if (pendingDelete.value) {
-        await releaseLock(pendingDelete.value.tabla, pendingDelete.value.id)
-        pendingDelete.value = null
-      }
+      // El watcher se encargará de liberar pendingDelete cuando showConfirm → false,
+      // pero como aquí ya eliminamos el registro (y el bloqueo en el backend también
+      // se borra en cascada), simplemente limpiamos el estado local.
+      pendingDelete.value = null
 
       toast.success(`"${toDelete.value.nombre}" fue eliminado`, 'Eliminado')
-      showConfirm.value = false
+      showConfirm.value = false   // watcher dispara, pendingDelete ya es null → no intenta liberar
       toDelete.value    = null
       onDeleted?.()
     } catch (e) {
@@ -222,18 +233,21 @@ export function useCatalogosForm({ activeTab, tabActual, tipoActual, onSaved, on
     }
   }
 
+  // Ya no es necesario liberar manualmente aquí: el watcher lo hace.
   async function handleCancelDelete() {
-    if (pendingDelete.value) {
-      await releaseLock(pendingDelete.value.tabla, pendingDelete.value.id)
-      pendingDelete.value = null
-    }
-    toDelete.value    = null
-    showConfirm.value = false
+    showConfirm.value = false  // dispara el watcher → libera pendingDelete
   }
 
   // ── Concurrencia ─────────────────────────────────────────────
   function handleConcurrencyCancel() {
     showConcurrencyAlert.value = false
+    // Si había un pendingDelete que se intentó y falló (bloqueo ajeno),
+    // no hay nada que liberar — tryAcquireLock falló antes de crear el bloqueo.
+    // Limpiar toDelete por si quedó algo parcial.
+    if (pendingDelete.value) {
+      pendingDelete.value = null
+      toDelete.value = null
+    }
   }
 
   async function handleConcurrencyRetry(items) {
@@ -251,6 +265,11 @@ export function useCatalogosForm({ activeTab, tabActual, tipoActual, onSaved, on
   async function releasCurrentLock() {
     if (currentLock.value) {
       await releaseLock(currentLock.value.tabla, currentLock.value.id)
+    }
+    // También liberar pendingDelete si quedó colgado
+    if (pendingDelete.value) {
+      await releaseLock(pendingDelete.value.tabla, pendingDelete.value.id)
+      pendingDelete.value = null
     }
   }
 
