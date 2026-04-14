@@ -746,32 +746,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.input-error {
-  border-color: var(--danger) !important;
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
-}
-
-.field-error {
-  display: block;
-  font-size: 11.5px;
-  color: var(--danger);
-  margin-top: 4px;
-  font-weight: 500;
-  animation: fadeIn 0.15s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .editing-badge {
   display: inline-flex;
   align-items: center;
