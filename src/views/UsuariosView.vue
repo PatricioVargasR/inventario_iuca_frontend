@@ -103,12 +103,12 @@
           <div class="detail-item">
             <label>ID</label><strong style="font-family: var(--font-mono)">{{
               selected.id_usuario
-              }}</strong>
+            }}</strong>
           </div>
           <div class="detail-item">
             <label>Número de nómina</label><strong style="font-family: var(--font-mono)">{{
               selected.numero_nomina || "–"
-              }}</strong>
+            }}</strong>
           </div>
           <div class="detail-item span-full">
             <label>Nombre completo</label><strong>{{ selected.nombre_usuario }}</strong>
@@ -135,8 +135,8 @@
     </BaseModal>
 
     <!-- Form Modal -->
-    <BaseModal v-model="showForm" :title="editMode ? 'Actualizar responsable' : 'Nuevo responsable'" size="sm"
-      @update:model-value="handleFormClose">
+    <BaseModal v-model="showForm" :title="editMode ? 'Actualizar responsable' : 'Nuevo responsable'"
+      subtitle="Sistema de inventario IUCA" size="sm" @update:model-value="handleFormClose">
       <LockWarningBanner v-if="editMode" :message="lockWarning" />
 
       <form id="usuariosForm" @submit.prevent="saveItem" novalidate>
@@ -165,7 +165,7 @@
               ">
               <span v-if="formErrors.numero_nomina" class="field-error">{{
                 formErrors.numero_nomina
-                }}</span>
+              }}</span>
               <span v-else></span>
               <small style="color: var(--gray-400); font-size: 11px">{{ form.numero_nomina.length }} / 4 —
                 Opcional</small>
@@ -181,7 +181,7 @@
             </select>
             <span v-if="formErrors.area_id" class="field-error">{{
               formErrors.area_id
-              }}</span>
+            }}</span>
           </div>
         </div>
 
@@ -206,7 +206,7 @@
             </div>
             <span v-if="formErrors.nombre_usuario" class="field-error">{{
               formErrors.nombre_usuario
-              }}</span>
+            }}</span>
           </div>
           <div class="form-group span-full">
             <label class="form-label">Puesto <span class="required">*</span></label>
@@ -226,7 +226,7 @@
             </div>
             <span v-if="formErrors.puesto" class="field-error">{{
               formErrors.puesto
-              }}</span>
+            }}</span>
           </div>
         </div>
       </form>

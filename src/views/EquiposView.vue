@@ -111,7 +111,7 @@
             <td>
               <span style="font-family: var(--font-mono); font-size: 12px">{{
                 eq.numero_serie || "–"
-              }}</span>
+                }}</span>
             </td>
             <td>
               <StatusBadge :estado="eq.estado" :color="eq.color_estado" />
@@ -149,7 +149,7 @@
           <div class="detail-item">
             <label>ID</label><strong style="font-family: var(--font-mono)">{{
               selected.id_activo
-            }}</strong>
+              }}</strong>
           </div>
           <div class="detail-item">
             <label>Modelo</label><strong>{{ selected.modelo || "–" }}</strong>
@@ -160,7 +160,7 @@
           <div class="detail-item">
             <label>Número de Serie</label><strong style="font-family: var(--font-mono)">{{
               selected.numero_serie || "–"
-            }}</strong>
+              }}</strong>
           </div>
           <div class="detail-item">
             <label>Nombre</label><strong>{{ selected.nombre_activo }}</strong>
@@ -212,8 +212,8 @@
     </BaseModal>
 
     <!-- Create/Edit Modal -->
-    <BaseModal v-model="showForm" :title="editMode ? 'Actualizar Equipo' : 'Nuevo Equipo'" size="lg"
-      @update:model-value="handleFormClose">
+    <BaseModal v-model="showForm" :title="editMode ? 'Actualizar Equipo' : 'Nuevo Equipo'"
+      subtitle="Sistema de inventario IUCA" size="lg" @update:model-value="handleFormClose">
       <LockWarningBanner v-if="editMode" :message="lockWarning" />
 
       <form id="equipoForm" @submit.prevent="handleSave" novalidate>
@@ -232,7 +232,7 @@
             </select>
             <span v-if="formErrors.tipo_activo_id" class="field-error">{{
               formErrors.tipo_activo_id
-            }}</span>
+              }}</span>
           </div>
           <div class="form-group">
             <label class="form-label">Estado <span class="required">*</span></label>
@@ -245,7 +245,7 @@
             </select>
             <span v-if="formErrors.estado_id" class="field-error">{{
               formErrors.estado_id
-            }}</span>
+              }}</span>
           </div>
           <div class="form-group">
             <label class="form-label">Nombre del Activo <span class="required">*</span></label>
@@ -253,7 +253,7 @@
               placeholder="Ej: ThinkPad X1" maxlength="50" />
             <span v-if="formErrors.nombre_activo" class="field-error">{{
               formErrors.nombre_activo
-            }}</span>
+              }}</span>
           </div>
           <div class="form-group">
             <label class="form-label">Sucursal <span class="required">*</span></label>
@@ -261,7 +261,7 @@
               :class="{ 'input-error': formErrors.sucursal_nombre }" maxlength="50" />
             <span v-if="formErrors.sucursal_nombre" class="field-error">{{
               formErrors.sucursal_nombre
-            }}</span>
+              }}</span>
           </div>
         </div>
 
@@ -273,7 +273,7 @@
               placeholder="Ej: Lenovo" maxlength="50" />
             <span v-if="formErrors.marca" class="field-error">{{
               formErrors.marca
-            }}</span>
+              }}</span>
           </div>
           <div class="form-group">
             <label class="form-label">Modelo <span class="required">*</span></label>
@@ -281,7 +281,7 @@
               placeholder="Ej: ThinkPad X1" maxlength="50" />
             <span v-if="formErrors.modelo" class="field-error">{{
               formErrors.modelo
-            }}</span>
+              }}</span>
           </div>
           <div class="form-group">
             <label class="form-label">Número de Serie <span class="required">*</span></label>
@@ -289,7 +289,7 @@
               placeholder="Ej: ABC123XYZ456" maxlength="50" />
             <span v-if="formErrors.numero_serie" class="field-error">{{
               formErrors.numero_serie
-            }}</span>
+              }}</span>
           </div>
           <div class="form-group span-full">
             <label class="form-label">Observaciones</label>
@@ -613,7 +613,7 @@ async function handleOpenEdit(eq) {
 
 async function handleOpenDetail(eq) {
   await openDetail(eq.id_activo);
-}from
+} from
 
 async function handleSave() {
   if (!validateForm()) {

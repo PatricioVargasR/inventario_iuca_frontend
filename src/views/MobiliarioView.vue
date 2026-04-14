@@ -88,7 +88,7 @@
           </tr>
           <tr v-else v-for="mueble in mobiliario" :key="mueble.id_mueble">
             <td><span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">{{ mueble.id_mueble
-                }}</span></td>
+            }}</span></td>
             <td style="font-weight:600;color:var(--gray-800)">
               {{ mueble.tipo_mobiliario }}
               <span v-if="mueble.editado_por && mueble.editado_por !== currentUserId" class="editing-badge">
@@ -110,7 +110,7 @@
                     {{ r.nombre_usuario }}
                   </span>
                   <span v-if="mueble.responsables.length > 2" class="resp-more">+{{ mueble.responsables.length - 2
-                    }}</span>
+                  }}</span>
                 </template>
                 <span v-else style="color:var(--gray-400)">–</span>
               </div>
@@ -132,7 +132,7 @@
       <template v-if="selected">
         <div class="detail-grid">
           <div class="detail-item"><label>ID</label><strong style="font-family:var(--font-mono)">{{ selected.id_mueble
-              }}</strong></div>
+          }}</strong></div>
           <div class="detail-item"><label>Tipo</label><strong>{{ selected.tipo_mobiliario }}</strong></div>
           <div class="detail-item"><label>Marca</label><strong>{{ selected.marca || '–' }}</strong></div>
           <div class="detail-item"><label>Modelo</label><strong>{{ selected.modelo || '–' }}</strong></div>
@@ -171,8 +171,8 @@
     </BaseModal>
 
     <!-- Create/Edit Modal -->
-    <BaseModal v-model="showForm" :title="editMode ? 'Actualizar Mobiliario' : 'Nuevo Mobiliario'" size="lg"
-      @update:model-value="handleFormClose">
+    <BaseModal v-model="showForm" :title="editMode ? 'Actualizar Mobiliario' : 'Nuevo Mobiliario'"
+      subtitle="Sistema de inventario IUCA" size="lg" @update:model-value="handleFormClose">
 
       <LockWarningBanner v-if="editMode" :message="lockWarning" />
 

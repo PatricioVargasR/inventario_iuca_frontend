@@ -1,17 +1,13 @@
 <template>
   <div class="page-container">
 
-    <PageHeader
-      title="Catálogos del sistema"
-      subtitle="Administración de catálogos y configuraciones"
-    >
+    <PageHeader title="Catálogos del sistema" subtitle="Administración de catálogos y configuraciones">
       <template #actions>
-        <button
-          v-if="authStore.canDo('catalogos', 'puede_crear')"
-          class="btn btn-primary"
-          @click="openCreate"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <button v-if="authStore.canDo('catalogos', 'puede_crear')" class="btn btn-primary" @click="openCreate">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
           Nuevo {{ tabActual.labelSingular }}
         </button>
       </template>
@@ -20,13 +16,8 @@
     <!-- Tabs + búsqueda -->
     <div class="card" style="padding:0;margin-bottom:20px;overflow:hidden;">
       <div class="tabs-bar">
-        <button
-          v-for="tab in TABS"
-          :key="tab.key"
-          class="tab-btn"
-          :class="{ active: activeTab === tab.key }"
-          @click="switchTab(tab.key)"
-        >
+        <button v-for="tab in TABS" :key="tab.key" class="tab-btn" :class="{ active: activeTab === tab.key }"
+          @click="switchTab(tab.key)">
           {{ tab.label }}
           <span class="tab-count" :class="{ active: activeTab === tab.key }">
             {{ tabCounts[tab.key] }}
@@ -38,13 +29,13 @@
         <div class="filter-group search">
           <label>Búsqueda general</label>
           <div class="input-with-icon">
-            <svg class="input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input
-              v-model="search"
-              class="form-input"
-              :placeholder="`Buscar ${tabActual.labelSingular.toLowerCase()}...`"
-              @input="onSearch"
-            />
+            <svg class="input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input v-model="search" class="form-input"
+              :placeholder="`Buscar ${tabActual.labelSingular.toLowerCase()}...`" @input="onSearch" />
           </div>
         </div>
         <div class="filter-group">
@@ -118,15 +109,15 @@
                 </span>
               </td>
               <td style="font-weight:700;color:var(--gray-900)">{{ getItemNombre(item) }}</td>
-              <td style="color:var(--gray-500);font-size:13px;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              <td
+                style="color:var(--gray-500);font-size:13px;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                 {{ item.descripcion || '–' }}
               </td>
               <td v-if="activeTab === 'estado'">
                 <div style="display:flex;align-items:center;gap:8px;">
                   <span
                     style="width:14px;height:14px;border-radius:50%;display:inline-block;border:1px solid var(--border);"
-                    :style="{ background: item.color_hex || '#ccc' }"
-                  ></span>
+                    :style="{ background: item.color_hex || '#ccc' }"></span>
                   <span style="font-family:var(--font-mono);font-size:12px;color:var(--gray-500)">
                     {{ item.color_hex || '–' }}
                   </span>
@@ -143,13 +134,27 @@
               <td>
                 <div class="actions-cell">
                   <button class="action-btn view" @click="openDetail(activeTab, item)" title="Ver detalle">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
                   </button>
-                  <button v-if="authStore.canDo('catalogos', 'puede_actualizar')" class="action-btn edit" @click="openEdit(activeTab, item)" title="Editar">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  <button v-if="authStore.canDo('catalogos', 'puede_actualizar')" class="action-btn edit"
+                    @click="openEdit(activeTab, item)" title="Editar">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
                   </button>
-                  <button v-if="authStore.canDo('catalogos', 'puede_eliminar')" class="action-btn delete" @click="confirmDelete(activeTab, item)" title="Eliminar">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                  <button v-if="authStore.canDo('catalogos', 'puede_eliminar')" class="action-btn delete"
+                    @click="confirmDelete(activeTab, item)" title="Eliminar">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6l-1 14H6L5 6" />
+                      <path d="M10 11v6" />
+                      <path d="M14 11v6" />
+                      <path d="M9 6V4h6v2" />
+                    </svg>
                   </button>
                 </div>
               </td>
@@ -158,38 +163,21 @@
         </tbody>
       </table>
 
-      <Pagination
-        v-if="!loading && items.length > 0"
-        :current="page"
-        :total-pages="totalPages"
-        :total="total"
-        :from="from"
-        :to="to"
-        :per-page="perPage"
-        @change="onPageChange"
-      />
+      <Pagination v-if="!loading && items.length > 0" :current="page" :total-pages="totalPages" :total="total"
+        :from="from" :to="to" :per-page="perPage" @change="onPageChange" />
     </div>
 
     <!-- Create / Edit Modal -->
-    <BaseModal
-      v-model="showForm"
+    <BaseModal v-model="showForm"
       :title="editMode ? `Actualizar ${tabActual.labelSingular.toLowerCase()}` : 'Nuevo catálogo'"
-      size="md"
-      @update:model-value="handleFormClose"
-    >
+      subtitle="Sistema de inventario IUCA" size="md" @update:model-value="handleFormClose">
       <form id="catalogoForm" @submit.prevent="saveItem" novalidate>
 
         <div v-if="!editMode">
           <div class="section-title" style="margin-top:0;">Tipo de catálogo</div>
           <div class="catalog-type-selector">
-            <button
-              v-for="tab in TABS"
-              :key="tab.key"
-              type="button"
-              class="catalog-type-btn"
-              :class="{ active: formTab === tab.key }"
-              @click="formTab = tab.key; clearErrors()"
-            >
+            <button v-for="tab in TABS" :key="tab.key" type="button" class="catalog-type-btn"
+              :class="{ active: formTab === tab.key }" @click="formTab = tab.key; clearErrors()">
               {{ tab.label }}
             </button>
           </div>
@@ -199,13 +187,8 @@
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">Nombre <span class="required">*</span></label>
-            <input
-              v-model="form.nombre"
-              class="form-input"
-              :class="{ 'input-error': formErrors.nombre }"
-              :placeholder="tipoActual.placeholder"
-              maxlength="50"
-            />
+            <input v-model="form.nombre" class="form-input" :class="{ 'input-error': formErrors.nombre }"
+              :placeholder="tipoActual.placeholder" maxlength="50" />
             <span v-if="formErrors.nombre" class="field-error">{{ formErrors.nombre }}</span>
           </div>
           <div class="form-group">
@@ -217,19 +200,25 @@
           </div>
         </div>
 
-        <div v-if="(editMode && activeTab === 'estado') || (!editMode && formTab === 'estado')" class="form-group" style="margin-top:4px;">
+        <div v-if="(editMode && activeTab === 'estado') || (!editMode && formTab === 'estado')" class="form-group"
+          style="margin-top:4px;">
           <label class="form-label">Color <span class="required">*</span></label>
           <div style="display:flex;gap:10px;align-items:center;">
-            <input type="text" v-model="form.color_hex" class="form-input" :class="{ 'input-error': formErrors.color_hex }" placeholder="#000000" maxlength="7" style="max-width:120px;" />
-            <input type="color" v-model="form.color_hex" style="width:50px;height:40px;padding:0;border:none;background:none;cursor:pointer;" />
+            <input type="text" v-model="form.color_hex" class="form-input"
+              :class="{ 'input-error': formErrors.color_hex }" placeholder="#000000" maxlength="7"
+              style="max-width:120px;" />
+            <input type="color" v-model="form.color_hex"
+              style="width:50px;height:40px;padding:0;border:none;background:none;cursor:pointer;" />
           </div>
           <span v-if="formErrors.color_hex" class="field-error">{{ formErrors.color_hex }}</span>
-          <small style="color:var(--gray-400);font-size:11px;">Puedes elegir el color o escribir el código HEX manualmente.</small>
+          <small style="color:var(--gray-400);font-size:11px;">Puedes elegir el color o escribir el código HEX
+            manualmente.</small>
         </div>
 
         <div class="section-title">Descripción</div>
         <div class="form-group">
-          <textarea v-model="form.descripcion" class="form-textarea" placeholder="Descripción opcional..." maxlength="200"></textarea>
+          <textarea v-model="form.descripcion" class="form-textarea" placeholder="Descripción opcional..."
+            maxlength="200"></textarea>
           <small style="color:var(--gray-400);font-size:11px;">{{ form.descripcion.length }} / 200</small>
         </div>
 
@@ -237,7 +226,8 @@
       <template #footer>
         <button class="btn btn-secondary" @click="handleFormClose">Cancelar</button>
         <button class="btn btn-primary" form="catalogoForm" type="submit" :disabled="saving">
-          <span v-if="saving" class="spinner" style="width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:white;"></span>
+          <span v-if="saving" class="spinner"
+            style="width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:white;"></span>
           <span v-else>{{ editMode ? 'Actualizar' : 'Guardar' }}</span>
         </button>
       </template>
@@ -265,7 +255,9 @@
           <div v-if="activeTab === 'estado'" class="detail-item span-full">
             <label>Color</label>
             <div style="display:flex;align-items:center;gap:10px;">
-              <span style="width:20px;height:20px;border-radius:50%;border:1px solid var(--border);display:inline-block;" :style="{ background: selected.color_hex }"></span>
+              <span
+                style="width:20px;height:20px;border-radius:50%;border:1px solid var(--border);display:inline-block;"
+                :style="{ background: selected.color_hex }"></span>
               <strong style="font-family:var(--font-mono)">{{ selected.color_hex }}</strong>
             </div>
           </div>
@@ -287,24 +279,13 @@
       </template>
     </BaseModal>
 
-    <ConfirmDialog
-      v-model="showConfirm"
-      :title="`Eliminar ${tabActual.labelSingular.toLowerCase()}`"
+    <ConfirmDialog v-model="showConfirm" :title="`Eliminar ${tabActual.labelSingular.toLowerCase()}`"
       :message="`¿Estás seguro de eliminar '${toDelete?.nombre}'? Esta acción no se puede deshacer.`"
-      :loading="deleting"
-      @confirm="doDelete"
-      @cancel="handleCancelDelete"
-    />
+      :loading="deleting" @confirm="doDelete" @cancel="handleCancelDelete" />
 
-    <ConcurrencyAlert
-      v-model="showConcurrencyAlert"
-      :title="concurrencyAlert.title"
-      :message="concurrencyAlert.message"
-      :lock-info="concurrencyAlert.lockInfo"
-      :show-retry="concurrencyAlert.showRetry"
-      @cancel="handleConcurrencyCancel"
-      @retry="handleConcurrencyRetry(items)"
-    />
+    <ConcurrencyAlert v-model="showConcurrencyAlert" :title="concurrencyAlert.title" :message="concurrencyAlert.message"
+      :lock-info="concurrencyAlert.lockInfo" :show-retry="concurrencyAlert.showRetry" @cancel="handleConcurrencyCancel"
+      @retry="handleConcurrencyRetry(items)" />
   </div>
 </template>
 
@@ -324,8 +305,8 @@ import Pagination from '@/components/ui/Pagination.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 
 const authStore = useAuthStore()
-const route     = useRoute()
-const router    = useRouter()
+const route = useRoute()
+const router = useRouter()
 
 // ── Tab activo — inicializado desde ?tab= query param ────────────────
 const VALID_TABS = TABS.map(t => t.key)
@@ -336,21 +317,21 @@ function tabFromQuery() {
 }
 
 const activeTab = ref(tabFromQuery())
-const search    = ref(route.query.search || '')
-const estado    = ref('')
+const search = ref(route.query.search || '')
+const estado = ref('')
 
 // Mantener URL sincronizada cuando cambian tab o search
 watch([activeTab, search], ([tab, s]) => {
   router.replace({
     query: {
-      ...(tab !== 'area'  ? { tab } : {}),
-      ...(s               ? { search: s } : {}),
+      ...(tab !== 'area' ? { tab } : {}),
+      ...(s ? { search: s } : {}),
     }
   })
 }, { flush: 'post' })
 
 // ── Computeds de tab ─────────────────────────────────────────────────
-const tabActual  = computed(() => TABS.find(t => t.key === activeTab.value))
+const tabActual = computed(() => TABS.find(t => t.key === activeTab.value))
 const tipoActual = computed(() => TABS.find(t => t.key === (editMode.value ? activeTab.value : formTab.value)))
 
 // ── Sort ─────────────────────────────────────────────────────────────
@@ -379,15 +360,15 @@ const {
   activeTab,
   tabActual,
   tipoActual,
-  onSaved:   () => { loadAllCounts(); loadTab() },
+  onSaved: () => { loadAllCounts(); loadTab() },
   onDeleted: () => { loadAllCounts(); loadTab() },
 })
 
 // ── Navegación entre tabs ────────────────────────────────────────────
 function switchTab(key) {
   activeTab.value = key
-  search.value    = ''
-  estado.value    = ''
+  search.value = ''
+  estado.value = ''
   resetSort()
   loadTab()
 }
@@ -411,7 +392,10 @@ onMounted(async () => {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
-.tabs-bar::-webkit-scrollbar { display: none; }
+
+.tabs-bar::-webkit-scrollbar {
+  display: none;
+}
 
 .tab-btn {
   display: inline-flex;
@@ -431,8 +415,15 @@ onMounted(async () => {
   white-space: nowrap;
   flex-shrink: 0;
 }
-.tab-btn:hover  { color: var(--gray-800); }
-.tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+.tab-btn:hover {
+  color: var(--gray-800);
+}
+
+.tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
 
 .tab-count {
   display: inline-flex;
@@ -448,7 +439,11 @@ onMounted(async () => {
   color: var(--gray-500);
   transition: all 0.15s;
 }
-.tab-count.active { background: var(--primary-light); color: var(--primary); }
+
+.tab-count.active {
+  background: var(--primary-light);
+  color: var(--primary);
+}
 
 .catalog-type-selector {
   display: flex;
@@ -468,8 +463,18 @@ onMounted(async () => {
   cursor: pointer;
   transition: all 0.2s;
 }
-.catalog-type-btn:hover  { border-color: var(--primary); background: var(--gray-100); }
-.catalog-type-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25); }
+
+.catalog-type-btn:hover {
+  border-color: var(--primary);
+  background: var(--gray-100);
+}
+
+.catalog-type-btn.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
 
 .filters-row {
   display: flex;
@@ -479,6 +484,12 @@ onMounted(async () => {
   padding: 16px 20px;
 }
 
-.sorted { cursor: pointer; user-select: none; }
-.sorted:hover { color: var(--gray-800); }
+.sorted {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sorted:hover {
+  color: var(--gray-800);
+}
 </style>
