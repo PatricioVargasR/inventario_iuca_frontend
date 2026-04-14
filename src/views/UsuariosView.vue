@@ -370,7 +370,7 @@ const {
   items,
   idKey: "id_usuario",
   openEdit: (u) => openEdit(u),
-  confirmDelete: (u) => confirmDelete(u),
+  confirmDelete: (u) => confirmDelete(u.id_usuario, u),
   apiGet: (id) => usuariosApi.getResponsable(id),
   clearErrors,
   toast,
