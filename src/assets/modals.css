@@ -3,6 +3,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -13,6 +14,7 @@
     opacity: 0;
     transform: translateY(20px) scale(0.97);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -47,12 +49,14 @@
   /* 👇 CAMBIO CLAVE */
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* en lugar de auto */
+  overflow: hidden;
+  /* en lugar de auto */
 }
 
 .modal-box.modal-sm {
   max-width: 420px;
 }
+
 .modal-box.modal-lg {
   max-width: 720px;
 }
@@ -76,6 +80,7 @@
   font-weight: 700;
   color: var(--gray-900);
 }
+
 .modal-subtitle {
   font-size: 12.5px;
   color: var(--gray-500);
@@ -96,6 +101,7 @@
   transition: all 0.15s;
   flex-shrink: 0;
 }
+
 .modal-close:hover {
   background: var(--gray-200);
   color: var(--gray-700);
@@ -128,6 +134,7 @@
 
 /* RESPONSIVE */
 @media (max-width: 768px) {
+
   /* Modal full screen en móvil */
   .modal-overlay {
     padding: 0;

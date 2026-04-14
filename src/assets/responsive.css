@@ -50,7 +50,8 @@
     --nav-height: 72px;
   }
 
-  html, body {
+  html,
+  body {
     font-size: 16px;
   }
 
@@ -77,9 +78,17 @@
     font-size: 15px;
   }
 
-  h1 { font-size: 2rem; }
-  h2 { font-size: 1.6rem; }
-  h3 { font-size: 1.25rem; }
+  h1 {
+    font-size: 2rem;
+  }
+
+  h2 {
+    font-size: 1.6rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+  }
 
   .btn {
     font-size: 15px;
@@ -109,7 +118,9 @@
 
 /* LARGE SCREENS (1920px+) */
 @media (min-width: 1920px) {
-  html, body {
+
+  html,
+  body {
     font-size: 17px;
   }
 
