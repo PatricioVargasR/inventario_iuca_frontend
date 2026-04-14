@@ -1,17 +1,17 @@
-import { watch, reactive } from 'vue'
+import { watch, reactive } from "vue";
 
 export function useSort({ onChange } = {}) {
   const sort = reactive({
-    field: '',
-    direction: ''
-  })
+    field: "",
+    direction: "",
+  });
 
   function toggleSort(field) {
     if (sort.field === field) {
-      sort.direction = sort.direction === 'asc' ? 'desc' : 'asc'
+      sort.direction = sort.direction === "asc" ? "desc" : "asc";
     } else {
-      sort.field = field
-      sort.direction = 'asc'
+      sort.field = field;
+      sort.direction = "asc";
     }
   }
 
@@ -22,8 +22,8 @@ export function useSort({ onChange } = {}) {
    *   'desc' → flecha abajo activa
    */
   function getSortClass(field) {
-    if (sort.field !== field) return ''
-    return sort.direction
+    if (sort.field !== field) return "";
+    return sort.direction;
   }
 
   /**
@@ -33,26 +33,30 @@ export function useSort({ onChange } = {}) {
    */
   function applySortToParams(params) {
     if (sort.field) {
-      params.sort_by  = sort.field
-      params.sort_dir = sort.direction
+      params.sort_by = sort.field;
+      params.sort_dir = sort.direction;
     }
-    return params
+    return params;
   }
 
   function resetSort() {
-    sort.field     = ''
-    sort.direction = ''
+    sort.field = "";
+    sort.direction = "";
   }
 
-  watch(sort, () => {
-    onChange?.()
-  }, { deep: true })
+  watch(
+    sort,
+    () => {
+      onChange?.();
+    },
+    { deep: true },
+  );
 
   return {
     sort,
     toggleSort,
     getSortClass,
     applySortToParams,
-    resetSort
-  }
+    resetSort,
+  };
 }
