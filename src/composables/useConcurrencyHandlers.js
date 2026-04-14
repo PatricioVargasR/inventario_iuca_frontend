@@ -27,10 +27,14 @@ export function useConcurrencyHandlers({
   }
 
   async function handleConflictReload(id, populate) {
+    if (!id) {
+      toast.error('No se pudo recargar el registro')
+      return
+    }
     try {
       const res = await apiGet(id)
-      populate(res.data)
       showConflictModal.value = false
+      populate(res.data)
       clearErrors()
       toast.info('Datos recargados. Verifica los cambios antes de guardar.')
     } catch {
