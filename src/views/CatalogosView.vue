@@ -309,7 +309,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useSort } from '@/composables/useSort'
 import { formatDateShort as formatDate } from '@/utils/formatters'
@@ -323,20 +324,41 @@ import Pagination from '@/components/ui/Pagination.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 
 const authStore = useAuthStore()
-const activeTab = ref('area')
-const search    = ref('')
+const route     = useRoute()
+const router    = useRouter()
+
+// ── Tab activo — inicializado desde ?tab= query param ────────────────
+const VALID_TABS = TABS.map(t => t.key)
+
+function tabFromQuery() {
+  const q = route.query.tab
+  return VALID_TABS.includes(q) ? q : 'area'
+}
+
+const activeTab = ref(tabFromQuery())
+const search    = ref(route.query.search || '')
 const estado    = ref('')
 
-// ── Computeds de tab ─────────────────────────────────────────
+// Mantener URL sincronizada cuando cambian tab o search
+watch([activeTab, search], ([tab, s]) => {
+  router.replace({
+    query: {
+      ...(tab !== 'area'  ? { tab } : {}),
+      ...(s               ? { search: s } : {}),
+    }
+  })
+}, { flush: 'post' })
+
+// ── Computeds de tab ─────────────────────────────────────────────────
 const tabActual  = computed(() => TABS.find(t => t.key === activeTab.value))
 const tipoActual = computed(() => TABS.find(t => t.key === (editMode.value ? activeTab.value : formTab.value)))
 
-// ── Sort ─────────────────────────────────────────────────────
+// ── Sort ─────────────────────────────────────────────────────────────
 const { toggleSort, getSortClass, applySortToParams, resetSort } = useSort({
   onChange: () => loadTab(true),
 })
 
-// ── Datos ────────────────────────────────────────────────────
+// ── Datos ────────────────────────────────────────────────────────────
 const {
   items, loading, tabCounts,
   page, total, totalPages, perPage, from, to,
@@ -344,7 +366,7 @@ const {
   loadTab, loadAllCounts,
 } = useCatalogosData({ activeTab, search, estado, applySortToParams })
 
-// ── Formulario / CRUD ────────────────────────────────────────
+// ── Formulario / CRUD ────────────────────────────────────────────────
 const {
   showForm, showDetail, showConfirm, showConcurrencyAlert,
   form, formTab, formErrors, editMode, saving, deleting,
@@ -361,7 +383,7 @@ const {
   onDeleted: () => { loadAllCounts(); loadTab() },
 })
 
-// ── Navegación entre tabs ────────────────────────────────────
+// ── Navegación entre tabs ────────────────────────────────────────────
 function switchTab(key) {
   activeTab.value = key
   search.value    = ''
@@ -370,7 +392,7 @@ function switchTab(key) {
   loadTab()
 }
 
-// ── Ciclo de vida ────────────────────────────────────────────
+// ── Ciclo de vida ────────────────────────────────────────────────────
 onBeforeUnmount(releasCurrentLock)
 
 onMounted(async () => {
@@ -426,10 +448,7 @@ onMounted(async () => {
   color: var(--gray-500);
   transition: all 0.15s;
 }
-.tab-count.active {
-  background: var(--primary-light);
-  color: var(--primary);
-}
+.tab-count.active { background: var(--primary-light); color: var(--primary); }
 
 .catalog-type-selector {
   display: flex;
