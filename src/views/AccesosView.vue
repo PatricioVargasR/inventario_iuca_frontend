@@ -365,7 +365,7 @@ const { catalogos, loadCatalogos } = useCatalogos()
 const { getSortClass, toggleSort, applySortToParams } = useSort({
   onChange: loadData
 })
-const { page, total, totalPages, perPage, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
+const { page, total, totalPages, perPage, from, to, onSearch, onPageChange, setMeta, setLoadFn } = usePagination()
 const { formErrors, clearErrors, applyFieldErrors, setError } = useFormErrors()
 
 const items = ref([])

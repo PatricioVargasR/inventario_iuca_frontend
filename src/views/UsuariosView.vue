@@ -290,6 +290,8 @@ const {
   total,
   totalPages,
   perPage,
+  from,
+  to,
   onSearch,
   onPageChange,
   setMeta,

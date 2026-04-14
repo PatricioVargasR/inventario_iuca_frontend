@@ -138,7 +138,7 @@
           </tr>
         </tbody>
       </table>
-      <Pagination :current="page" :total-pages="totalPages" :total="total" :from="from" :to="to" :per-page="20"
+      <Pagination :current="page" :total-pages="totalPages" :total="total" :from="from" :to="to" :per-page="perPage"
         @change="onPageChange" />
     </div>
 
@@ -461,6 +461,8 @@ const {
   total,
   totalPages,
   perPage,
+  from,
+  to,
   onSearch,
   onPageChange,
   setMeta,
@@ -611,7 +613,7 @@ async function handleOpenEdit(eq) {
 
 async function handleOpenDetail(eq) {
   await openDetail(eq.id_activo);
-}
+}from
 
 async function handleSave() {
   if (!validateForm()) {

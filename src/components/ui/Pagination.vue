@@ -1,8 +1,8 @@
 <template>
   <div class="pagination">
-  <span class="pagination-info">
-    Mostrando <strong>{{ from }}</strong> a <strong>{{ to }}</strong> de <strong>{{ total }}</strong> registros
-  </span>
+    <span class="pagination-info">
+      Mostrando <strong>{{ from }}</strong> a <strong>{{ to }}</strong> de <strong>{{ total }}</strong> registros
+    </span>
     <div class="pagination-controls">
       <button class="page-btn" @click="$emit('change', 1)" :disabled="current === 1">«</button>
       <button class="page-btn" @click="$emit('change', current - 1)" :disabled="current === 1">‹</button>
@@ -40,38 +40,23 @@ const props = defineProps({
 
 defineEmits(['change'])
 
-// Rango real mostrado en pantalla
-const from = computed(() => {
-  if (props.total === 0) return 0
-  return (props.current - 1) * props.perPage + 1
-})
-
-const to = computed(() => {
-  if (props.total === 0) return 0
-  return Math.min(props.current * props.perPage, props.total)
-})
-
 // Genera la lista de botones de página con puntos suspensivos correctos
 const pages = computed(() => {
   const tp = props.totalPages
   const c  = props.current
 
-  // Sin necesidad de puntos suspensivos
   if (tp <= 7) {
     return Array.from({ length: tp }, (_, i) => i + 1)
   }
 
-  // Cerca del inicio: mostrar primeras páginas + salto al final
   if (c <= 4) {
     return [1, 2, 3, 4, 5, '...', tp]
   }
 
-  // Cerca del final: mostrar salto al inicio + últimas páginas
   if (c >= tp - 3) {
     return [1, '...', tp - 4, tp - 3, tp - 2, tp - 1, tp]
   }
 
-  // En el medio: mostrar contexto alrededor de la página actual
   return [1, '...', c - 1, c, c + 1, '...', tp]
 })
 </script>

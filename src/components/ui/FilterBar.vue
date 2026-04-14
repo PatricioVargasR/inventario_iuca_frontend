@@ -68,7 +68,7 @@
               :value="key"
               v-model="localFilters[chipGroup.key]"
               :disabled="isDisabled(chipGroup)"
-              @change="onChange"
+              @change="emitChange"
             />
             <span class="chip-text">{{ label }}</span>
           </label>
@@ -108,6 +108,11 @@ export default {
     },
     emitChange() {
       this.$emit("change", this.localFilters)
+    },
+    isDisabled(chipGroup) {
+      if (!chipGroup.dependsOn) return false
+      const dep = this.localFilters[chipGroup.dependsOn]
+      return !dep || (Array.isArray(dep) && dep.length === 0)
     }
   }
 }
