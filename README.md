@@ -120,8 +120,8 @@ Para evitar conflictos al editar registros simultáneamente, el sistema implemen
 | `ConflictModal` | Modal para resolver conflictos de versión |
 | `ToastNotification` | Sistema de notificaciones tipo toast (success, error, warning, info) |
 | `Pagination` | Paginación con puntos suspensivos y navegación completa |
-| `ResponsablesSelector` | Selector múltiple con búsqueda para asignar responsables |
-| `ResponsablesFilter` | Filtro tipo dropdown con checkboxes para responsables |
+| `ResponsablesSelector` | Selector múltiple con búsqueda para asignar responsables a un activo en formularios |
+| `ResponsablesFilter` | Filtro tipo dropdown con checkboxes para filtrar por responsable en las tablas |
 | `StatusBadge` | Badge de estado con color dinámico |
 | `TableActions` | Botones de acción (ver, editar, eliminar) con control de permisos |
 | `FilterBar` | Barra de filtros configurable |
@@ -139,9 +139,22 @@ Para evitar conflictos al editar registros simultáneamente, el sistema implemen
 | `useToast` | Sistema de notificaciones global (singleton) |
 | `useFormErrors` | Gestión de errores de validación por campo |
 | `useCatalogos` | Carga en paralelo de catálogos necesarios por vista |
+| `useCatalogosData` | Carga de datos, contadores por tab y paginación para la vista de catálogos |
+| `useCatalogosForm` | Lógica de formulario, validación, CRUD y concurrencia para la vista de catálogos |
 | `usePermisos` | Lógica de permisos con dependencias entre acciones |
 | `useSpecsEditor` | Editor de especificaciones dinámicas con sugerencias por tipo de equipo |
-| `useConcurrencyHandlers` | Handlers de eventos de concurrencia y conflicto reutilizables |
+| `useConcurrencyHandlers` | Handlers de eventos de concurrencia y conflicto reutilizables entre vistas |
+
+---
+
+## 📐 Constantes principales
+
+| Archivo | Descripción |
+|---|---|
+| `constants/accesos.js` | Módulos disponibles, permisos, estructura de permisos por defecto y nombres legibles de módulos |
+| `constants/catalogos.js` | Tabs, mapeos de tablas/métodos API/campos, helpers `getItemId`, `getItemNombre`, `resolveField` |
+| `constants/equiposMap.js` | `SPECS_MAP` — sugerencias de especificaciones técnicas agrupadas por tipo de equipo (PC, laptop, monitor, etc.) |
+| `constants/historial.js` | Nombres legibles de campos, tablas y operaciones para la vista de historial |
 
 ---
 
@@ -163,3 +176,4 @@ Los endpoints se organizan por dominio: `authApi`, `equiposApi`, `mobiliarioApi`
 - El diseño es responsive con breakpoints en 768px (móvil) y 1600px/1920px (pantallas grandes).
 - Las fuentes utilizadas son **DM Sans** (cuerpo) y **Space Mono** (monoespaciado) vía Google Fonts.
 - Los errores del backend (constraints de PostgreSQL, unicidad, claves foráneas, etc.) son traducidos automáticamente a mensajes legibles en español por `useToast.parseBackendError`.
+- Los filtros de responsables en equipos y mobiliario admiten selección múltiple; la query se envía como múltiples parámetros `usuario_id` y el backend aplica un filtro AND (el activo debe tener asignados todos los responsables seleccionados).
