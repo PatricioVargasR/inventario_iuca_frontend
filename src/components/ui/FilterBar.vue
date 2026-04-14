@@ -5,36 +5,23 @@
     <div v-if="config.search" class="filter-group search">
       <label>Búsqueda General</label>
       <div class="input-with-icon">
-        <svg class="input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input
-          v-model="localFilters.search"
-          class="form-input"
-          placeholder="Buscar..."
-          @input="emitSearch"
-        />
+        <svg class="input-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input v-model="localFilters.search" class="form-input" placeholder="Buscar..." @input="emitSearch" />
       </div>
     </div>
 
     <!-- 🧾 SELECTS -->
-    <div
-      v-for="select in config.selects || []"
-      :key="select.key"
-      class="filter-group"
-    >
+    <div v-for="select in config.selects || []" :key="select.key" class="filter-group">
       <label>{{ select.label }}</label>
 
-      <select
-        v-model="localFilters[select.key]"
-        class="form-select"
-        @change="emitChange"
-      >
+      <select v-model="localFilters[select.key]" class="form-select" @change="emitChange">
         <option value="">{{ select.placeholder }}</option>
 
-        <option
-          v-for="opt in select.options"
-          :key="opt[select.optionValue]"
-          :value="opt[select.optionValue]"
-        >
+        <option v-for="opt in select.options" :key="opt[select.optionValue]" :value="opt[select.optionValue]">
           {{ opt[select.optionLabel] }}
         </option>
 
@@ -43,12 +30,8 @@
 
     <!-- Chips -->
     <div v-if="config.chips">
-      <div
-        v-for="chipGroup in config.chips"
-        :key="chipGroup.key"
-        class="filter-chips-section"
-        :class="{ disabled: isDisabled(chipGroup) }"
-      >
+      <div v-for="chipGroup in config.chips" :key="chipGroup.key" class="filter-chips-section"
+        :class="{ disabled: isDisabled(chipGroup) }">
         <label class="filter-label">
           {{ chipGroup.label }}
           <span v-if="isDisabled(chipGroup)" class="hint-text">
@@ -57,19 +40,10 @@
         </label>
 
         <div class="chips-group">
-          <label
-            v-for="(label, key) in chipGroup.options"
-            :key="key"
-            class="chip-checkbox"
-            :class="{ disabled: isDisabled(chipGroup) }"
-          >
-            <input
-              type="checkbox"
-              :value="key"
-              v-model="localFilters[chipGroup.key]"
-              :disabled="isDisabled(chipGroup)"
-              @change="emitChange"
-            />
+          <label v-for="(label, key) in chipGroup.options" :key="key" class="chip-checkbox"
+            :class="{ disabled: isDisabled(chipGroup) }">
+            <input type="checkbox" :value="key" v-model="localFilters[chipGroup.key]" :disabled="isDisabled(chipGroup)"
+              @change="emitChange" />
             <span class="chip-text">{{ label }}</span>
           </label>
         </div>

@@ -3,38 +3,29 @@
     <label class="filter-label-text">{{ label }}</label>
 
     <!-- Trigger button -->
-    <button
-      type="button"
-      class="resp-filter-trigger"
-      :class="{ active: modelValue.length > 0, open: isOpen }"
-      @click="isOpen = !isOpen"
-    >
+    <button type="button" class="resp-filter-trigger" :class="{ active: modelValue.length > 0, open: isOpen }"
+      @click="isOpen = !isOpen">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
       </svg>
       <span v-if="modelValue.length === 0">{{ placeholder }}</span>
       <span v-else-if="modelValue.length === 1">{{ getNombre(modelValue[0]) }}</span>
       <span v-else>{{ modelValue.length }} responsables</span>
-      <svg
-        class="chevron"
-        :class="{ rotated: isOpen }"
-        width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-      >
-        <path d="M6 9l6 6 6-6"/>
+      <svg class="chevron" :class="{ rotated: isOpen }" width="12" height="12" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2">
+        <path d="M6 9l6 6 6-6" />
       </svg>
     </button>
 
     <!-- Badge de seleccionados -->
     <div v-if="modelValue.length > 0" class="active-tags">
-      <span
-        v-for="id in modelValue"
-        :key="id"
-        class="active-tag"
-      >
+      <span v-for="id in modelValue" :key="id" class="active-tag">
         {{ getNombre(id) }}
         <button type="button" @click.stop="remove(id)">
           <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
       </span>
@@ -46,35 +37,24 @@
       <div v-if="isOpen" class="resp-filter-dropdown">
         <div class="dropdown-search">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-          <input
-            ref="searchRef"
-            v-model="search"
-            class="dropdown-search-input"
-            placeholder="Buscar..."
-            @keydown.escape="isOpen = false"
-          />
+          <input ref="searchRef" v-model="search" class="dropdown-search-input" placeholder="Buscar..."
+            @keydown.escape="isOpen = false" />
         </div>
         <div class="dropdown-options">
-          <label
-            v-for="u in filtered"
-            :key="u.id_usuario"
-            class="dropdown-option"
-            :class="{ checked: modelValue.includes(u.id_usuario) }"
-          >
-            <input
-              type="checkbox"
-              :checked="modelValue.includes(u.id_usuario)"
-              @change="toggle(u.id_usuario)"
-            />
+          <label v-for="u in filtered" :key="u.id_usuario" class="dropdown-option"
+            :class="{ checked: modelValue.includes(u.id_usuario) }">
+            <input type="checkbox" :checked="modelValue.includes(u.id_usuario)" @change="toggle(u.id_usuario)" />
             <div class="option-avatar">{{ initials(u.nombre_usuario) }}</div>
             <div class="option-info">
               <span class="option-name">{{ u.nombre_usuario }}</span>
               <span v-if="u.puesto" class="option-puesto">{{ u.puesto }}</span>
             </div>
-            <svg v-if="modelValue.includes(u.id_usuario)" class="option-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="20 6 9 17 4 12"/>
+            <svg v-if="modelValue.includes(u.id_usuario)" class="option-check" width="13" height="13"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12" />
             </svg>
           </label>
           <div v-if="filtered.length === 0" class="dropdown-no-results">
@@ -91,8 +71,8 @@ import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 
 const props = defineProps({
   modelValue: { type: Array, default: () => [] },
-  usuarios:   { type: Array, default: () => [] },
-  label:       { type: String, default: 'Responsable' },
+  usuarios: { type: Array, default: () => [] },
+  label: { type: String, default: 'Responsable' },
   placeholder: { type: String, default: 'Todos los responsables' }
 })
 
@@ -222,6 +202,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
   flex-shrink: 0;
   transition: transform 0.15s;
 }
+
 .chevron.rotated {
   transform: rotate(180deg);
 }
@@ -257,7 +238,10 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
   padding: 0;
   opacity: 0.7;
 }
-.active-tag button:hover { opacity: 1; }
+
+.active-tag button:hover {
+  opacity: 1;
+}
 
 .clear-all {
   font-size: 11px;
@@ -270,7 +254,10 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
   font-family: var(--font-body);
   text-decoration: underline;
 }
-.clear-all:hover { color: var(--danger); }
+
+.clear-all:hover {
+  color: var(--danger);
+}
 
 /* ── Dropdown ── */
 .resp-filter-dropdown {
@@ -304,7 +291,10 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
   color: var(--gray-700);
   background: transparent;
 }
-.dropdown-search-input::placeholder { color: var(--gray-400); }
+
+.dropdown-search-input::placeholder {
+  color: var(--gray-400);
+}
 
 .dropdown-options {
   max-height: 200px;
@@ -321,9 +311,18 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
   border-bottom: 1px solid var(--gray-100);
   user-select: none;
 }
-.dropdown-option:last-child { border-bottom: none; }
-.dropdown-option:hover { background: var(--gray-50); }
-.dropdown-option.checked { background: #eff6ff; }
+
+.dropdown-option:last-child {
+  border-bottom: none;
+}
+
+.dropdown-option:hover {
+  background: var(--gray-50);
+}
+
+.dropdown-option.checked {
+  background: #eff6ff;
+}
 
 .dropdown-option input[type="checkbox"] {
   display: none;
@@ -348,7 +347,11 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
   color: white;
 }
 
-.option-info { flex: 1; min-width: 0; }
+.option-info {
+  flex: 1;
+  min-width: 0;
+}
+
 .option-name {
   display: block;
   font-size: 13px;
@@ -358,12 +361,17 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .option-puesto {
   display: block;
   font-size: 11px;
   color: var(--gray-400);
 }
-.option-check { color: var(--primary); flex-shrink: 0; }
+
+.option-check {
+  color: var(--primary);
+  flex-shrink: 0;
+}
 
 .dropdown-no-results {
   padding: 14px;
@@ -375,15 +383,22 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
 
 /* ── Transición ── */
 .dropdown-enter-active,
-.dropdown-leave-active { transition: opacity 0.12s ease, transform 0.12s ease; }
+.dropdown-leave-active {
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
 .dropdown-enter-from,
-.dropdown-leave-to { opacity: 0; transform: translateY(-4px); }
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
 
 /* 📱 Responsive */
 @media (max-width: 760px) {
   .resp-filter {
     width: 100%;
-    min-width: unset; /* 👈 rompe el bloqueo */
+    min-width: unset;
+    /* 👈 rompe el bloqueo */
   }
 
   .resp-filter-trigger {
@@ -391,7 +406,8 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
   }
 
   .resp-filter-dropdown {
-    min-width: unset; /* 👈 clave */
+    min-width: unset;
+    /* 👈 clave */
     width: 100%;
   }
 }
@@ -412,6 +428,4 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
     max-height: 55vh;
   }
 }
-
-
 </style>

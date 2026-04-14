@@ -11,7 +11,8 @@
           <div class="modal-footer" style="justify-content: center; gap: 12px;">
             <button class="btn btn-secondary" @click="$emit('update:modelValue', false)">Cancelar</button>
             <button class="btn btn-danger" @click="confirm" :disabled="loading">
-              <span v-if="loading" class="spinner" style="width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,0.3);border-top-color:white;"></span>
+              <span v-if="loading" class="spinner"
+                style="width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,0.3);border-top-color:white;"></span>
               <span v-else>{{ confirmLabel }}</span>
             </button>
           </div>

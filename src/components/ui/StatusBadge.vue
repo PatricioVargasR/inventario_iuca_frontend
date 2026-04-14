@@ -1,4 +1,3 @@
-
 <script setup>
 import { computed } from 'vue'
 const props = defineProps({
@@ -9,10 +8,7 @@ const label = computed(() => props.estado || '–')
 </script>
 
 <template>
-  <span
-    class="badge"
-    :style="{ backgroundColor: color || '#ccc', color: '#fff' }"
-  >
+  <span class="badge" :style="{ backgroundColor: color || '#ccc', color: '#fff' }">
     {{ label }}
   </span>
 </template>

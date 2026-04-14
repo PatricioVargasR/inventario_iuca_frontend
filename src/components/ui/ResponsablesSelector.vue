@@ -3,18 +3,16 @@
     <!-- Tags de responsables seleccionados -->
     <div class="selected-tags" :class="{ empty: modelValue.length === 0 }">
       <template v-if="modelValue.length > 0">
-        <span
-          v-for="id in modelValue"
-          :key="id"
-          class="resp-tag"
-        >
+        <span v-for="id in modelValue" :key="id" class="resp-tag">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
           </svg>
           {{ getNombre(id) }}
           <button type="button" class="tag-remove" @click="remove(id)">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </span>
@@ -25,48 +23,37 @@
     <!-- Buscador + dropdown -->
     <div class="dropdown-wrapper" ref="wrapperRef">
       <div class="search-input-wrap">
-        <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
-        <input
-          ref="inputRef"
-          v-model="search"
-          class="search-input"
+        <input ref="inputRef" v-model="search" class="search-input"
           :placeholder="modelValue.length > 0 ? 'Agregar otro responsable...' : 'Buscar responsable...'"
-          @focus="open = true"
-          @keydown.escape="open = false"
-          @keydown.down.prevent="moveHighlight(1)"
-          @keydown.up.prevent="moveHighlight(-1)"
-          @keydown.enter.prevent="selectHighlighted"
-        />
+          @focus="open = true" @keydown.escape="open = false" @keydown.down.prevent="moveHighlight(1)"
+          @keydown.up.prevent="moveHighlight(-1)" @keydown.enter.prevent="selectHighlighted" />
         <button v-if="search" type="button" class="clear-search" @click="search = ''; inputRef?.focus()">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
       </div>
 
       <Transition name="dropdown">
         <div v-if="open && filtered.length > 0" class="dropdown-list">
-          <button
-            v-for="(u, i) in filtered"
-            :key="u.id_usuario"
-            type="button"
-            class="dropdown-item"
-            :class="{
-              selected: modelValue.includes(u.id_usuario),
-              highlighted: i === highlightIndex
-            }"
-            @mousedown.prevent="toggle(u.id_usuario)"
-            @mouseover="highlightIndex = i"
-          >
+          <button v-for="(u, i) in filtered" :key="u.id_usuario" type="button" class="dropdown-item" :class="{
+            selected: modelValue.includes(u.id_usuario),
+            highlighted: i === highlightIndex
+          }" @mousedown.prevent="toggle(u.id_usuario)" @mouseover="highlightIndex = i">
             <div class="item-avatar">{{ initials(u.nombre_usuario) }}</div>
             <div class="item-info">
               <span class="item-name">{{ u.nombre_usuario }}</span>
               <span v-if="u.puesto" class="item-puesto">{{ u.puesto }}</span>
             </div>
-            <svg v-if="modelValue.includes(u.id_usuario)" class="item-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="20 6 9 17 4 12"/>
+            <svg v-if="modelValue.includes(u.id_usuario)" class="item-check" width="14" height="14" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12" />
             </svg>
           </button>
         </div>
@@ -83,8 +70,8 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 
 const props = defineProps({
   modelValue: { type: Array, default: () => [] },  // array de IDs
-  usuarios:   { type: Array, default: () => [] },   // lista completa de usuarios
-  disabled:   { type: Boolean, default: false }
+  usuarios: { type: Array, default: () => [] },   // lista completa de usuarios
+  disabled: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -212,6 +199,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
   transition: background 0.12s;
   flex-shrink: 0;
 }
+
 .tag-remove:hover {
   background: rgba(37, 99, 235, 0.3);
 }
@@ -267,6 +255,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
   color: var(--gray-500);
   padding: 0;
 }
+
 .clear-search:hover {
   background: var(--gray-300);
 }
@@ -307,7 +296,10 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
   transition: background 0.1s;
   border-bottom: 1px solid var(--gray-100);
 }
-.dropdown-item:last-child { border-bottom: none; }
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
 
 .dropdown-item:hover,
 .dropdown-item.highlighted {
@@ -371,6 +363,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
 .dropdown-leave-active {
   transition: opacity 0.12s ease, transform 0.12s ease;
 }
+
 .dropdown-enter-from,
 .dropdown-leave-to {
   opacity: 0;
